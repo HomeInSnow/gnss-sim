@@ -301,8 +301,10 @@ window.addChannel = function () {
     <div class="channel-actions">
       <button id="${id}-btn-preview">Preview geometry</button>
       <button id="${id}-btn-generate" class="btn-primary">Generate</button>
+      <button id="${id}-btn-receiver" title="Run the built-in software receiver on the last generated IQ: acquires the satellites, extracts pseudoranges and solves a least-squares position fix, then reports the error against the map marker.">Verify Fix</button>
       <progress id="${id}-gen-progress" max="1" value="0"></progress>
     </div>
+    <div id="${id}-rx-result" class="hint" style="white-space:pre-wrap;margin:2px 0 6px 0;"></div>
     <div class="timeline-editor">
       <h4>Timeline (scheduled during live transmit) <span class="info" title="Runs only while a live transmit is active on this channel (Start).">i</span></h4>
       <ul id="${id}-timeline-list"></ul>
@@ -1137,6 +1139,53 @@ function wireChannelActions(id) {
     el.textContent = 'applied: ' + bits.join('  ·  ');
   }
 
+  document.getElementById(`${id}-btn-receiver`).onclick = async () => {
+    const out = document.getElementById(`${id}-rx-result`);
+    const btn = document.getElementById(`${id}-btn-receiver`);
+    const outdir = st.lastOutdir || st.outdir;
+    if (!outdir) {
+      out.textContent = 'No generated scenario yet: click Generate first, then Verify Fix.';
+      return;
+    }
+    const body = { outdir };
+    const ll = st.map.latlng();
+    // alt must mirror the generator's fixed alt (see btn-generate) or the
+    // reported error would include the altitude offset of the marker.
+    if (ll) body.marker = { lat: ll.lat, lon: ll.lng, alt: 100 };
+    btn.disabled = true;
+    out.textContent = `Running software receiver on ${outdir} …`;
+    try {
+      const r = await fetch('/api/receiver', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!r.ok) {
+        const d = await r.json().catch(() => ({}));
+        out.textContent = 'Receiver verify failed: ' + (d.detail || ('HTTP ' + r.status));
+        return;
+      }
+      const d = await r.json();
+      const llh = d.llh || [];
+      const lines = [
+        `Fix: ${llh[0]?.toFixed(6)}, ${llh[1]?.toFixed(6)}, ${llh[2]?.toFixed(1)} m`
+        + `   PDOP: ${d.pdop?.toFixed(1) ?? '-'}   residual RMS: ${d.residual_rms_m?.toFixed(2) ?? '-'} m`
+        + `   clock: ${(d.clock_bias_s * 1e6)?.toFixed(2)} µs`,
+        `SVs used (${(d.prns_used || []).length}): ${(d.prns_used || []).join(' ')}`,
+      ];
+      if (typeof d.error_m === 'number') {
+        lines.push(`Position error vs map marker: ${d.error_m.toFixed(2)} m`);
+      }
+      if (d.result_file) lines.push(`Saved: out/${d.result_file}`);
+      out.textContent = lines.join('\n');
+      logLine('Channel ' + id + ': software receiver fix'
+        + (typeof d.error_m === 'number' ? `, error ${d.error_m.toFixed(1)} m` : '')
+        + ` on ${outdir}`, 'info');
+    } catch (e) {
+      out.textContent = 'Receiver verify failed: ' + e;
+    } finally {
+      btn.disabled = false;
+    }
+  };
   document.getElementById(`${id}-btn-generate`).onclick = () => {
     const su = document.getElementById(`${id}-start-utc`).value;
     if (!su) return alert('set a start UTC');

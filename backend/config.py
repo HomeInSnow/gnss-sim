@@ -37,6 +37,10 @@ RINEX_MIRRORS = [
     # confirmed against the live directory listing; georinex's use="G" filter
     # picks the GPS records back out of it.
     "https://igs.bkg.bund.de/root_ftp/IGS/BRDC/{yyyy}/{ddd}/BRDC00WRD_R_{yyyy}{ddd}0000_01D_MN.rnx.gz",
+    # Some days BKG publishes the combined file under the IGS centre code
+    # (BRDC00IGS_) instead of WRD (observed live for DOY 283/2026); without
+    # this variant those days "all mirrors failed" while the file exists.
+    "https://igs.bkg.bund.de/root_ftp/IGS/BRDC/{yyyy}/{ddd}/BRDC00IGS_R_{yyyy}{ddd}0000_01D_MN.rnx.gz",
     # ESA GSSC open portal:
     "https://gssc.esa.int/portal/rest/file/gnss/data/daily/{yyyy}/{ddd}/BRDC00WRD_R_{yyyy}{ddd}0000_01D_MN.rnx.gz",
     # Legacy RINEX 2 daily broadcast GPS nav:

@@ -823,9 +823,7 @@ def _load_broadcast(req, systems, at_dt) -> dict:
     a_dt = at_dt + dt.timedelta(seconds=config.GPS_UTC_LEAP_S)
     a_week, a_sow = ephemeris.gps_week_and_sow(a_dt)
     eph = ephemeris.parse_rinex_multi(req.rinex_path, systems, require=(), at_gps=a_dt)
-    return ephemeris.align_epochs(
-        eph, a_week, a_sow, kepler_grid_s=_TOE_GRID_S,
-        keep_real_within_s=ephemeris.REAL_EPH_WINDOW_S)
+    return ephemeris.align_for_run(eph, a_week, a_sow, "native")
 
 
 def _galileo_records(eph) -> dict:
@@ -1092,9 +1090,7 @@ def _run_impl(req, progress_cb=None, plan_only=False):
                 eph_osnma_now = _load_broadcast(req, ("E",), now_ep)
         # Records whose own epoch covers the run are used as broadcast (the
         # real sky); only stale ones are relabeled onto the toe grid.
-        eph = ephemeris.align_epochs(
-            eph, a_week, a_sow, kepler_grid_s=_TOE_GRID_S,
-            keep_real_within_s=ephemeris.REAL_EPH_WINDOW_S)
+        eph = ephemeris.align_for_run(eph, a_week, a_sow, "native")
         rx = (rx_fn(0.0)[0] if rx_fn is not None
               else geometry.llh_to_ecef(req.lat, req.lon, req.alt))
         req_bands = getattr(req, "bands", None)
@@ -1395,6 +1391,21 @@ def _run_impl(req, progress_cb=None, plan_only=False):
                        # (BeiDou B1I vs GPS/Galileo on a widened L1 output)
                        "if_hz": if_hz,
                        "code_doppler_hz": e["code_doppler_hz"],
+                       # Synthesizer state at run start (t_rel=0): the code
+                       # phase at IQ sample 0, the total pseudorange it
+                       # encodes (geo + atmo - C*svb, after the correction
+                       # loop above) and the carrier Doppler. The mixer
+                       # advances the FILE code-grid argument as
+                       # g(t) = -pr(t)*chip/C (transmit-time anchor), i.e.
+                       # g drifts at +code_doppler_hz chips/s; the
+                       # acquisition-frame phase a receiver reports is
+                       # -g mod code_len = (code_phase_chips
+                       # - code_doppler_hz*t), which is what
+                       # backend/analysis/trace.py compares the receiver's
+                       # per-epoch acquisition against.
+                       "carrier_doppler_hz": e["carrier_doppler_hz"],
+                       "code_phase_chips": e["code_phase_chips"],
+                       "pseudorange_m": e["pseudorange_m"],
                        "el_deg": round(el_deg, 2),
                        "az_deg": round(float(e.get("az_deg", 0.0)), 2),
                        # static elevation amplitude taper applied to this SV;

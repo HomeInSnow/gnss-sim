@@ -582,6 +582,12 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
     :mod:`backend.analysis.cnav_decode`, then the same WLS position solve.
     ``"G2"`` runs the GLONASS L2OF path (see ``_fix_from_iq_glo_l2of``).
     """
+    # /api/receiver accepts `marker` as a {"lat","lon","alt"} dict; every
+    # consumer below unpacks positionally (llh_to_ecef(*marker_llh)), so
+    # normalize once at the entry or dict keys leak through as strings.
+    if isinstance(marker_llh, dict):
+        marker_llh = (marker_llh.get("lat", 0.0), marker_llh.get("lon", 0.0),
+                      marker_llh.get("alt", 0.0))
     if band == "L2":
         return _fix_from_iq_l2(iq_path, sample_format, sample_rate,
                                eph_by_prn, approx_time_gps, marker_llh)
@@ -708,14 +714,17 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
                                     pass
             if not eph_by_prn and rinex_path:
                 from backend.ephem import ephemeris
-                eph_multi = ephemeris.parse_rinex_multi(rinex_path, tuple(systems))
                 start_dt = dt.datetime.fromisoformat(meta["config"]["start_utc"])
                 gps_start = start_dt + dt.timedelta(seconds=config.GPS_UTC_LEAP_S)
                 week, sow = ephemeris.gps_week_and_sow(gps_start)
-                eph_by_prn = ephemeris.align_epochs(
-                    eph_multi, week, sow,
-                    kepler_grid_s=ephemeris.toe_grid_for(meta.get("provenance", {}).get("engine")),
-                )
+                engine = meta.get("provenance", {}).get("engine")
+                # Same record selection the generator used: native picks each
+                # satellite's record nearest the RUN start; a file-midday
+                # pick rebuilds a different fake orbit after relabeling.
+                eph_multi = ephemeris.parse_rinex_multi(
+                    rinex_path, tuple(systems),
+                    at_gps=gps_start if engine == "native" else None)
+                eph_by_prn = ephemeris.align_for_run(eph_multi, week, sow, engine)
         return fix_from_iq_l1_multi(
             iq_by_band, meta, eph_by_prn, approx_time_gps,
             approx_llh=approx_llh, marker_llh=marker_llh, atmo_fn=atmo_fn,
@@ -734,6 +743,23 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
         r = inspector.acquire(iq, sample_rate, prn)
         if r["metric_db"] > 9:
             acq[prn] = r
+
+    # Atmosphere the native plan injected into the code phase
+    # (engine._atmo_for: Klobuchar + Saastamoinen for G): the anchored
+    # pseudorange must remove exactly what synthesis added, same recipe as
+    # backend.analysis.l1_fix, or iono+tropo (tens of metres, per-SV) stay
+    # as an unmodelled residual the LS cannot absorb.
+    atmo_fn = None
+    _cfg_d = (meta.get("config") or {}) if isinstance(meta, dict) else {}
+    if meta.get("config", {}).get("rinex_path"):
+        from backend.analysis.l1_fix import default_atmo_fn
+        _allh = marker_llh or (_cfg_d.get("lat", 0.0), _cfg_d.get("lon", 0.0),
+                              _cfg_d.get("alt", 0.0))
+        _af = default_atmo_fn(meta["config"]["rinex_path"], _allh,
+                              approx_time_gps)
+
+        def atmo_fn(az_rad, el_rad, _f=_af, _c=config.L1_HZ):
+            return float(_f(az_rad, el_rad, _c))
 
     nav_decode: dict = {}
     if decode_nav:
@@ -768,7 +794,7 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
         # millisecond count), then apply the measured sub-chip residual.
         # Robust for an a-priori within ~150 km / a known approximate time.
         sats = geometry.constellation(eph_by_prn, approx_rx, approx_time_gps,
-                                      mask_deg=-90.0)
+                                      mask_deg=-90.0, atmo_delay_fn=atmo_fn)
         ent = {e["prn"]: e for e in sats}
         sat_pos, pr, usable = {}, {}, []
         m_per_chip = config.C / config.CA_CHIP_HZ
@@ -786,24 +812,43 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
                 eph_by_prn[prn], approx_rx, approx_time_gps)
             sat_pos[prn] = pos
             # observables() models the raw measurement as geo - c*dt_sv;
-            # add the decoded satellite-clock term back to get a
-            # clock-corrected pseudorange for the position solve.
+            # add the decoded satellite-clock term back and remove the
+            # atmospheric delay the native plan injected into the code
+            # phase, giving a clean geometric pseudorange for the solve
+            # (same recipe as backend.analysis.l1_fix).
             svb = geometry.group_delay_bias_s("G", "L1",
                                               eph_by_prn[prn])
             pr[prn] = (e["pseudorange_m"] + err_c * m_per_chip
-                       + config.C * (clk + svb))
+                       + config.C * (clk + svb) - e["atmo_delay_m"])
             usable.append(prn)
         acq = {p: acq[p] for p in usable}
         if len(acq) < 4:
             return {"error": f"only {len(acq)} PRNs usable after nav decode",
                     "prns_used": sorted(acq), "nav_decode": nav_decode}
     else:
-        sat_pos, predicted = {}, {}
+        # predicted must carry exactly what the native plan injected into
+        # the code phase (- C*(clk + svb) + iono + tropo), or the integer-ms
+        # anchor and the LS both inherit the per-SV spread of those terms
+        # (a few 100-microsecond BRDC af0 alone is tens of km). Remove them
+        # from the reconstructed pseudorange afterwards, like l1_fix does.
+        sat_pos, predicted, svcorr = {}, {}, {}
         for prn in acq:
             pos, _, tof, clk = geometry.solve_transmit_time(
                 eph_by_prn[prn], approx_rx, approx_time_gps)
             sat_pos[prn] = pos
-            predicted[prn] = np.linalg.norm(pos - approx_rx) - config.C * clk
+            rec = eph_by_prn.get(prn)
+            svb = geometry.group_delay_bias_s(
+                "G", "L1", rec if isinstance(rec, dict) else None)
+            atmo_m = 0.0
+            if atmo_fn is not None:
+                losv = pos - approx_rx
+                g = float(np.linalg.norm(losv))
+                _e, _n, _u = geometry._enu(approx_rx)
+                az = float(np.degrees(np.arctan2(losv @ _e, losv @ _n))) % 360.0
+                el = float(np.degrees(np.arcsin(np.clip(losv @ _u / g, -1, 1))))
+                atmo_m = atmo_fn(np.radians(az), np.radians(el))
+            svcorr[prn] = (clk, svb, atmo_m)
+            predicted[prn] = (g - config.C * (clk + svb) + atmo_m)
 
         ref = max(acq, key=lambda p: predicted[p] * -1)  # shortest range ~ highest el
         code_m = {p: (acq[p]["code_phase_chips"] / config.CA_CHIP_HZ) * config.C
@@ -812,7 +857,10 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
         for prn in acq:
             n_ms = round((predicted[prn] - predicted[ref] - (code_m[prn] - code_m[ref]))
                          / (config.C * 1e-3))
-            pr[prn] = predicted[ref] + (code_m[prn] - code_m[ref]) + n_ms * config.C * 1e-3
+            clk, svb, atmo_m = svcorr[prn]
+            pr[prn] = (predicted[ref] + (code_m[prn] - code_m[ref])
+                       + n_ms * config.C * 1e-3
+                       + config.C * (clk + svb) - atmo_m)
 
     sol = solve_position(pr, sat_pos, x0=[*approx_rx, 0.0])
     lat, lon, h = _ecef_to_llh(*sol["ecef"])

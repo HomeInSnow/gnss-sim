@@ -1,0 +1,27 @@
+# generated scenario IQ + logs
+out/
+logs/
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# native build outputs (sources *.cpp/*.hpp/Makefile stay tracked)
+backend/synth/native/*.o
+backend/synth/native/*.obj
+backend/synth/native/*.dll
+backend/synth/native/*.so
+backend/synth/native/*.a
+
+# workbuddy session data (diagnostic scripts stay tracked)
+.workbuddy/memory/
+.workbuddy/http_*.json
+.genie_*
+*.genie
+
+# OS
+Thumbs.db
+.DS_Store

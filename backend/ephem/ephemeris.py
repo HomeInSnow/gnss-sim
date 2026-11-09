@@ -103,6 +103,27 @@ def toe_grid_for(engine: str | None) -> float:
     return NATIVE_TOE_GRID_S if engine == "native" else 0.0
 
 
+def align_for_run(eph_by_prn: dict, week: int, sow: float,
+                  engine: str | None) -> dict:
+    """The ONE epoch alignment a run's engine actually synthesised from.
+
+    Anything rebuilding a finished run's geometry -- ``/api/receiver``,
+    ``inspector.compare``, ``/api/lnav``, the preview endpoints -- MUST go
+    through here instead of calling ``align_epochs`` with hand-picked
+    arguments. The native engine keeps in-window records real
+    (``keep_real_within_s``); dropping that argument on the verification
+    side relabels GPS/Galileo onto the ``toe_ahead`` fictitious orbit while
+    the IQ carries the real sky, and every anchored code phase then diverges
+    by tens of km. gps-sdr-sim (``generator.run``) aligns with the plain
+    defaults, so the non-native branch keeps matching it.
+    """
+    if engine == "native":
+        return align_epochs(eph_by_prn, week, sow,
+                            kepler_grid_s=NATIVE_TOE_GRID_S,
+                            keep_real_within_s=REAL_EPH_WINDOW_S)
+    return align_epochs(eph_by_prn, week, sow)
+
+
 # Systems whose RINEX toe/week are on the GPS time scale (GPSWeek field),
 # so a record can be used with its REAL broadcast epoch.
 # Galileo: GALWeek GPS haftasına hizalı, Toe saniyesi GST=GPST. Gerçek kayıt gerçek toe ve
@@ -558,9 +579,18 @@ def _parse_rinex_multi(path: str | pathlib.Path, systems=("G",),
     return out
 
 
-def parse_rinex(path: str | pathlib.Path) -> dict[int, dict]:
-    """GPS-only facade over :func:`parse_rinex_multi` -- output unchanged."""
-    return parse_rinex_multi(path, ("G",))
+def parse_rinex(path: str | pathlib.Path,
+                at_gps: dt.datetime | None = None) -> dict[int, dict]:
+    """GPS-only facade over :func:`parse_rinex_multi` -- output unchanged.
+
+    ``at_gps`` mirrors :func:`parse_rinex_multi`: the native engine selects
+    each satellite's record nearest the RUN start, so any verification or
+    display path replaying a native run must pass the run's GPS-time start
+    here too; leaving it None picks nearest the file's midday instead, which
+    for a satellite with several broadcast records means a DIFFERENT set of
+    orbital elements -- a different (fake) orbit after relabeling, tens of km
+    away (the built-in receiver then diverges from its own prediction)."""
+    return parse_rinex_multi(path, ("G",), at_gps=at_gps)
 
 
 def _hdr_floats(s: str) -> list[float]:

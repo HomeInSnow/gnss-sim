@@ -408,24 +408,35 @@ def _newest_cached_rinex():
     return max(files, key=lambda p: p.stat().st_mtime)
 
 
-def _resolve_eph(date, rinex_path=None, systems=("G",)):
+def _resolve_eph(date, rinex_path=None, systems=("G",), at_gps=None):
     """Return (eph_by_prn, source_label).
 
     - explicit real path         -> parse that file
     - 'AUTO'/None                -> that day's cache, else download,
                                     else fall back to the newest cached RINEX
+
+    ``at_gps`` (GPS-time naive datetime) must be the run start whenever the
+    replayed run used the native engine: native generation selects each
+    satellite's record nearest the RUN start, and a plain (file-midday)
+    parse picks a different record for satellites with several broadcast
+    epochs, rebuilding a different fake orbit after relabeling. Pass None
+    only for the legacy gps-sdr-sim engine, which parses with the same
+    file-midday default.
     """
     if rinex_path and rinex_path != "AUTO":
         if systems and set(systems) - {"G"}:
-            return ephemeris.parse_rinex_multi(rinex_path, tuple(systems)), pathlib.Path(rinex_path).name
-        return ephemeris.parse_rinex(rinex_path), pathlib.Path(rinex_path).name
+            return (ephemeris.parse_rinex_multi(rinex_path, tuple(systems),
+                                                at_gps=at_gps),
+                    pathlib.Path(rinex_path).name)
+        return (ephemeris.parse_rinex(rinex_path, at_gps=at_gps),
+                pathlib.Path(rinex_path).name)
     try:
         return ephemeris.get_ephemeris(date), f"downloaded/cached {date:%Y-%j}"
     except ephemeris.EphemerisUnavailable:
         fb = _newest_cached_rinex()
         if fb is None:
             raise
-        return ephemeris.parse_rinex(fb), f"fallback: {fb.name}"
+        return ephemeris.parse_rinex(fb, at_gps=at_gps), f"fallback: {fb.name}"
 
 
 def _has_libiio() -> bool:
@@ -567,13 +578,23 @@ def _preview_multi(body: dict, start: dt.datetime, rx,
         precise_warns = []
 
     path = _resolve_rinex(body, start)
+    engine = body.get("engine", "native")
     try:
         # GPS zorunlu değil: Talep edilen sistemler arasında 'G' varsa 'G' zorunlu tutulur, yoksa boş demet verilir
         req_require = tuple(s for s in ("G",) if s in systems)
-        eph = ephemeris.parse_rinex_multi(path, systems, require=req_require)
+        # Match the engine that will actually synthesise the run, so the
+        # satellites shown here are the satellites the IQ will carry: native
+        # keeps in-window records real (see ephemeris.align_for_run) AND
+        # picks each satellite's record nearest the RUN start, so the
+        # replay must pass the same at_gps or a multi-record satellite is
+        # rebuilt from another orbit.
+        eph = ephemeris.parse_rinex_multi(
+            path, systems, require=req_require,
+            at_gps=(start + dt.timedelta(seconds=config.GPS_UTC_LEAP_S))
+            if engine == "native" else None)
     except ephemeris.EphemerisUnavailable as e:
         raise HTTPException(422, f"ephemeris: {e}")
-    eph = ephemeris.align_epochs(eph, week, sow)
+    eph = ephemeris.align_for_run(eph, week, sow, engine)
     got = {(k[0] if isinstance(k, tuple) else "G") for k in eph}
     dropped = [s for s in systems if s not in got]
 
@@ -707,7 +728,10 @@ def preview(body: dict):
             start + dt.timedelta(seconds=config.GPS_UTC_LEAP_S))
         return _preview_multi(body, start, rx, req_systems, week_m, sow_m)
 
-    eph, eph_src = _resolve_eph(date, body.get("rinex_path"))
+    eph, eph_src = _resolve_eph(
+        date, body.get("rinex_path"),
+        at_gps=(start + dt.timedelta(seconds=config.GPS_UTC_LEAP_S))
+        if body.get("engine", "native") == "native" else None)
 
     # Ephemeris mode for the *geometry preview only*. 'precise' uses the
     # loaded SP3 product (analysis); the generated IQ is still broadcast.
@@ -1130,12 +1154,12 @@ def generate(body: dict):
                     # records, so build "expected" from those same records.
                     eph = req.nav_override
                 else:
-                    eph, _ = _resolve_eph(req.start.date(), req.rinex_path)
                     gps_start = req.start + dt.timedelta(seconds=config.GPS_UTC_LEAP_S)
                     week, sow = ephemeris.gps_week_and_sow(gps_start)
-                    eph = ephemeris.align_epochs(
-                        eph, week, sow,
-                        kepler_grid_s=ephemeris.toe_grid_for(req.engine))
+                    eph, _ = _resolve_eph(
+                        req.start.date(), req.rinex_path,
+                        at_gps=gps_start if req.engine == "native" else None)
+                    eph = ephemeris.align_for_run(eph, week, sow, req.engine)
                 rx = geometry.llh_to_ecef(req.lat, req.lon, req.alt)
                 sats = geometry.constellation(eph, rx, _gps_tow(req.start))
                 iq = inspector.read_iq(outdir / "gpssim.bin", req.sample_format,
@@ -1160,6 +1184,15 @@ def generate(body: dict):
             meta_bands = _m.get("bands", [])
         except Exception:                        # noqa: BLE001 - meta optional
             pass
+        # Best-effort sim-side trace (truth grid for the rx comparison in
+        # scripts/plot_trace.py); never fails the generation itself.
+        trace_sim_file = None
+        try:
+            from backend.analysis import trace as _trace
+            if _trace.dump_sim_trace(outdir) is not None:
+                trace_sim_file = f"{outdir.name}/trace_sim.json"
+        except Exception:                        # noqa: BLE001 - trace opt-in
+            trace_sim_file = None
         done = {"done": {"outdir": outdir.name,
                          "size_bytes": (outdir / "gpssim.bin").stat().st_size,
                          "inspect": table,
@@ -1169,6 +1202,7 @@ def generate(body: dict):
                          "fading": meta_fading,
                          "bands": meta_bands,
                          "systems": meta_systems,
+                         "trace_sim_file": trace_sim_file,
                          "ephemeris_mode": "precise" if req.nav_override is not None else "broadcast",
                          "warnings": list(precise_warnings) + engine_warnings}}
         yield f"data: {json.dumps(done)}\n\n"
@@ -1201,16 +1235,91 @@ def run_receiver(body: dict):
     meta = json.loads((outdir / "meta.json").read_text())
     start = _parse_utc(meta["config"]["start_utc"])
     systems = tuple(meta.get("systems") or meta.get("config", {}).get("systems") or {s["sys"] for s in meta.get("provenance", {}).get("svs", [])} or ["G"])
-    eph, _ = _resolve_eph(start.date(), meta["config"].get("rinex_path"), systems=systems)
     gps_start = start + dt.timedelta(seconds=config.GPS_UTC_LEAP_S)
     week, sow = ephemeris.gps_week_and_sow(gps_start)
-    eph = ephemeris.align_epochs(
-        eph, week, sow,
-        kepler_grid_s=ephemeris.toe_grid_for(meta.get("provenance", {}).get("engine")))
-    return receiver.fix_from_iq(
+    engine = meta.get("provenance", {}).get("engine")
+    # Same record selection the generator used: native picks each satellite's
+    # record nearest the RUN start (ephemeris.parse_rinex_multi at_gps). A
+    # file-midday pick is a different record for satellites with several
+    # broadcast epochs -> a different fake orbit after relabeling -> tens of
+    # km between the receiver and its own prediction.
+    eph, _ = _resolve_eph(start.date(), meta["config"].get("rinex_path"),
+                          systems=systems,
+                          at_gps=gps_start if engine == "native" else None)
+    eph = ephemeris.align_for_run(eph, week, sow, engine)
+    res = receiver.fix_from_iq(
         outdir / "gpssim.bin", meta["sample_format"], meta["sample_rate"],
         eph, _gps_tow(start), marker_llh=body.get("marker"),
         systems=systems)
+    # Persist the fix next to the IQ so it survives the request and can be
+    # re-inspected later. The HTTP response stays authoritative: a failed
+    # write only downgrades result_file, and an error payload never clobbers
+    # a previous good result file.
+    res = dict(res)
+    if "error" not in res:
+        try:
+            res["saved_at_utc"] = dt.datetime.now(
+                dt.timezone.utc).isoformat(timespec="seconds")
+            (outdir / "receiver_result.json").write_text(
+                json.dumps(res, indent=2, default=float))
+            res["result_file"] = f"{outdir.name}/receiver_result.json"
+        except (TypeError, ValueError, OSError):
+            res["result_file"] = None
+        # Per-epoch rx trace on the same grid as trace_sim.json (pair with
+        # scripts/plot_trace.py). Body flag "trace": false skips it when the
+        # request only wants the fix (the sweep costs ~1 min on big runs).
+        if body.get("trace", True):
+            try:
+                from backend.analysis import trace as _trace
+                if _trace.dump_rx_trace(
+                        outdir, eph=eph, marker_llh=body.get("marker")) \
+                        is not None:
+                    res["trace_rx_file"] = f"{outdir.name}/trace_rx.json"
+            except Exception:                    # noqa: BLE001 - best effort
+                res["trace_rx_file"] = None
+        # Body flag "tracking": true adds the carrier-aided DLL tracking
+        # receiver on top: (1) a position fix whose per-SV code phase comes
+        # from continuous SVTracker sessions instead of integer-lag
+        # acquisition snapshots (removes the sample-grid quantization floor,
+        # ~17 m -> few-m), and (2) trace_dll.json for the acq-vs-DLL plot.
+        if body.get("tracking"):
+            # "dll_mode": "coh" (default, coherent E/L + Costas PLL with
+            # carrier-phase observable) | "el" (classic early/late power
+            # discriminator) | "nc" (power-surface peak-tracking)
+            # -- see tracker.SVTracker.
+            dm = str(body.get("dll_mode") or "coh")
+            try:
+                from backend.analysis import trace as _trace
+                from backend.analysis.l1_fix import (default_atmo_fn,
+                                                    fix_from_iq_l1_multi_tracked)
+                mk = body.get("marker")
+                approx_llh = (
+                    (float(mk["lat"]), float(mk["lon"]), float(mk["alt"]))
+                    if isinstance(mk, dict) else
+                    (tuple(mk) if isinstance(mk, (tuple, list)) else
+                     (meta["config"].get("lat", 0.0),
+                      meta["config"].get("lon", 0.0),
+                      meta["config"].get("alt", 0.0))))
+                rp = meta["config"].get("rinex_path")
+                afn = default_atmo_fn(rp, approx_llh,
+                                      _gps_tow(start)) if rp else None
+                tfix = fix_from_iq_l1_multi_tracked(
+                    outdir, meta, eph, _gps_tow(start),
+                    approx_llh=approx_llh, marker_llh=mk, atmo_fn=afn,
+                    dll_mode=dm)
+                res["tracking_fix"] = tfix
+            except Exception as exc:             # noqa: BLE001 - best effort
+                res["tracking_fix"] = {"error": f"{type(exc).__name__}: {exc}"}
+            try:
+                from backend.analysis import trace as _trace2
+                if _trace2.dump_rx_trace_dll(
+                        outdir, eph=eph, marker_llh=body.get("marker"),
+                        dll_mode=dm) \
+                        is not None:
+                    res["trace_dll_file"] = f"{outdir.name}/trace_dll.json"
+            except Exception:                    # noqa: BLE001 - best effort
+                res["trace_dll_file"] = None
+    return res
 
 
 @app.get("/api/iqplot")
@@ -1288,13 +1397,14 @@ def lnav(prn: int, outdir: str):
     start = _parse_utc(meta["config"]["start_utc"])
     # Same alignment as generator.run/inspect/receiver (KNOWN_ISSUES F4): the
     # generated IQ's subframes actually carry the aligned toc/toe/week, not
-    # the original broadcast ones.
-    eph_all, _ = _resolve_eph(start.date(), meta["config"].get("rinex_path"))
+    # the original broadcast ones. Same RECORD selection too (at_gps for a
+    # native run), or the nav-field replay is built off another orbit.
     gps_start = start + dt.timedelta(seconds=config.GPS_UTC_LEAP_S)
     week, sow = ephemeris.gps_week_and_sow(gps_start)
-    eph_all = ephemeris.align_epochs(
-        eph_all, week, sow,
-        kepler_grid_s=ephemeris.toe_grid_for(meta.get("provenance", {}).get("engine")))
+    engine = meta.get("provenance", {}).get("engine")
+    eph_all, _ = _resolve_eph(start.date(), meta["config"].get("rinex_path"),
+                              at_gps=gps_start if engine == "native" else None)
+    eph_all = ephemeris.align_for_run(eph_all, week, sow, engine)
     if prn not in eph_all:
         raise HTTPException(404, f"PRN {prn} not in ephemeris")
     eph = eph_all[prn]
