@@ -1,0 +1,63 @@
+schema_version: 1
+request_id: 2f4c0d14-0757-4213-8756-60b265f8446e
+created_at: 2026-11-10T04:52:00+08:00
+updated_at: 2026-11-10T06:11:30+08:00
+
+entry_type: full_pipeline
+stage_chain: [1, 2, 3]
+
+output_docx_path: "D:\\workbuddy\\GNSSSignal\\gnss-sim\\output\\2f4c0d14-0757-4213-8756-60b265f8446e\\stage3\\GNSS仿真与接收解调交叉验证汇总报告.docx"
+output_docx_user_specified: false
+
+current_stage: 3
+
+stages:
+  stage_0:
+    status: completed
+    completed_at: 2026-11-10T04:52:00+08:00
+    decision: full_pipeline
+  stage_1:
+    status: completed
+    started_at: 2026-11-10T04:52:00+08:00
+    completed_at: 2026-11-10T05:02:00+08:00
+    output_path: "stage1/final_draft.md"
+    genre: general
+    expert_used: general-writer
+    route_tag: general_writing
+  stage_2:
+    status: completed
+    started_at: 2026-11-10T05:02:00+08:00
+    completed_at: 2026-11-10T05:12:00+08:00
+    route: html
+    html_sub: template
+    output_path: "stage2/formatted-验证汇总.html"
+    output_format: html
+    skills_invoked: [design-token, doc-typeset, html-review]
+    design_tokens_path: "stage2/design_tokens.json"
+    fallback: false
+    fallback_reason: null
+  stage_3:
+    status: completed
+    started_at: 2026-11-10T06:10:00+08:00
+    completed_at: 2026-11-10T06:11:30+08:00
+    executor: doc-converter
+    input_format: html
+    input_path: "working/formatted-验证汇总.inlined.html"
+    conversion_note: "相对路径/file:/// 图片被引擎丢弃或降级占位，仅 base64 dataURI 可嵌入；转换前将 9 图内联为 dataURI（工作副本，stage2 主 HTML 保持相对引用）"
+    output_path: "stage3/GNSS仿真与接收解调交叉验证汇总报告.docx"
+    output_size_bytes: 804337
+    images_embedded: 9
+    skill_used: ["html-to-doc"]
+    present_files_opened: true
+    fallback: false
+    fallback_reason: null
+
+consistency_check:
+  output_files_exist: true
+  stage_chain_complete: true
+  last_checked_at: "2026-11-10T06:11:30+08:00"
+  stats:
+    stage1/final_draft.md: {size: 12525, mtime: "2026-11-10T05:45:47"}
+    stage2/formatted-验证汇总.html: {size: 29585, mtime: "2026-11-10T06:00:04"}
+    stage3/GNSS仿真与接收解调交叉验证汇总报告.docx: {size: 804337, mtime: "2026-11-10T06:10:50"}
+  errors: []

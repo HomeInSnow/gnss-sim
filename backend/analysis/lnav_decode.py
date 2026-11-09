@@ -129,6 +129,27 @@ def decode_ephemeris(subframes: dict) -> dict:
 _L1_HZ = 1575.42e6
 
 
+def _linear_wipe(iq, fs, f0: float, f1: float):
+    """Remove a LINEAR carrier f(t) = f0 + f1·t (Hz, Hz/s) from complex IQ.
+
+    Chunked so temporaries stay < ~30 MB. ``f1`` (Doppler rate) lets a
+    ~13 s sub-window stay phase-flat over its whole span even at several
+    Hz/s of Doppler drift -- wiping with a CONSTANT seed leaves ±3 Hz of
+    residual over 13 s at the observed −0.5 Hz/s, which rotates the 20 ms
+    bit integrators enough to wreck the parity chain.
+    """
+    iq = np.asarray(iq)
+    if not np.iscomplexobj(iq):
+        iq = iq.astype(np.complex64)
+    out = np.empty_like(iq, dtype=np.complex64)
+    step = 1 << 20
+    for s0 in range(0, iq.size, step):
+        e = min(s0 + step, iq.size)
+        t = np.arange(s0, e, dtype=np.float64) / fs
+        out[s0:e] = iq[s0:e] * np.exp(-2j * np.pi * (f0 * t + 0.5 * f1 * t * t))
+    return out
+
+
 def _prompt_per_ms(x_wiped, fs, ca, code_phase0_chips, code_rate, *, chunk_ms: int = 100):
     """Complex prompt correlator output, one sample per 1 ms C/A period,
     for a carrier-wiped signal and a given code chipping rate.
@@ -167,7 +188,8 @@ def _prompt_per_ms(x_wiped, fs, ca, code_phase0_chips, code_rate, *, chunk_ms: i
 
 
 def demod_nav_bits(iq, fs, prn, code_phase0_chips, doppler_hz, *,
-                   n_bits: int = 1500, align_ms: int | None = None):
+                   n_bits: int = 1500, align_ms: int | None = None,
+                   rate_span: float = 3.0):
     """Hard nav bits (``int8`` {0,1}) from IQ.
 
     Steps: prompt correlation to 1 ms samples, residual-frequency search,
@@ -205,29 +227,46 @@ def demod_nav_bits(iq, fs, prn, code_phase0_chips, doppler_hz, *,
     # peak prompt energy.
     base_rate = chip_hz * (1.0 + doppler_hz / _L1_HZ)
     best_p, best_e = None, -1.0
-    for drate in np.linspace(-3.0, 3.0, 31):
+    for drate in np.linspace(-rate_span, rate_span, 31):
         cand = _prompt_per_ms(x, fs, ca, code_phase0_chips, base_rate + drate)
         e = float(np.sum(np.abs(cand)))
         if e > best_e:
             best_e, best_p = e, cand
     p = best_p
+    mm = np.arange(p.size, dtype=np.float64)
+
+    # Carrier search uses the NON-COHERENT 20 ms-block energy criterion
+    # Σ|Σ_block p| over the first seconds of the prompt train. The previous
+    # coherent-sum criterion |Σ p·e^{-jwt}| is pulled toward zero by the random
+    # ±1 data modulation of the 50 bps stream (its peak lands on a lucky data
+    # pattern, not on the true residual) -- a real-IQ-only failure: clean
+    # synthetic IQ hides it, multi-SV captured tracks expose it.
+    #
+    # The residual and the bit phase are searched JOINTLY (argmax over
+    # (f, off)): an un-aligned argmax lets blocks straddle data transitions,
+    # and the straddling pattern deforms the broad |sinc|-like response
+    # enough to shift argmax by ~15 Hz off the true residual -- past the fine
+    # grid's reach (probe: real peaks sit inside the aligned-energy band the
+    # un-aligned scan skipped, deterministic per SV, quality-independent).
+    n_c = min(p.size, 2000)
+    best_f1, best_off, best_e1 = 0.0, 0, -1.0
+    if n_c >= 40:
+        pc = p[:n_c]
+        kc = np.arange(n_c, dtype=np.float64)
+        nbo = (n_c - 19) // 20
+        offs = np.arange(20)
+        ed0 = offs[:, None] + 20 * np.arange(nbo)[None, :]        # (20, nbo)
+        for f in np.arange(-50.0, 50.01, 0.5):
+            pw = pc * np.exp(-2j * np.pi * f * kc / 1000.0)
+            cs = np.concatenate(([0.0 + 0j], np.cumsum(pw)))
+            e_mat = np.abs(cs[ed0 + 20] - cs[ed0])                # (20, nbo)
+            e = float(e_mat.sum())
+            if e > best_e1:
+                best_off = int(np.argmax(e_mat.sum(axis=1)))
+                best_f1, best_e1 = float(f), e
+    p = p * np.exp(-2j * np.pi * best_f1 * mm[:p.size] / 1000.0)
+
     if align_ms is None:
-        # coarse carrier removal for the bit-sync search only: 1 ms-rate
-        # power spectrum peak of p**2 (data-free), then energy per offset.
-        sq = p[:min(p.size, 2000)] ** 2
-        spec = np.abs(np.fft.fft(sq, 8 * sq.size))
-        f2 = np.fft.fftfreq(8 * sq.size, d=1e-3)[int(np.argmax(spec))] / 2.0
-        mm = np.arange(p.size, dtype=np.float64)
-        pw = p * np.exp(-2j * np.pi * f2 * mm / 1000.0)
-        best_off, best_en = 0, -1.0
-        for off in range(20):
-            nbo = (pw.size - off) // 20
-            if nbo <= 0:
-                continue
-            en = float(np.sum(np.abs(
-                pw[off:off + nbo * 20].reshape(nbo, 20).sum(axis=1))))
-            if en > best_en:
-                best_off, best_en = off, en
         align_ms = best_off
     if align_ms:
         p = p[align_ms:]
@@ -236,27 +275,29 @@ def demod_nav_bits(iq, fs, prn, code_phase0_chips, doppler_hz, *,
     if nb == 0:
         return np.zeros(0, dtype=np.int8)
 
-    # residual carrier frequency: coarse 1 ms-rate search, then a fine
-    # parabolic refine (the phase must stay coherent across the whole
-    # capture, so sub-0.05 Hz accuracy matters over 20 s).
+    # (b) fine residual via a SQUARED-BLOCK TONE on the bit-aligned train.
+    # The non-coherent block-energy criterion CANNOT resolve small residuals:
+    # its |sum|20ms| response to f has a ~50 Hz main lobe, so neighbouring
+    # 0.05 Hz candidates differ only in noise -- argmax lands anywhere in
+    # ±3 Hz, and a consistent 2-3 Hz residual then rotates the block phase by
+    # up to 21.6 deg/bit (36 revolutions over 600 bits), the quadratic
+    # derotate fit breaks down and the parity chain dies. Deterministic per
+    # SV (depends on its data + noise), independent of signal quality -- the
+    # exact all-or-nothing failure signature. Squaring the block sums cancels
+    # the ±1 data modulation, giving a sharp tone at 2·f_res that the fine
+    # grid resolves (~0.006 Hz linewidth over the search span).
     m = np.arange(p.size, dtype=np.float64)
-    m_coarse = m[:min(p.size, 1000)]
-    p_coarse = p[:m_coarse.size]
-
-    def _mag(f):
-        return np.abs(np.sum(p_coarse * np.exp(-2j * np.pi * f * m_coarse
-                                               / 1000.0)))
-
-    grid = np.arange(-45.0, 45.01, 0.25)
-    mags = np.array([_mag(f) for f in grid])
-    j = int(np.argmax(mags))
-    best_f = grid[j]
-    if 0 < j < len(grid) - 1:
-        y0, y1, y2 = mags[j - 1], mags[j], mags[j + 1]
-        den = y0 - 2 * y1 + y2
-        if abs(den) > 1e-12:
-            best_f += 0.25 * 0.5 * (y0 - y2) / den
-    p = p * np.exp(-2j * np.pi * best_f * m / 1000.0)
+    blk = p[:nb * 20].reshape(nb, 20).sum(axis=1)
+    n_sq = min(nb, 600)
+    b2 = blk[:n_sq] * blk[:n_sq]
+    k_sq = np.arange(n_sq, dtype=np.float64)
+    best_f2, best_e2 = 0.0, -1.0
+    for f in np.arange(-3.0, 3.001, 0.05):
+        e = float(np.abs(np.sum(b2 * np.exp(
+            -2j * np.pi * (2.0 * f) * 20.0 * k_sq / 1000.0))))
+        if e > best_e2:
+            best_f2, best_e2 = float(f), e
+    p = p * np.exp(-2j * np.pi * best_f2 * m / 1000.0)
 
     bits = p.reshape(nb, 20).sum(axis=1)
     bits = derotate_bpsk_carrier(bits, deg=2)

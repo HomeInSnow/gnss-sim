@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="docx-page-size" content="A4">
+  <title>GNSS 仿真与接收解调交叉验证汇总报告</title>
+  <style>
+  /* 页面规则（页眉页脚模型）：正文页脚居中页码 */
+  @page {
+    @bottom-center { content: counter(page); }
+  }
+  @page cover {
+    @bottom-center { content: none; }
+  }
+  section[role="cover"] { page: cover; }
+
+  :root {
+    --fs-h1: var(--typography-fontSize-h1, 22pt);
+    --fs-h2: var(--typography-fontSize-h2, 16pt);
+    --fs-h3: var(--typography-fontSize-h3, 13pt);
+    --fs-body: var(--typography-fontSize-body, 12pt);
+    --fs-small: var(--typography-fontSize-small, 10pt);
+    --fs-cover-title: var(--typography-fontSize-coverTitle, 26pt);
+    --fs-cover-category: var(--typography-fontSize-coverCategory, 13pt);
+    --fs-cover-subtitle: var(--typography-fontSize-coverSubtitle, 14pt);
+    --fs-cover-info: var(--typography-fontSize-coverInfo, 11pt);
+    --fs-kpi: var(--typography-fontSize-kpi, 15pt);
+    --fs-table: var(--typography-fontSize-table, 10.5pt);
+    --ff-heading: var(--typography-fontFamily-heading, "微软雅黑", "Microsoft YaHei", sans-serif);
+    --ff-body: "SimSun", "宋体", serif;
+    --ff-mono: "Consolas", "Courier New", monospace;
+    --lh-body: var(--typography-lineHeight-body, 1.6);
+    --fw-bold: var(--typography-fontWeight-bold, 700);
+    --color-primary: var(--color-primary, #1a73e8);
+    --color-text: var(--color-text, #000000);
+    --color-muted: var(--color-muted, #666666);
+    --color-soft: var(--color-muted, #333333);
+    --color-border: var(--color-border, #cccccc);
+    --color-bg: var(--color-bg, #ffffff);
+    --color-highlight: var(--color-highlight, #f5f7fa);
+    --color-summary-bg: var(--color-highlight);
+    --color-summary-border: var(--color-primary);
+    --color-emphasis: var(--color-danger, #c62828);
+    --color-success: var(--color-success, #2e7d32);
+    --summary-border-width: var(--border-thick, 4px);
+    --border-thick: var(--typography-border-thick, 4px);
+    --border-thin: var(--typography-border-thin, 1px);
+    --radius-card: var(--spacing-block, 8px);
+    --spacing-paragraph: var(--spacing-paragraph, 0.8em);
+    --spacing-section: var(--spacing-section, 2em);
+    --spacing-block: var(--spacing-block, 1em);
+    --spacing-half: var(--spacing-half, 0.5em);
+    --spacing-third: var(--spacing-third, 0.3em);
+    --spacing-quarter: var(--spacing-quarter, 0.4em);
+    --spacing-small: var(--spacing-small, 0.6em);
+    --spacing-tall: var(--spacing-tall, 1.2em);
+    --spacing-big: var(--spacing-big, 1.4em);
+    --spacing-cover-top: var(--layout-coverTop, 320px);
+    --pad-cell-h: var(--layout-padCellH, 8px);
+    --pad-cell-v: var(--layout-padCellV, 5px);
+    --pad-cell-h-th: var(--layout-padCellHTh, 8px);
+    --pad-cell-v-th: var(--layout-padCellVTh, 6px);
+    --pad-code: var(--layout-padCode, 8px);
+    --margin-page: var(--layout-margin, 2.5cm);
+    --page-content-width: var(--layout-contentWidth, 15.6cm);
+    --indent-body: var(--typography-textIndent, 2em);
+    --indent-list: var(--typography-listIndent, 2em);
+    --letter-space: var(--typography-letterSpacing, 0.08em);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--ff-body); font-size: var(--fs-body); line-height: var(--lh-body); color: var(--color-text); background: var(--color-bg); max-width: var(--page-content-width); margin-left: auto; margin-right: auto; }
+
+  /* 封面 */
+  .cover-spacer { font-size: var(--fs-cover-title); text-indent: 0; margin-top: var(--spacing-cover-top); color: var(--color-primary); }
+  .cover-category { font-size: var(--fs-cover-category); font-family: var(--ff-heading); font-weight: var(--fw-bold); color: var(--color-primary); letter-spacing: var(--letter-space); margin-bottom: var(--spacing-half); text-align: left; }
+  .cover-title { font-size: var(--fs-cover-title); font-family: var(--ff-heading); font-weight: var(--fw-bold); color: var(--color-primary); margin-bottom: var(--spacing-half); text-align: left; }
+  .cover-subtitle { font-size: var(--fs-cover-subtitle); color: var(--color-muted); margin-bottom: var(--spacing-tall); text-align: left; font-family: var(--ff-heading); }
+  .cover-meta { font-size: var(--fs-small); color: var(--color-muted); text-align: left; }
+  .cover-info { border-collapse: collapse; margin-top: var(--spacing-block); }
+  .cover-info td { font-size: var(--fs-cover-info); color: var(--color-soft); padding: var(--pad-cell-v) var(--pad-cell-h); border: none; text-align: left; }
+
+  /* 目录 */
+  .doc-toc { padding: var(--spacing-block) 0; background: var(--color-bg); }
+  .toc-title { font-weight: var(--fw-bold); font-family: var(--ff-heading); font-size: var(--fs-h2); margin-bottom: var(--spacing-half); text-indent: 0; color: var(--color-text); }
+  .toc-list, .toc-list ol, .toc-list ul { list-style: none; list-style-type: none; padding-left: var(--indent-list); }
+  .toc-list li { margin-bottom: var(--spacing-third); text-indent: 0; font-size: var(--fs-body); color: var(--color-text); }
+  .toc-list a { color: var(--color-primary); text-decoration: none; }
+
+  /* 执行摘要 */
+  .executive-summary { margin: var(--spacing-section) 0; padding: var(--spacing-tall); border-left: var(--summary-border-width) solid var(--color-summary-border); background: var(--color-summary-bg); }
+  .summary-header { margin-bottom: var(--spacing-block); }
+  .summary-title { font-size: var(--fs-h2); font-family: var(--ff-heading); font-weight: var(--fw-bold); text-indent: 0; color: var(--color-text); }
+  .summary-badge { font-size: var(--fs-small); color: var(--color-muted); font-style: italic; }
+  .kpi-table { width: 100%; border-collapse: collapse; margin-bottom: var(--spacing-block); }
+  .kpi-table td { background: var(--color-bg); border: var(--border-thin) solid var(--color-border); padding: var(--pad-cell-v-th) var(--pad-cell-h); text-align: center; vertical-align: middle; }
+  .kpi-name { display: block; font-size: var(--fs-small); color: var(--color-muted); margin-bottom: var(--spacing-third); text-indent: 0; }
+  .kpi-value { display: block; font-size: var(--fs-kpi); font-weight: var(--fw-bold); color: var(--color-primary); font-family: var(--ff-heading); text-indent: 0; }
+  .summary-body { font-size: var(--fs-body); color: var(--color-text); }
+
+  /* 正文 */
+  .report-body h1 { font-size: var(--fs-h2); font-family: var(--ff-heading); font-weight: var(--fw-bold); color: var(--color-primary); margin-top: var(--spacing-tall); margin-bottom: var(--spacing-block); text-indent: 0; border-left: var(--border-thick) solid var(--color-primary); padding-left: var(--pad-cell-h); }
+  .report-body h2 { font-size: var(--fs-h3); font-family: var(--ff-heading); font-weight: var(--fw-bold); margin-top: var(--spacing-block); margin-bottom: var(--spacing-half); text-indent: 0; color: var(--color-text); }
+  .report-body p { font-family: var(--ff-body); font-size: var(--fs-body); line-height: var(--lh-body); margin-bottom: var(--spacing-paragraph); text-indent: var(--indent-body); color: var(--color-text); }
+  .report-body ol, .report-body ul { padding-left: var(--indent-list); margin-bottom: var(--spacing-paragraph); }
+  .report-body li { font-size: var(--fs-body); margin-bottom: var(--spacing-quarter); text-indent: 0; color: var(--color-text); }
+  .data-emphasis { color: var(--color-emphasis); font-weight: var(--fw-bold); }
+
+  /* 表格 */
+  .data-table { width: 100%; border-collapse: collapse; margin-bottom: var(--spacing-tall); }
+  .data-table th { background: var(--color-highlight); font-family: var(--ff-heading); font-size: var(--fs-table); font-weight: var(--fw-bold); padding: var(--pad-cell-v-th) var(--pad-cell-h-th); border: var(--border-thin) solid var(--color-border); text-align: center; color: var(--color-text); }
+  .data-table td { font-family: var(--ff-body); font-size: var(--fs-table); padding: var(--pad-cell-v) var(--pad-cell-h); border: var(--border-thin) solid var(--color-border); text-align: center; color: var(--color-text); }
+  .data-table td.td-left { text-align: left; }
+  .src-note { font-size: var(--fs-small); color: var(--color-muted); background: var(--color-highlight); padding: var(--pad-cell-v) var(--pad-cell-h); margin-bottom: var(--spacing-block); text-indent: 0; }
+
+  /* 图 */
+  .fig-block { margin: var(--spacing-small) 0 var(--spacing-big) 0; }
+  .fig-block img { width: 100%; display: block; margin-left: auto; margin-right: auto; }
+  .fig-caption { font-size: var(--fs-small); color: var(--color-muted); text-align: center; text-indent: 0; font-family: var(--ff-heading); margin-top: var(--spacing-third); margin-bottom: 0; }
+
+  /* 代码 */
+  .code-line { font-family: var(--ff-mono); font-size: var(--fs-table); background: var(--color-highlight); border: var(--border-thin) solid var(--color-border); padding: var(--pad-code); margin-bottom: var(--spacing-block); text-indent: 0; color: var(--color-soft); }
+
+  /* 附录 */
+  .appendix { border-top: var(--border-thin) solid var(--color-border); margin-top: var(--spacing-section); padding-top: var(--spacing-block); }
+  .appendix h1 { border-left: none; padding-left: 0; }
+  </style>
+</head>
+<body>
+  <section role="cover">
+    <p class="cover-spacer">&nbsp;</p>
+    <p class="cover-category">GNSS 信号仿真 · 技术验证报告</p>
+    <p class="cover-title">GNSS 仿真与接收解调<br>交叉验证汇总报告</p>
+    <p class="cover-subtitle">GPS L1 C/A 与 Galileo E1B 全观测量逐星逐历元对账 · VERDICT: PASS</p>
+    <table class="cover-info">
+      <thead></thead>
+      <tbody>
+        <tr><td>验证场景</td><td>郑州 · 25 星（GPS 10 + Galileo 15）· 60 s @ 5 Msps int8</td></tr>
+        <tr><td>数据批次</td><td>run 20261106T084558776704（native 引擎）</td></tr>
+        <tr><td>验证工具</td><td>scripts/verify_sim_rx.py（七组量交叉对账 + 导航电文字段级比对）</td></tr>
+        <tr><td>报告日期</td><td>2026-11-10 · v1.0</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section role="cover">
+  <nav class="doc-toc" aria-label="文档目录">
+    <p class="toc-title">目录</p>
+    <ol class="toc-list">
+      <li><a href="#section-1">1 验证对象与数据场景</a>
+        <ol>
+          <li><a href="#section-1-1">1.1 场景配置</a></li>
+          <li><a href="#section-1-2">1.2 交叉验证方法</a></li>
+          <li><a href="#section-1-3">1.3 对比量分组</a></li>
+        </ol>
+      </li>
+      <li><a href="#section-2">2 总体结论</a></li>
+      <li><a href="#section-3">3 码相位与伪距</a></li>
+      <li><a href="#section-4">4 多普勒与载波相位</a></li>
+      <li><a href="#section-5">5 信号强度链路</a></li>
+      <li><a href="#section-6">6 导航电文解码验证</a></li>
+      <li><a href="#section-7">7 定位精度闭环</a></li>
+      <li><a href="#section-8">8 结论与已知边界</a></li>
+      <li><a href="#section-9">附录 A 复现方法与数据清单</a></li>
+    </ol>
+  </nav>
+  </section>
+
+  <section role="body" class="report-body" data-page-restart="1">
+
+    <div class="executive-summary">
+      <div class="summary-header">
+        <p class="summary-title" style="display:inline;">执行摘要</p>
+        <p style="display:inline; text-indent:0; margin-left:12px;"><span class="summary-badge">Executive Summary</span></p>
+      </div>
+      <table class="kpi-table">
+        <thead></thead>
+        <tbody>
+          <tr>
+            <td><span class="kpi-name">检查项通过</span><span class="kpi-value">24 / 24</span></td>
+            <td><span class="kpi-name">导航电文字段比对</span><span class="kpi-value">610 零不符</span></td>
+            <td><span class="kpi-name">跟踪码相位 RMS 最差</span><span class="kpi-value">0.019 码片</span></td>
+            <td><span class="kpi-name">定位误差（相干跟踪）</span><span class="kpi-value">0.17 m</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="summary-body">
+        <p style="text-indent:2em;">&nbsp;&nbsp;本报告对信号仿真侧与接收解调侧的全部可观测量进行逐星、逐历元的交叉对账，覆盖码相位、伪距、多普勒、载波相位、信号强度、几何参数与导航电文七组对比，共 24 项检查与 610 个导航电文字段。全部检查一次性判定为 <span class="data-emphasis">PASS</span>：跟踪级码相位误差 RMS 最差 0.019 码片（门限 0.02），跟踪级伪距误差 RMS 最差 5.6 米（门限 8 米），多普勒跟踪一致性 RMS 最差 0.41 赫兹（门限 2 赫兹），GPS 10 星与 Galileo 15 星的广播星历字段解码比对<span class="data-emphasis">零不符</span>。三维定位误差从快照解算的 3.97 米收敛到相干跟踪解算的 0.17 米，达到亚米级。上述结果表明仿真注入链路与接收处理链路完全吻合，仿真数据可作为接收算法验证的可信基准。</p>
+      </div>
+    </div>
+
+    <main>
+      <h1 id="section-1">1 验证对象与数据场景</h1>
+
+      <h2 id="section-1-1">1.1 场景配置</h2>
+      <p>本次验证基于原生 C++20 信号仿真引擎生成的一组 IQ 采样数据，场景配置如表 1。</p>
+      <p class="src-note">表 1　验证场景配置</p>
+      <table class="data-table">
+        <thead><tr><th>配置项</th><th>取值</th></tr></thead>
+        <tbody>
+          <tr><td class="td-left">场景位置</td><td class="td-left">郑州（北纬 34.7466°，东经 113.6254°）</td></tr>
+          <tr><td class="td-left">仿真起点</td><td class="td-left">2026-10-10T04:00:00 UTC</td></tr>
+          <tr><td class="td-left">信号时长</td><td class="td-left">60 s（30 个 1 s 验证历元）</td></tr>
+          <tr><td class="td-left">采样率 / 量化</td><td class="td-left">5 Msps / int8</td></tr>
+          <tr><td class="td-left">星座</td><td class="td-left">GPS L1 C/A 10 星 + Galileo E1B 15 星，共 25 星</td></tr>
+          <tr><td class="td-left">星历模式</td><td class="td-left">广播星历（BRDC_2026283.rnx，含 Klobuchar 电离层与 Saastamoinen 对流层注入）</td></tr>
+          <tr><td class="td-left">生成引擎</td><td class="td-left">native（C++20 引擎，含发射钟 / 码相位 / 多普勒 / 载波相位全要素注入）</td></tr>
+          <tr><td class="td-left">落盘产物</td><td class="td-left">gpssim.bin（IQ）、meta.json（逐星注入真值）、trace_sim / trace_rx / trace_dll / verify_sim_rx 四份 json</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="section-1-2">1.2 交叉验证方法</h2>
+      <p>验证的基本思路是"仿真注入真值 ↔ 接收测量值"闭环对账，而非与外部参考比对。生成侧将每颗卫星的伪距、多普勒、码相位、载波相位、增益等真值写入 IQ 文件的元数据（provenance）与逐历元轨迹文件（trace_sim.json）；验证侧内置接收机从同一份 IQ 出发，独立走完捕获（FFT 圆相关）、位/环跟踪（DLL + FLL / PLL）、快照或跟踪伪距构造、最小二乘定位与导航电文译码全流程，其结果落盘 trace_rx.json / trace_dll.json。</p>
+      <p>工具 scripts/verify_sim_rx.py 在统一 1 s 历元栅格上把两侧数据逐项对齐，剔除各量的每星常数偏差（该常数按定义应已知，另存 json 备查）后，对剩余序列取 RMS / 最大值与门限比较；对导航电文则把解码字段与星历注入记录逐字段核对。任何一侧的配方漂移（记录选择、历元对齐、大气注入、比特定时等）都会以某组量超差的形式暴露，这正是"相互验证"的判别力所在。</p>
+
+      <h2 id="section-1-3">1.3 对比量分组</h2>
+      <p class="src-note">表 2　七组交叉对比量与核心检查</p>
+      <table class="data-table">
+        <thead><tr><th>组</th><th>仿真侧量</th><th>接收侧量</th><th>核心检查</th></tr></thead>
+        <tbody>
+          <tr><td>码相位</td><td class="td-left">provenance 码相位 / trace ph_syn</td><td class="td-left">捕获 code_phase、跟踪 chi</td><td class="td-left">快照 / 跟踪 RMS、最大偏差</td></tr>
+          <tr><td>伪距</td><td class="td-left">pr_truth + 大气注入</td><td class="td-left">meas_pr − pred_pr 残差</td><td class="td-left">RMS、最大偏差</td></tr>
+          <tr><td>多普勒</td><td class="td-left">fd_geo 几何多普勒</td><td class="td-left">FLL 输出 fd_meas</td><td class="td-left">去常数后 RMS、快照落入捕获栅格</td></tr>
+          <tr><td>载波相位</td><td class="td-left">相位锚点残差</td><td class="td-left">PLL 锚定残差</td><td class="td-left">线性漂移率、抖动</td></tr>
+          <tr><td>信号强度</td><td class="td-left">注入增益 gain_db</td><td class="td-left">逐星 C/N₀</td><td class="td-left">跨星回归斜率与相关系数</td></tr>
+          <tr><td>几何</td><td class="td-left">弹道方位 / 仰角</td><td class="td-left">接收端复算仰角</td><td class="td-left">最大偏差</td></tr>
+          <tr><td>导航电文</td><td class="td-left">广播星历注入记录</td><td class="td-left">LNAV / I/NAV 解码字段</td><td class="td-left">解码覆盖、逐字段容差比对</td></tr>
+        </tbody>
+      </table>
+
+      <h1 id="section-2">2 总体结论</h1>
+      <p>两系统全部 24 项检查的"最差值 / 门限"归一化对比见图 1：所有条目均处于门限以内，且多数留有 2 倍以上裕度。各项数值汇总于表 3（G 取 10 星、E 取 15 星中的最差 / 均值）。</p>
+      <div class="fig-block">
+        <img src="images/fig01_overview.png" alt="图1 全部检查项归一化总览">
+        <p class="fig-caption">图 1　两系统全部检查项归一化总览（越靠近左侧越好，虚线为门限）</p>
+      </div>
+      <p class="src-note">表 3　24 项检查值汇总（数值为逐星最差值 / 均值）</p>
+      <table class="data-table">
+        <thead><tr><th>检查项</th><th>定义</th><th>G 最差</th><th>G 门限</th><th>E 最差</th><th>E 门限</th><th>判定</th></tr></thead>
+        <tbody>
+          <tr><td>码相位跟踪 RMS</td><td class="td-left">去常数后（ch）</td><td>0.0148</td><td>0.02</td><td>0.0192</td><td>0.02</td><td>PASS</td></tr>
+          <tr><td>码相位跟踪最大</td><td class="td-left">失锁筛查（ch）</td><td>0.079</td><td>0.15</td><td>0.103</td><td>0.15</td><td>PASS</td></tr>
+          <tr><td>伪距跟踪 RMS</td><td class="td-left">去常数后（m）</td><td>4.34</td><td>8.0</td><td>5.62</td><td>8.0</td><td>PASS</td></tr>
+          <tr><td>伪距跟踪最大</td><td class="td-left">（m）</td><td>23.1</td><td>45.0</td><td>30.0</td><td>45.0</td><td>PASS</td></tr>
+          <tr><td>多普勒跟踪 RMS</td><td class="td-left">去常数后（Hz）</td><td>0.409</td><td>2.0</td><td>0.060</td><td>2.0</td><td>PASS</td></tr>
+          <tr><td>码相位快照 RMS</td><td class="td-left">捕获级（ch）</td><td>0.077</td><td>0.177</td><td>0.060</td><td>0.177</td><td>PASS</td></tr>
+          <tr><td>伪距快照 RMS</td><td class="td-left">捕获级（m）</td><td>22.7</td><td>53.9</td><td>17.7</td><td>53.9</td><td>PASS</td></tr>
+          <tr><td>多普勒快照最大</td><td class="td-left">落入 ±4.4 捕获栅格（Hz）</td><td>146.5</td><td>220</td><td>100.1</td><td>220</td><td>PASS</td></tr>
+          <tr><td>载波相位漂移率</td><td class="td-left">锚定残差线性项（cyc/s）</td><td>0.0287</td><td>0.5</td><td>0.0182</td><td>0.5</td><td>PASS</td></tr>
+          <tr><td>仰角最大偏差</td><td class="td-left">接收复算 vs 弹道（°）</td><td>0.000</td><td>1.0</td><td>0.000</td><td>1.0</td><td>PASS</td></tr>
+          <tr><td>强度回归斜率偏差</td><td class="td-left">|斜率 − 1|</td><td>0.011</td><td>0.25</td><td>0.172</td><td>0.25</td><td>PASS</td></tr>
+          <tr><td>强度相关系数</td><td class="td-left">Pearson r</td><td>0.998</td><td>0.60</td><td>0.775</td><td>0.60</td><td>PASS</td></tr>
+        </tbody>
+      </table>
+      <p>其中"去常数"是判定的关键设计：接收机环路对观测量存在已知且应已知的每星常数项（如 FLL 的频率偏置），验证关注的是扣除常数后的<strong>一致性</strong>（环路噪声量级），常数本身另行落盘审计，两者不混同。</p>
+
+      <h1 id="section-3">3 码相位与伪距</h1>
+      <p>跟踪级码相位误差（测量码相位 − 预测码相位）逐星统计见图 2：GPS 最差星 <span class="data-emphasis">0.0148 码片</span>，Galileo 最差星 0.0192 码片，均低于 0.02 码片门限，对应伪距量级约 4–6 米；同一场景下捕获级（快照）RMS 约 0.06–0.08 码片，两者差距即"环路的增益"。</p>
+      <div class="fig-block">
+        <img src="images/fig02_code.png" alt="图2 码相位误差逐星分布">
+        <p class="fig-caption">图 2　码相位误差逐星分布：上 GPS、下 Galileo，浅色为捕获快照、深色为环内跟踪</p>
+      </div>
+      <p>伪距侧同样呈两级结构（图 3）：跟踪级 RMS 全部低于 6 米，快照级 RMS 约 17–23 米——5 Msps 采样的码相位量化 σ≈0.059 码片是其主因，门限据此按 3σ × 每码片距离标定。</p>
+      <div class="fig-block">
+        <img src="images/fig03_pr.png" alt="图3 伪距误差逐星分布">
+        <p class="fig-caption">图 3　伪距误差逐星分布：上 GPS、下 Galileo</p>
+      </div>
+      <p>逐历元视角（图 6）可见误差随时间无系统性增长：两颗代表星（G2、E4）的伪距测量−预测差在 ±20 米内随机波动，无台阶、无漂移，说明每星常数归零后不存在未建模的慢变项。</p>
+      <div class="fig-block">
+        <img src="images/fig06_pr_epoch.png" alt="图6 逐历元伪距差">
+        <p class="fig-caption">图 6　G2 / E4 逐历元伪距测量−预测差</p>
+      </div>
+
+      <h1 id="section-4">4 多普勒与载波相位</h1>
+      <p>多普勒跟踪的一致性（图 4 左列）远好于门限：GPS 最差 <span class="data-emphasis">0.41 Hz</span>，Galileo 最差 0.06 Hz。右列为扣除常数偏差后的剩余序列：FLL 输出相对注入真值存在约 −7 Hz 的每星常数偏置（该值已按设计落盘备查，不计入一致性判定），扣除后各星围绕零线抖动，验证频率链路的动态跟踪能力。</p>
+      <div class="fig-block">
+        <img src="images/fig04_fd.png" alt="图4 多普勒跟踪一致性">
+        <p class="fig-caption">图 4　多普勒跟踪 RMS（左）与扣除常数偏置后的剩余（右）</p>
+      </div>
+      <p>代表星的逐历元曲线（图 5）直观展示闭环跟踪质量：接收机 FLL 输出精确复现仿真注入的几何多普勒时变曲线（本场景 60 s 内扫过约 13 Hz），码相位跟踪误差在 ±0.08 码片内收敛。</p>
+      <div class="fig-block">
+        <img src="images/fig05_trace_g2_e4.png" alt="图5 代表星逐历元曲线">
+        <p class="fig-caption">图 5　G2 / E4 逐历元多普勒对比与码相位跟踪误差</p>
+      </div>
+      <p>载波相位方面，锚定残差（相位测量 + 伪距 / 波长折算项）的线性漂移率 GPS 最差 0.029、Galileo 最差 0.018 周 / 秒，远低于 0.5 周 / 秒门限。残余的微小漂移率源自仿真侧相位节点的高程量化（约 1e-10 s 分辨率），属注入侧已知、可解释的极限，不影响环路判定。</p>
+
+      <h1 id="section-5">5 信号强度链路</h1>
+      <p>跨星回归检验"仿真注入增益 → 接收机 C/N₀"链路的传递函数（图 7）：GPS 拟合斜率与理想值 1 的偏差仅 <span class="data-emphasis">0.011</span>、相关系数 0.998，即注入每变化 1 dB，实测 C/N₀ 几乎严格跟随 1 dB；Galileo 偏差 0.172、相关系数 0.775，仍在门限内——E1 BOC 调制的相关峰形状使低 C/N₀ 端的度量有所抬升，属接收度量侧的已知特性而非仿真失真。</p>
+      <div class="fig-block">
+        <img src="images/fig07_strength.png" alt="图7 注入增益与实测C/N0回归">
+        <p class="fig-caption">图 7　注入增益 vs 实测 C/N₀ 跨星回归</p>
+      </div>
+
+      <h1 id="section-6">6 导航电文解码验证</h1>
+      <p>导航电文是最强的"内容级"验证：任何比特级的仿真—解调不吻合都会破坏奇偶校验链或令字段值漂移。验证配方为：以环内跟踪结果为种子（跟踪多普勒 + 首历元码相位），GPS 侧对 13 s 子窗做比特解调（联合频率—比特对齐的块能量判据 + 50 bps 速率网格搜索）后经 Gold 奇偶链寻帧；Galileo 侧以跟踪种子 + 55 s 窗解 8,000 sps 符号流，经二级奇偶校验收齐 26 页 I/NAV。解码结果与 RINEX 广播星历注入记录逐字段比对：整数与枚举字段零容差，浮点字段按 1 LSB 容差，GPS 周号按 10-bit 字段特性作周翻转比对，Galileo 钟差 af0 叠加 E5a→E5b 群延迟（IFB）修正后比对。</p>
+      <div class="fig-block">
+        <img src="images/fig08_nav.png" alt="图8 导航电文解码覆盖">
+        <p class="fig-caption">图 8　导航电文解码覆盖：左 GPS 子帧、右 Galileo I/NAV 页</p>
+      </div>
+      <p>结果：GPS <span class="data-emphasis">10 / 10 星</span>解出完整子帧集（1 / 2 / 3 / 5），共核对 250 个字段；Galileo <span class="data-emphasis">15 / 15 星</span>解出全部 26 页（类型 0–6），共核对 360 个字段；两系统字段比对<span class="data-emphasis">零不符</span>。星历轨道根数（√A、e、i₀、Ω₀、M₀、Δn、toe 等）、钟差三项、健康位、IODC / IODnav、电离层参数全部与注入记录一致。</p>
+
+      <h1 id="section-7">7 定位精度闭环</h1>
+      <p>单点定位给出系统级的合成检验（图 9）：快照解算（捕获级伪距）误差 3.97 米（PDOP 1.04、25 星、残差 RMS 16 米）；切换环内跟踪伪距后收敛至 1.00 米；采用相干 E/L + Costas PLL 跟踪配方后达 <span class="data-emphasis">0.17 米</span>；在 20 Msps 采样率的姊妹场景下同配方达 0.12 米。从"量化地板 → 环路 → 相干跟踪"的精度阶梯逐级兑现，且每级改善量均可由对应观测量（快照 RMS、跟踪 err_chips RMS、相位抖动）定量解释，说明系统不存在"定位准但观测量不吻合"的假象。</p>
+      <div class="fig-block">
+        <img src="images/fig09_position.png" alt="图9 定位误差阶梯">
+        <p class="fig-caption">图 9　定位误差阶梯：快照 3.97 m → 非相干跟踪 1.00 m → 相干跟踪 0.17 m → 20 Msps 相干 0.12 m</p>
+      </div>
+
+      <h1 id="section-8">8 结论与已知边界</h1>
+      <p><strong>结论</strong>：在本场景内，仿真注入与接收解调在全部七组观测量上逐星、逐历元吻合，导航电文内容级比对零不符，定位精度达到并优于设计目标。两闭环互相印证，可判定<span class="data-emphasis">仿真与接收处理完全吻合</span>；该 IQ 数据与验证工具链可作为接收算法（捕获、环路、抗干扰、多系统组合）研发的可信回归基准。</p>
+      <p>已知边界（均不改变判定，但使用时应知悉）：</p>
+      <ol>
+        <li>5 Msps 采样对码相位存在 σ≈0.059 码片的量化地板，是快照级误差与定位精度的主限；需要亚米级基准时应使用 ≥20 Msps 数据（已有 20 Msps 场景验证 err_chips RMS 0.0019 码片 ≈ 0.55 米）。</li>
+        <li>接收机 FLL 对注入多普勒存在约 −7 Hz 的每星常数偏置（环路带宽内的稳态偏置），验证与使用跟踪输出时应扣除或重标定该常数。</li>
+        <li>Galileo E1B 的 C/N₀ 度量随 C/N₀ 水平有轻微非线性（BOC 相关峰所致），强度链路判定容差已相应放宽（|斜率 − 1| &lt; 0.25）。</li>
+        <li>载波相位的每星微小漂移率（≤0.13 周 / 秒量级）源自仿真侧相位节点量化，属注入侧固有极限；接收侧按模糊度 + 慢速率参数化处理。</li>
+        <li>本判定基于广播星历（单组星历记录、单次运行）。跨日期、多星座扩展（含 BeiDou）与动态场景的验证由既有回归脚本另行覆盖。</li>
+      </ol>
+    </main>
+
+    <div class="appendix">
+      <h1 id="section-9">附录 A　复现方法与数据清单</h1>
+      <p style="text-indent:0;">复现命令：</p>
+      <p class="code-line">python scripts/verify_sim_rx.py 20261106T084558776704 --nav</p>
+      <table class="data-table">
+        <thead><tr><th>文件</th><th>内容</th></tr></thead>
+        <tbody>
+          <tr><td class="td-left">verify_sim_rx.json</td><td class="td-left">本报告全部判定与逐星明细（verdict / summary / per_sv / nav）</td></tr>
+          <tr><td class="td-left">trace_sim.json · trace_rx.json</td><td class="td-left">逐历元仿真 ↔ 接收轨迹对账数据</td></tr>
+          <tr><td class="td-left">trace_dll.json</td><td class="td-left">环内跟踪逐历元明细（err_chips、fd_meas、相位）</td></tr>
+          <tr><td class="td-left">meta.json · gpssim.bin</td><td class="td-left">场景配置、逐星注入真值与 IQ 数据</td></tr>
+          <tr><td class="td-left">figs/fig01–fig09.png</td><td class="td-left">本报告图件（out/&lt;runid&gt;/figs/）</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</body>
+</html>
