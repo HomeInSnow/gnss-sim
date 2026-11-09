@@ -31,8 +31,8 @@ def default_atmo_fn(rinex_path, approx_llh, t_gps_sow):
     lat_rad = math.radians(lat_deg)
     lon_rad = math.radians(lon_deg)
 
-    def atmo_delay(az_rad: float, el_rad: float, carrier_hz: float,
-                   sysc: str | None = None) -> float:
+    def _atmo_parts(az_rad: float, el_rad: float, carrier_hz: float,
+                    sysc: str | None = None) -> tuple[float, float]:
         # Mirror the engine's injection policy (synth/engine.py _atmo_for):
         # Galileo I/NAV broadcasts NeQuick-G ai0..ai2 = 0, so the generator
         # injects NO ionosphere for E (troposphere still applies). A receiver
@@ -64,8 +64,20 @@ def default_atmo_fn(rinex_path, approx_llh, t_gps_sow):
             if cfg.troposphere == "saastamoinen"
             else 0.0
         )
-        return float(iono + tropo)
+        return float(iono), float(tropo)
 
+    def atmo_delay(az_rad: float, el_rad: float, carrier_hz: float,
+                   sysc: str | None = None) -> float:
+        # CODE-side total delay (ionospheric + tropospheric group delay).
+        i, t = _atmo_parts(az_rad, el_rad, carrier_hz, sysc)
+        return i + t
+
+    # Carrier-phase anchor needs the split: the generator advances the
+    # CARRIER by the ionosphere while delaying code AND carrier phase by the
+    # troposphere (engine _trajectory_knots: geo - iono + tropo). Anchoring
+    # phi on the code total (geo + iono + tropo) instead injects a 2*iono
+    # term whose slow rate looks like per-SV carrier-phase drift.
+    atmo_delay.components = _atmo_parts        # (iono_m, tropo_m)
     return atmo_delay
 
 
@@ -374,15 +386,31 @@ def fix_from_iq_l1_multi_tracked(
         t_g = np.arange(0.0, track_s + 0.51, 0.25)
         fd_g = np.empty(len(t_g))
         pr_g = np.empty(len(t_g))
+        pr_c_g = np.empty(len(t_g))          # CARRIER-consistent anchor
+        comps = getattr(atmo_fn, "components", None) if atmo_fn else None
         for i, tk in enumerate(t_g):
             o_n = geometry.observables(state, approx_rx,
                                        approx_time_gps + float(tk),
                                        signal=sig, sv_clock_bias_s=svb)
             fd_g[i] = o_n["carrier_doppler_hz"]
-            atmo_n = float(atmo_fn(math.radians(o_n["az_deg"]),
-                                   math.radians(o_n["el_deg"]),
-                                   carrier_hz, sysc)) if atmo_fn else 0.0
+            if comps is not None:
+                iono_n, tropo_n = comps(math.radians(o_n["az_deg"]),
+                                        math.radians(o_n["el_deg"]),
+                                        carrier_hz, sysc)
+                atmo_n = iono_n + tropo_n
+            elif atmo_fn is not None:
+                atmo_n = float(atmo_fn(math.radians(o_n["az_deg"]),
+                                       math.radians(o_n["el_deg"]),
+                                       carrier_hz, sysc))
+                iono_n, tropo_n = 0.0, atmo_n
+            else:
+                atmo_n = iono_n = tropo_n = 0.0
             pr_g[i] = o_n["pseudorange_m"] + atmo_n
+            # engine cph node model is geo - iono + tropo (iono ADVANCES the
+            # carrier): anchoring the phase residual on the code total
+            # (geo + iono + tropo) leaves 2*iono whose slow rate masquerades
+            # as per-SV carrier-phase drift.
+            pr_c_g[i] = o_n["pseudorange_m"] - iono_n + tropo_n
         trk = SVTracker(get_window_for(bid), fs, sysc, sv["prn"],
                         chip_hz=sig.chip_rate_hz, code_len=sig.code_len,
                         carrier_hz=float(sig.carrier_hz),
@@ -430,15 +458,17 @@ def fix_from_iq_l1_multi_tracked(
                 err_med = float(np.median(e_s))
         err_used = err_chips if err_med is None else err_med
         # Carrier-phase observable (coh): the tracked NCO phase follows
-        # -pred_pr/lambda + per-SV constant (engine carrier-phase model,
-        # see _trajectory_knots cph); the anchored residual
-        # phi + pr/lambda is a CONTINUOUS near-constant sequence (the
-        # tracker books phase to absolute times and logs at the true
-        # sample time), so mean-removing it directly gives the phase
-        # noise; unwrap() only guards against rare PLL step jumps.
-        # A few hundredths of a cycle = healthy lock.
+        # -rho_carr/lambda + per-SV constant, rho_carr = geo - iono + tropo
+        # (engine _trajectory_knots cph). The anchored residual
+        # phi + rho_carr/lambda is continuous (the tracker books phase to
+        # absolute times); a genuine receiver estimates its per-SV constant
+        # (ambiguity) AND a slow rate (clock/bias) anyway, so loop quality
+        # is the LINEAR-DETRENDED RMS -- the raw RMS just re-displays that
+        # deterministic drift (obs. E-side raw 0.32 cyc vs detrended 0.03).
+        # unwrap() only guards against rare PLL step jumps.
         ph_cycles = m.get("carrier_phase_cycles")
         ph_rms = None
+        ph_drift = None
         if ph_cycles is not None and len(trk.phase_log) >= 16:
             tl2 = np.array(trk.t_log, float)
             ph = np.array(trk.phase_log, float)
@@ -446,9 +476,11 @@ def fix_from_iq_l1_multi_tracked(
             if sel2.sum() >= 16:
                 lam = config.C / carrier_hz
                 phr = np.unwrap(ph[sel2]
-                                + np.interp(tl2[sel2], t_g, pr_g) / lam)
-                phr = phr - float(np.mean(phr))
-                ph_rms = float(np.sqrt(np.mean(phr * phr)))
+                                + np.interp(tl2[sel2], t_g, pr_c_g) / lam)
+                pfit = np.polyfit(tl2[sel2], phr, 1)
+                ph_drift = float(pfit[0])                  # cyc/s
+                res = phr - np.polyval(pfit, tl2[sel2])
+                ph_rms = float(np.sqrt(np.mean(res * res)))
         measured_pr = pred_pr + err_used * (config.C / sig.chip_rate_hz)
         pos, _vel, _tof, clk = geometry.solve_transmit_time(
             state, approx_rx, approx_time_gps + track_s)
@@ -463,7 +495,9 @@ def fix_from_iq_l1_multi_tracked(
             "chip_rms_hist": None,      # filled below from session logs
             "fd_meas_hz": m["doppler_hz"],
             "carrier_phase_cycles": ph_cycles,
-            "phase_rms_cycles": ph_rms,
+            "phase_rms_cycles": ph_rms,       # linear-detrended loop jitter
+            "phase_drift_cycps": ph_drift,    # per-SV bias-rate (absorbed
+                                              # by a real user's clock/amb. est.)
             "pll_off_hz": m.get("pll_off_hz"),
             "n_pll_skipped": m.get("n_pll_skipped"),
             "metric_db": acq["metric_db"],

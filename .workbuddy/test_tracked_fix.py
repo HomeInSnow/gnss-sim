@@ -81,10 +81,15 @@ if len(ecv):
           f"  max={np.max(np.abs(ecv)):.5f} ch")
 prs = [v["phase_rms_cycles"] for v in tr["per_sv"].values()
        if v.get("phase_rms_cycles") is not None]
+dru = [abs(v["phase_drift_cycps"]) for v in tr["per_sv"].values()
+       if v.get("phase_drift_cycps") is not None]
 if prs:
     prs = np.array(prs)
-    print(f"  phase anchored resid: mean={prs.mean():.5f}  max={prs.max():.5f} cyc"
-          f"  (x{config.C / 1.57542098e9 * 100:.2f} cm/cyc)")
+    print(f"  phase jitter (anchored, detrended): mean={prs.mean():.5f}"
+          f"  max={prs.max():.5f} cyc"
+          f"  (x{config.C / 1.57542098e9 * 100:.2f} cm/cyc)"
+          + (f"  |drift| mean={np.mean(dru):.4f} max={np.max(dru):.4f} cyc/s"
+             if dru else ""))
     for sysp in sorted({k[0] for k in tr["per_sv"]}):
         sub = [v["phase_rms_cycles"] for k, v in tr["per_sv"].items()
                if k.startswith(sysp) and v.get("phase_rms_cycles") is not None]

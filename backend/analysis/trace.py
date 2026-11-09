@@ -553,15 +553,25 @@ def dump_rx_trace_dll(outdir, *, step_s: float = 1.0, n_max: int = 30,
         if coh:
             rows["phase_cycles"] = []
             rows["phase_resid_cycles"] = []
+        # Carrier-phase anchor must use the CARRIER-consistent delay
+        # (geo - iono + tropo, engine cph): the code-side +iono would inject
+        # 2*iono into the wrapped residual and smear the G-side plots.
+        comps = getattr(atmo_fn, "components", None)
         for k in range(n_epochs):
             m = trk.measure(t_s[k])
             if not m:
                 break
             o = geometry.observables(state, approx_rx, ctx["sow"] + t_s[k],
                                      signal=sig, sv_clock_bias_s=svb)
-            atmo_m = float(atmo_fn(math.radians(o["az_deg"]),
-                                   math.radians(o["el_deg"]), carrier_hz,
-                                   sysc))
+            if comps is not None:
+                iono_m, tropo_m = comps(math.radians(o["az_deg"]),
+                                        math.radians(o["el_deg"]),
+                                        carrier_hz, sysc)
+            else:
+                iono_m, tropo_m = 0.0, float(atmo_fn(
+                    math.radians(o["az_deg"]), math.radians(o["el_deg"]),
+                    carrier_hz, sysc))
+            atmo_m = iono_m + tropo_m
             pred_pr = o["pseudorange_m"] + atmo_m
             ph_pred = (pred_pr / config.C * chip_hz) % code_len
             rows["chi_chips"].append(m["chi_chips"])
@@ -578,7 +588,8 @@ def dump_rx_trace_dll(outdir, *, step_s: float = 1.0, n_max: int = 30,
                 rows["phase_cycles"].append(pc)
                 rows["phase_resid_cycles"].append(
                     None if pc is None
-                    else _wrap(pc + pred_pr / lam, 1.0))
+                    else _wrap(pc + (o["pseudorange_m"] - iono_m
+                                     + tropo_m) / lam, 1.0))
         if not rows["chi_chips"]:
             continue
         out["svs"][key] = {

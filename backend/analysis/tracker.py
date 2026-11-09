@@ -159,7 +159,16 @@ class SVTracker:
         wn = 2.0 * np.pi * float(pll_bw)
         self._pll_kp = 0.5                                   # phase prop.
         self._pll_ki = float(np.clip(2.0 * 0.7 * wn * self.t_coh,
-                                     0.02, 0.35))            # freq integr.
+                                     0.005, 0.35))           # freq integr.
+        if self.mode == "coh" and self.t_coh <= 0.005:
+            # Single-block coherent windows (E1: t_coh=4 ms < 10 ms code
+            # period): the loop moves only on ONE cross-window lag-1
+            # difference, so a wide-bandwidth ki just makes the frequency
+            # integrator twitch between DLL windows and leaks into phase.
+            # A/B 2026-11-09: E phRMS 0.0252 -> 0.0199 cyc at ki=0.01,
+            # error_m unchanged; 0.005 shrinks jitter more but slows
+            # pull-in (error_m 0.39 -> 0.54 at track_s=2). Cap at 0.01.
+            self._pll_ki = min(self._pll_ki, 0.01)
         self._lastP: tuple[complex, float] | None = None     # (P, t_abs)
         self._p_ref = 0.0
         self.n_dropped = 0
