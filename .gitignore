@@ -25,3 +25,6 @@ backend/synth/native/*.a
 # OS
 Thumbs.db
 .DS_Store
+
+# WPS/Office 编辑器占用锁文件
+~$*

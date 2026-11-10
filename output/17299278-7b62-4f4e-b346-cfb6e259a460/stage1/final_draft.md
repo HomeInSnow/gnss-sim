@@ -48,6 +48,59 @@
 | 几何 | 弹道方位/仰角 | 接收端复算仰角 | 最大偏差 |
 | 导航电文 | 广播星历注入记录 | LNAV / I/NAV 解码字段 | 解码覆盖、逐字段容差比对 |
 
+### 1.5 仿真数据的产生办法（生成侧链路）
+
+仿真数据由一条五步流水线产生，逐步落盘、每步可独立复现：
+
+| 步 | 动作 | 实现位置 | 产物 |
+|----|------|----------|------|
+| 1 | 场景请求：郑州 (34.7466, 113.6254, 110 m)、2026-10-10T04:00:00 UTC 起 60 s、5 Msps int8、G+E 双系统、`atmosphere={"ionosphere":"off","troposphere":"off"}`、`sv_clock=False`、engine=native | `.workbuddy/make_run_noclock.py` 构造 ScenarioRequest，经 `backend/synth/engine.py` 执行 | run 目录 out/20261110T020937303125/ |
+| 2 | 星历记录选择与历元对齐：按场景起点时刻选每星最近记录（`at_gps`），历元经 `ephemeris.align_for_run` 统一对齐，保证生成/验证两侧同一轨道参数组 | `backend/obs/` 星历解析、`backend/ephemeris.py` | 逐星广播星历参数组（provenance 记录来源） |
+| 3 | 观测量构造与策略剥离：对每星解发射时刻方程得几何伪距、几何多普勒、钟速项；本口径下电离层/对流层项取零，钟系数与相对论项经同参重解后从伪距中剥离（TGD/BGD 保留） | `backend/geometry.py::observables(sv_clock)`、`engine._run_impl` | 逐星注入真值（伪距/多普勒/码相位/幅度） |
+| 4 | 波形合成（native C++20 引擎，ctypes 调用 libgnsssynth.dll）：逐星以码相位/载波相位/多普勒/幅度调制生成 GPS L1 C/A 与 Galileo E1B（BOC(1,1)）波形，幅度由自由空间路径损耗（gain_db）决定，25 星同频叠加；本场景不注入附加 AWGN/信道损伤（impairments 缺省关闭），IQ 为干净叠加——噪声底仅来自末级量化 | native 引擎 + `backend/synth/postproc.py` 后处理链 | 带内数字信号 |
+| 5 | 量化落盘：I+Q 交织 int8，5×10⁶ 样点/秒 × 2 通道 × 60 s = 600 MB 单文件；同时写场景元数据与逐历元真值轨迹 | 同上 | `gpssim.bin`、`meta.json`、`trace_sim.json` |
+
+其中逐星注入真值以**统一 1 s 历元栅格**逐历元落盘于 `trace_sim.json`，每星 19 个字段，核心项：`pr_truth_m`（无环境项几何伪距真值）、`pr_inj_m`（实际注入伪距）、`fd_geo_hz`（几何载波多普勒）、`fd_code_geo_hz`（码多普勒）、`code_phase0_chips` / `ph_syn_chips`（码相位/合成载波相位）、`gain_db`（注入增益）、`el_deg_t` / `az_deg_t`（弹道几何）。`meta.json` 的 `config` 节记录**有效环境策略**（本 run：atmosphere off / sv_clock false），`provenance` 节记录引擎与星历来源血缘——后续所有验证路径凭此分流。
+
+### 1.6 接收数据的产生办法（接收侧链路）
+
+接收测量与仿真共用**同一份 `gpssim.bin`**，由内置纯 Python 接收机（`backend/analysis/`，进程内模块，无外部程序）按"捕获→跟踪→观测量构造→定位/译码"四段产生，策略开关读取 `meta.json` 与本口径严格对称：
+
+| 段 | 动作 | 实现位置 | 关键参数（本口径） |
+|----|------|----------|--------------------|
+| 1 捕获 | FFT 圆相关，逐星给出码相位/多普勒种子与 C/N0 度量，并提供快照测量 | `l1_acquire.py` | 多普勒扫描 ±300 Hz / 步进 50 Hz / 2 码周期积累 |
+| 2 相干跟踪 | 以捕获种子为起点建立跟踪会话：载波剥离后同相支路早/迟（E/L）相干相关 + 二阶 Costas 锁相环（载波辅助码环），环内输出连续码相位 chi、多普勒 fd、载波相位 | `tracker.py::SVTracker(mode="coh")` | 会话 10 s、环路带宽 0.5 Hz、种子窗 4 码周期、E1 频环积分系数封顶 0.01；逐历元落盘 `trace_dll.json`（chi_chips / fd_meas_hz / err_chips / pred_pr_m / meas_pr_m） |
+| 3 观测量构造 | 锚定伪距 measured_pr = pred_pr + err_chips×(c/f_chip)；预测侧 pred_pr 与修正项 +C·(clk+svb) − atmo 全部按 meta 策略同参重解、同步归零，保证与生成侧剥离口径逐位对称（1.2 节命脉） | `l1_fix.py::fix_from_iq_l1_multi_tracked(sv_clock=…)` | 伪距取会话中值进定位；锁定点值另列 |
+| 4 定位与译码 | 25 星会话中值伪距 + 接收钟差未知数最小二乘 → ENU/PDOP/残差；电文以跟踪种子解调（G LNAV 13 s 子窗块能量判据 + Gold 奇偶寻帧；E I/NAV 55 s 窗 8,000 sps + 二级奇偶，af0 叠加 IFB 修正） | `l1_fix.py` LS、`inav_decode.py` 等 | 落盘 `tracking_fix_coh.json`；快照对照另存 `trace_rx.json` |
+
+### 1.7 两种数据的对比分析方法
+
+对比在 `scripts/verify_sim_rx.py` 内完成，方法要点四条：
+
+1. **同栅格对账**：仿真侧（trace_sim）与接收侧（trace_rx 快照 / trace_dll 跟踪会话）统一插值到同一 1 s × 30 历元栅格，逐星逐项作差，不与任何外部参考比对。
+2. **去常数判定**：每星误差序列取中值为常数项扣除（常数落盘 `<field>_bias` 备查），判定量（RMS/最大）只作用于波动部分——常数按定义应由接收机钟差等参数吸收或可重标定（接收机钟差公共项、捕获牵引偏置、判别器零点稳态偏移三源叠加），扣除后剩余即环路跟踪噪声与失配信息，两者不混同。
+3. **门限化检查与总判定**：两系统各 9 项跟踪级检查 + 捕获快照 4 项 + 电文解码，逐星最差值/均值与门限比较（表 6），全部通过才给 VERDICT: PASS。
+4. **系统级闭环与横向对照**：会话中值伪距 → 25 星最小二乘 → 定位误差与残差三尺度互证；并与保留全部环境项的基准场景（run 20261106T084558776704）做逐星误差相关与指标对照（第 9 节），用以归因残差来源。
+
+图件由 `make_report_charts_noclock.py` 从上述 json 直接绘制（图 1–图 9）。
+
+### 1.8 数据文件地图（每项数据的确切存放位置）
+
+全部产物位于 `out/20261110T020937303125/`：
+
+| 文件 | 产生者 | 内容要点 | 消费方 |
+|------|--------|----------|--------|
+| `gpssim.bin`（600 MB） | native 引擎 | 5 Msps、I+Q int8 交织、60 s 复采样 | 捕获/跟踪/电文（接收侧唯一输入） |
+| `meta.json` | native 引擎 | `config`：场景参数 + 有效环境策略（atmosphere off / sv_clock false）；`provenance`：引擎/星历血缘；`bands` 等 | 全部验证路径的策略分流入口 |
+| `trace_sim.json` | `analysis/trace.py::dump_sim_trace` | 1 s 栅格仿真侧真值：逐星 pr_truth_m / pr_inj_m / fd_geo_hz / fd_code_geo_hz / code_phase0_chips / ph_syn_chips / gain_db / el_deg_t / az_deg_t …（19 字段） | 验证仿真侧、图 4/5/6 |
+| `trace_rx.json` | `trace.py::dump_rx_trace` | 捕获快照测量：ph_meas_chips / fd_meas_hz / metric_db / meas_pr_m / el_rx_deg；`acq` 节记录捕获参数 | 验证快照级检查项 |
+| `trace_dll.json` | `trace.py::dump_rx_trace_dll` | 相干跟踪会话逐历元：chi_chips / fd_meas_hz / err_chips / pred_pr_m / meas_pr_m / phase_cycles / phase_resid_cycles；`dll` 节记录 bw=0.5 Hz、mode=coh | 验证跟踪级、图 4/6 |
+| `verify_sim_rx.json` | `scripts/verify_sim_rx.py` | `verdict` 总判定；`summary` 各检查项 worst/mean/threshold/pass；`per_sv` 逐星明细（code_trk、fd_trk、常数 bias、snap、strength）；`nav` 逐字段解码比对 | 表 6、图 1/2/5/7/8 与判定 |
+| `tracking_fix_coh.json` | `.workbuddy/coh_fix_export.py` | 跟踪解算：error_m / enu_m / pdop / residual_rms_m / clock_bias_s 与 `per_sv`（err_chips / err_avg_m / phase_rms_cycles / phase_drift_cycps / pll_off_hz / el_deg …） | 表 7、图 3/9 |
+| `figs/fig01–fig09.png` | `.workbuddy/make_report_charts_noclock.py` | 本报告图件 | 本报告 |
+
+代码侧对应关系：生成 `backend/synth/engine.py`（编排）+ native 引擎 DLL + `backend/geometry.py`（观测构造）；接收 `backend/analysis/l1_acquire.py`（捕获）、`tracker.py`（coh 环路）、`l1_fix.py`（锚定伪距与 LS）、`inav_decode.py`（电文）；落盘与对比 `backend/analysis/trace.py`、`scripts/verify_sim_rx.py`。
+
 ## 2 两场景的结构一致性
 
 为保证"剥离三项"是**唯一变量**，新场景与基准场景（run 20261106T084558776704）在生成后做了逐项对账：
