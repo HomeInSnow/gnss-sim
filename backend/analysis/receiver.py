@@ -624,7 +624,17 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
             iq_by_band["L1"] = (iq, sample_rate)
         approx_llh = marker_llh or (meta.get("config", {}).get("lat", 0.0), meta.get("config", {}).get("lon", 0.0), meta.get("config", {}).get("alt", 0.0))
         rinex_path = meta.get("config", {}).get("rinex_path")
-        atmo_fn = default_atmo_fn(rinex_path, approx_llh, approx_time_gps) if rinex_path else None
+        # Runs carry their physical-injection policy in meta.config
+        # (atmosphere/sv_clock); de-remove only what the generator put in.
+        # Runs predating the keys keep the historical fully-injected path.
+        _atm = meta.get("config", {}).get("atmosphere")
+        _iono_on = (_atm is None
+                    or str(_atm.get("ionosphere", "off")) != "off")
+        _tropo_on = (_atm is None
+                     or str(_atm.get("troposphere", "off")) != "off")
+        _svc = bool(meta.get("config", {}).get("sv_clock", True))
+        atmo_fn = default_atmo_fn(rinex_path, approx_llh, approx_time_gps) \
+            if (rinex_path and (_iono_on or _tropo_on)) else None
         if not eph_by_prn:
             if decode_nav:
                 from backend.analysis import inav_decode, bds_d1_decode, nav_encoders
@@ -728,6 +738,7 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
         return fix_from_iq_l1_multi(
             iq_by_band, meta, eph_by_prn, approx_time_gps,
             approx_llh=approx_llh, marker_llh=marker_llh, atmo_fn=atmo_fn,
+            sv_clock=_svc,
         )
     # A LNAV decode needs at least one full set of subframes 1-3 (18 s of
     # 50 bps data) plus acquisition slack; a plain code-phase fix needs

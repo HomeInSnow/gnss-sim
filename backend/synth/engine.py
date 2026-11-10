@@ -1132,6 +1132,16 @@ def _run_impl(req, progress_cb=None, plan_only=False):
     # rather than one quasi-static shift of the composite signal.
     chan = channel_models.ChannelModels.from_request(req)
     to_iq = bool(getattr(req, "models_to_iq", False))
+    # Satellite-clock injection switch (signal-fidelity evaluation mode):
+    # False strips the observables' af0/af1/af2 + relativistic clock term
+    # from the transmitted pseudorange, so the IQ encodes the pure
+    # geometric range (+ group-delay bias, which stays). The nav message
+    # is built from the untouched broadcast record and still broadcasts
+    # the real BRDC clock coefficients. meta.config records the effective
+    # policy so every verification path (trace/verify/receiver) reads the
+    # IQ as the generator actually made it -- "de-remove only what was
+    # injected" symmetry.
+    sv_clock_inj = bool(getattr(req, "sv_clock", True))
     rc_cfg = chan.receiver_clock
     clk_fn = None
     if to_iq and rc_cfg.enabled:
@@ -1189,6 +1199,16 @@ def _run_impl(req, progress_cb=None, plan_only=False):
         iono, tropo = (fa(math.radians(e["az_deg"]), math.radians(e["el_deg"]),
                           0.0) if fa is not None else (0.0, 0.0))
         svb = geometry.group_delay_bias_s(sysc, sig.band, rec)
+        if not sv_clock_inj and e.get("_state") is not None:
+            # Remove the -C*clk the observables call folded in: re-run the
+            # SAME transmit-time solve constellation_multi used (t_rx = sow)
+            # and add its clock term back. Covers af0/af1/af2 AND the
+            # relativistic term, which no zeroing of the af coefficients
+            # alone can reach.
+            _st = e["_state"]
+            _sfn = _st if callable(_st) else geometry.state_fn_for(_st)
+            _p, _v, _t, _clk = geometry.solve_transmit_time(_sfn, rx, sow)
+            e["pseudorange_m"] += config.C * _clk
         e["pseudorange_m"] += -config.C * svb + iono + tropo
         if clk_fn is not None:
             c_off, c_rate = clk_fn(0.0)
@@ -1543,6 +1563,14 @@ def _run_impl(req, progress_cb=None, plan_only=False):
             "lat": req.lat, "lon": req.lon, "alt": req.alt,
             "start_utc": req.start.isoformat(), "duration_s": req.duration_s,
             "rinex_path": req.rinex_path, "ephemeris_mode": ephemeris_mode,
+            # Effective physical-injection policy this run was synthesized
+            # with. Verification paths (trace/verify/receiver) branch on
+            # these instead of assuming the engine defaults, so a run made
+            # without atmosphere / satellite clock is never "corrected"
+            # against delays that were never in the signal.
+            "atmosphere": {"ionosphere": atmo_cfg.ionosphere,
+                           "troposphere": atmo_cfg.troposphere},
+            "sv_clock": sv_clock_inj,
         },
         "provenance": {
             "engine": "native",

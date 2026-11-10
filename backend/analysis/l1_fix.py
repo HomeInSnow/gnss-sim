@@ -90,7 +90,12 @@ def fix_from_iq_l1_multi(
     approx_llh,
     marker_llh=None,
     atmo_fn=None,
+    sv_clock: bool = True,
 ) -> dict:
+    """``sv_clock=False`` mirrors a run synthesized WITHOUT the broadcast
+    satellite clock (meta.config.sv_clock false): the prediction and the
+    clock correction term both drop the af-polynomial (TGD/BGD stays).
+    Pass it together with ``atmo_fn=None`` for a no-atmosphere run."""
     approx_rx = np.array(geometry.llh_to_ecef(*approx_llh))
     skipped = {}
     pr = {}
@@ -139,7 +144,8 @@ def fix_from_iq_l1_multi(
 
         # d. Observables, elevation check, atmospheric delay, predicted phase
         o = geometry.observables(
-            state, approx_rx, approx_time_gps, signal=sig, sv_clock_bias_s=svb
+            state, approx_rx, approx_time_gps, signal=sig, sv_clock_bias_s=svb,
+            sv_clock=sv_clock
         )
         if o["el_deg"] < 5.0:
             skipped[key] = "low elevation"
@@ -187,7 +193,8 @@ def fix_from_iq_l1_multi(
         pos, _vel, _tof, clk = geometry.solve_transmit_time(
             state, approx_rx, approx_time_gps
         )
-        corrected_pr = measured_pr + config.C * (clk + svb) - atmo_m
+        corrected_pr = measured_pr + config.C * (
+            (clk if sv_clock else 0.0) + svb) - atmo_m
         pr[key] = corrected_pr
         sat_pos[key] = pos
         per_sv[key] = {
@@ -245,6 +252,7 @@ def fix_from_iq_l1_multi_tracked(
     approx_llh,
     marker_llh=None,
     atmo_fn=None,
+    sv_clock: bool = True,
     track_s: float = 3.0,
     dll_bw_hz: float = 0.5,
     min_metric_db: float = 15.0,
@@ -391,7 +399,8 @@ def fix_from_iq_l1_multi_tracked(
         for i, tk in enumerate(t_g):
             o_n = geometry.observables(state, approx_rx,
                                        approx_time_gps + float(tk),
-                                       signal=sig, sv_clock_bias_s=svb)
+                                       signal=sig, sv_clock_bias_s=svb,
+                                       sv_clock=sv_clock)
             fd_g[i] = o_n["carrier_doppler_hz"]
             if comps is not None:
                 iono_n, tropo_n = comps(math.radians(o_n["az_deg"]),
@@ -431,7 +440,8 @@ def fix_from_iq_l1_multi_tracked(
         # the snapshot fix, evaluated at t = track_s).
         o = geometry.observables(state, approx_rx,
                                  approx_time_gps + track_s,
-                                 signal=sig, sv_clock_bias_s=svb)
+                                 signal=sig, sv_clock_bias_s=svb,
+                                 sv_clock=sv_clock)
         if o["el_deg"] < 5.0:
             skipped[key] = "low elevation"
             continue
@@ -484,7 +494,8 @@ def fix_from_iq_l1_multi_tracked(
         measured_pr = pred_pr + err_used * (config.C / sig.chip_rate_hz)
         pos, _vel, _tof, clk = geometry.solve_transmit_time(
             state, approx_rx, approx_time_gps + track_s)
-        corrected_pr = measured_pr + config.C * (clk + svb) - atmo_m
+        corrected_pr = measured_pr + config.C * (
+            (clk if sv_clock else 0.0) + svb) - atmo_m
         pr[key] = corrected_pr
         sat_pos[key] = pos
         per_sv[key] = {

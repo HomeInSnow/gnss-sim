@@ -52,6 +52,7 @@ def scenario_hash(req) -> str:
         "ephemeris_mode": "precise" if getattr(req, "nav_override", None) is not None
                           else "broadcast",
         "atmosphere": getattr(req, "atmosphere", None),
+        "sv_clock": getattr(req, "sv_clock", True),
         "impairments": getattr(req, "impairments", None),
         "receiver_clock": getattr(req, "receiver_clock", None),
         "multipath": getattr(req, "multipath", None),

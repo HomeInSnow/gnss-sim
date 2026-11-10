@@ -1077,6 +1077,7 @@ def generate(body: dict):
         receiver_clock=body.get("receiver_clock"),
         multipath=body.get("multipath"),
         models_to_iq=bool(body.get("models_to_iq")),
+        sv_clock=bool(body.get("sv_clock", True)),
         engine=engine,
         fading=body.get("fading"),
         systems=systems,
@@ -1301,12 +1302,23 @@ def run_receiver(body: dict):
                       meta["config"].get("lon", 0.0),
                       meta["config"].get("alt", 0.0))))
                 rp = meta["config"].get("rinex_path")
-                afn = default_atmo_fn(rp, approx_llh,
-                                      _gps_tow(start)) if rp else None
+                # Honours the run's recorded injection policy: a run made
+                # without atmosphere / satellite clock must not be corrected
+                # against delays that were never injected (engine records
+                # meta.config.atmosphere + sv_clock; older runs default to
+                # fully injected).
+                _atm = meta["config"].get("atmosphere")
+                _iono_on = (_atm is None
+                            or str(_atm.get("ionosphere", "off")) != "off")
+                _tropo_on = (_atm is None
+                             or str(_atm.get("troposphere", "off")) != "off")
+                _svc = bool(meta["config"].get("sv_clock", True))
+                afn = default_atmo_fn(rp, approx_llh, _gps_tow(start)) \
+                    if (rp and (_iono_on or _tropo_on)) else None
                 tfix = fix_from_iq_l1_multi_tracked(
                     outdir, meta, eph, _gps_tow(start),
                     approx_llh=approx_llh, marker_llh=mk, atmo_fn=afn,
-                    dll_mode=dm)
+                    sv_clock=_svc, dll_mode=dm)
                 res["tracking_fix"] = tfix
             except Exception as exc:             # noqa: BLE001 - best effort
                 res["tracking_fix"] = {"error": f"{type(exc).__name__}: {exc}"}

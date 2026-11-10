@@ -40,11 +40,24 @@ tow = ((delta.days % 7) * 86400 + delta.seconds + delta.microseconds / 1e6
        + config.GPS_UTC_LEAP_S) % (7 * 86400)
 marker = (float(cfg["lat"]), float(cfg["lon"]), float(cfg["alt"]))
 
-print(f"run={RUN} track_s={track_s} bw={dll_bw} mode=coh", flush=True)
-afn = default_atmo_fn(rinex, marker, tow) if rinex else None
+# Honour the run's recorded injection policy (meta.config.atmosphere /
+# sv_clock): a run synthesized without atmosphere / satellite clock must be
+# solved without those corrections (de-remove only what was injected).
+# Runs predating the keys keep the historical fully-injected recipe.
+_atm = cfg.get("atmosphere")
+iono_on = (_atm is None or str(_atm.get("ionosphere", "off")) != "off")
+tropo_on = (_atm is None or str(_atm.get("troposphere", "off")) != "off")
+sv_clock = bool(cfg.get("sv_clock", True))
+
+print(f"run={RUN} track_s={track_s} bw={dll_bw} mode=coh "
+      f"(iono_on={iono_on} tropo_on={tropo_on} sv_clock={sv_clock})",
+      flush=True)
+afn = default_atmo_fn(rinex, marker, tow) \
+    if (rinex and (iono_on or tropo_on)) else None
 tr = fix_from_iq_l1_multi_tracked(
     od, meta, eph, tow, approx_llh=marker, marker_llh=marker,
-    atmo_fn=afn, track_s=track_s, dll_bw_hz=dll_bw, dll_mode="coh")
+    atmo_fn=afn, sv_clock=sv_clock,
+    track_s=track_s, dll_bw_hz=dll_bw, dll_mode="coh")
 if "error" in tr:
     print(f"ERROR: {tr['error']}  skipped={json.dumps(tr.get('skipped', {}))}")
     sys.exit(1)

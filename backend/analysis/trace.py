@@ -76,12 +76,23 @@ def _load_run(outdir: pathlib.Path) -> dict:
     systems = tuple(meta.get("systems") or cfg.get("systems")
                     or sorted({s.get("sys") for s in prov.get("svs", [])}
                               - {None}))
+    # Physical-injection policy the run was synthesized with. Runs made
+    # BEFORE the policy was recorded in meta.config carry neither key and
+    # keep the historical assumption (Klobuchar + Saastamoinen + satellite
+    # clock all injected); a run explicitly made without them must not be
+    # "corrected" against delays that were never in the IQ.
+    atm = cfg.get("atmosphere")
+    if atm is None:
+        atm = {"ionosphere": "klobuchar", "troposphere": "saastamoinen"}
     return {
         "outdir": outdir, "meta": meta, "prov": prov, "cfg": cfg,
         "engine": prov.get("engine"), "start": start, "gps_start": gps_start,
         "week": week, "sow": float(sow), "systems": systems,
         "bands": {b["id"]: b for b in meta.get("bands", []) or []},
         "svs": prov.get("svs", []) or [],
+        "iono_on": str(atm.get("ionosphere", "off")) != "off",
+        "tropo_on": str(atm.get("troposphere", "off")) != "off",
+        "sv_clock": bool(cfg.get("sv_clock", True)),
     }
 
 
@@ -111,10 +122,14 @@ def _lookup_rec(eph: dict, sysc: str, prn: int):
     return rec
 
 
-def _sim_atmo_factory(rinex_path, lat_rad, lon_rad, h_m, sow0):
+def _sim_atmo_factory(rinex_path, lat_rad, lon_rad, h_m, sow0, *,
+                      iono_on: bool = True, tropo_on: bool = True):
     """Re-implement engine._run_impl._atmo_for: Klobuchar (header params)
     for every system EXCEPT Galileo (I/NAV publishes zero NeQuick-G, so the
-    engine never injects iono into E), Saastramoinen for all."""
+    engine never injects iono into E), Saastramoinen for all.
+    ``iono_on``/``tropo_on`` follow the run's recorded injection policy
+    (meta.config.atmosphere): a run made without a layer traces truth
+    without it too."""
     cfg = atmosphere.AtmosphereConfig.from_dict(engine._DEFAULT_ATMOSPHERE)
     try:
         hdr = dict(ephemeris.rinex_header_iono_utc(rinex_path) or {})
@@ -127,13 +142,13 @@ def _sim_atmo_factory(rinex_path, lat_rad, lon_rad, h_m, sow0):
 
     def f(sysc, az_rad, el_rad, carrier_hz, t_rel):
         iono = 0.0
-        if cfg.ionosphere == "klobuchar" and sysc != "E":
+        if iono_on and cfg.ionosphere == "klobuchar" and sysc != "E":
             iono = atmosphere.klobuchar_delay_m(
                 cfg.klobuchar_alpha, cfg.klobuchar_beta,
                 sow0 + t_rel, lat_rad, lon_rad, az_rad, el_rad,
                 freq_hz=carrier_hz)["delay_m"]
         tropo = 0.0
-        if cfg.troposphere == "saastamoinen":
+        if tropo_on and cfg.troposphere == "saastamoinen":
             tropo = atmosphere.saastamoinen_delay_m(
                 el_rad, h_m, cfg.pressure_hpa, cfg.temperature_k,
                 cfg.humidity)["delay_m"]
@@ -170,7 +185,8 @@ def dump_sim_trace(outdir, *, step_s: float = 1.0, n_max: int = 30,
         ctx["cfg"].get("rinex_path"),
         math.radians(float(ctx["cfg"].get("lat", 0.0))),
         math.radians(float(ctx["cfg"].get("lon", 0.0))),
-        float(ctx["cfg"].get("alt", 0.0)), ctx["sow"]) \
+        float(ctx["cfg"].get("alt", 0.0)), ctx["sow"],
+        iono_on=ctx["iono_on"], tropo_on=ctx["tropo_on"]) \
         if ctx["cfg"].get("rinex_path") else None
 
     # Bound the grid by the shortest band, so rx traces can never fall off
@@ -233,7 +249,8 @@ def dump_sim_trace(outdir, *, step_s: float = 1.0, n_max: int = 30,
                 pr_t, fd_t, fdc_t, at_t, el_t, az_t = [], [], [], [], [], []
                 for t in t_s:
                     o = geometry.observables(state, rx_ecef, ctx["sow"] + t,
-                                             signal=sig, sv_clock_bias_s=svb)
+                                             signal=sig, sv_clock_bias_s=svb,
+                                             sv_clock=ctx["sv_clock"])
                     iono, tropo = atmo_f(sysc, math.radians(o["az_deg"]),
                                          math.radians(o["el_deg"]),
                                          carrier_hz, t)
@@ -284,7 +301,8 @@ def dump_rx_trace(outdir, *, step_s: float = 1.0, n_max: int = 30,
         float(ctx["cfg"].get("alt", 0.0)))
     approx_rx = np.array(geometry.llh_to_ecef(*approx_llh))
     atmo_fn = l1_fix.default_atmo_fn(ctx["cfg"].get("rinex_path"),
-                                     approx_llh, ctx["sow"])
+                                     approx_llh, ctx["sow"]) \
+        if (ctx["iono_on"] or ctx["tropo_on"]) else None
 
     dur_s = float(ctx["cfg"].get("duration_s") or 0.0)
     n_epochs = max(1, min(int(n_max), int(dur_s / step_s)) if dur_s > 0 else n_max)
@@ -365,10 +383,11 @@ def dump_rx_trace(outdir, *, step_s: float = 1.0, n_max: int = 30,
             iq, fs = got
             t = t_s[k]
             o = geometry.observables(state, approx_rx, ctx["sow"] + t,
-                                     signal=sig, sv_clock_bias_s=svb)
+                                     signal=sig, sv_clock_bias_s=svb,
+                                     sv_clock=ctx["sv_clock"])
             atmo_m = float(atmo_fn(math.radians(o["az_deg"]),
                                    math.radians(o["el_deg"]), carrier_hz,
-                                   sysc))
+                                   sysc)) if atmo_fn is not None else 0.0
             pred_pr = o["pseudorange_m"] + atmo_m
             ph_pred = (pred_pr / config.C * chip_hz) % code_len
             seg = iq[:npp_total] * (derot if derot is not None else 1.0)
@@ -449,7 +468,8 @@ def dump_rx_trace_dll(outdir, *, step_s: float = 1.0, n_max: int = 30,
         float(ctx["cfg"].get("alt", 0.0)))
     approx_rx = np.array(geometry.llh_to_ecef(*approx_llh))
     atmo_fn = l1_fix.default_atmo_fn(ctx["cfg"].get("rinex_path"),
-                                     approx_llh, ctx["sow"])
+                                     approx_llh, ctx["sow"]) \
+        if (ctx["iono_on"] or ctx["tropo_on"]) else None
 
     dur_s = float(ctx["cfg"].get("duration_s") or 0.0)
     n_epochs = max(1, min(int(n_max), int(dur_s / step_s)) if dur_s > 0 else n_max)
@@ -532,7 +552,8 @@ def dump_rx_trace_dll(outdir, *, step_s: float = 1.0, n_max: int = 30,
         fd_g = []
         for k in range(n_epochs):
             o = geometry.observables(state, approx_rx, ctx["sow"] + t_s[k],
-                                     signal=sig, sv_clock_bias_s=svb)
+                                     signal=sig, sv_clock_bias_s=svb,
+                                     sv_clock=ctx["sv_clock"])
             fd_g.append(o["carrier_doppler_hz"])
         fd_g = np.array(fd_g, float)
 
@@ -562,15 +583,18 @@ def dump_rx_trace_dll(outdir, *, step_s: float = 1.0, n_max: int = 30,
             if not m:
                 break
             o = geometry.observables(state, approx_rx, ctx["sow"] + t_s[k],
-                                     signal=sig, sv_clock_bias_s=svb)
+                                     signal=sig, sv_clock_bias_s=svb,
+                                     sv_clock=ctx["sv_clock"])
             if comps is not None:
                 iono_m, tropo_m = comps(math.radians(o["az_deg"]),
                                         math.radians(o["el_deg"]),
                                         carrier_hz, sysc)
-            else:
+            elif atmo_fn is not None:
                 iono_m, tropo_m = 0.0, float(atmo_fn(
                     math.radians(o["az_deg"]), math.radians(o["el_deg"]),
                     carrier_hz, sysc))
+            else:
+                iono_m = tropo_m = 0.0
             atmo_m = iono_m + tropo_m
             pred_pr = o["pseudorange_m"] + atmo_m
             ph_pred = (pred_pr / config.C * chip_hz) % code_len

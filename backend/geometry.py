@@ -273,10 +273,18 @@ def _enu(rx_ecef):
 def observables(eph, rx_ecef, t_rx: float, rx_vel=(0.0, 0.0, 0.0),
                 atmo_delay_fn=None, rx_clock_range_m: float = 0.0,
                 mp_code_bias_m: float = 0.0, *, signal=None,
-                sv_clock_bias_s: float = 0.0) -> dict:
+                sv_clock_bias_s: float = 0.0,
+                sv_clock: bool = True) -> dict:
     """``eph`` is a broadcast-ephemeris dict or a ``state_fn`` (see
     ``as_state_fn``). Everything downstream -- az/el, geometric range,
     Doppler, pseudorange, code phase -- is identical for both.
+
+    ``sv_clock=False`` drops the satellite-clock polynomial (af0/af1/af2
+    + relativistic term) from the pseudorange while KEEPING the group
+    delay ``sv_clock_bias_s`` (TGD/BGD stays -- it is a broadcast
+    hardware-bias term, not a clock). Used by the no-atmosphere /
+    no-sat-clock signal-fidelity evaluation mode, in strict symmetry with
+    the generator's ``ScenarioRequest.sv_clock`` switch.
 
     ``atmo_delay_fn``, when given, is ``f(az_rad, el_rad) -> extra one-way
     path delay in metres`` (see ``backend.models.atmosphere``). It is added to the
@@ -294,6 +302,8 @@ def observables(eph, rx_ecef, t_rx: float, rx_vel=(0.0, 0.0, 0.0),
 
     rx = np.asarray(rx_ecef, float)
     pos, vel, tof, clk = solve_transmit_time(eph, rx, t_rx)
+    if not sv_clock:
+        clk = 0.0            # af0/af1/af2 + relativistic term all off
     los_vec = pos - rx
     geo = float(np.linalg.norm(los_vec))
     los = los_vec / geo

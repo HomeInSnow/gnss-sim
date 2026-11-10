@@ -63,6 +63,13 @@ class ScenarioRequest:
     receiver_clock: dict | None = None
     multipath: dict | None = None
     models_to_iq: bool = False
+    # Native engine: fold the broadcast satellite-clock polynomial (af0/
+    # af1/af2 + relativistic term) into the transmitted code phase. False
+    # synthesizes WITHOUT it -- the IQ then carries the pure geometric
+    # range + group-delay bias, for the no-atmosphere/no-sat-clock signal
+    # fidelity evaluation. The nav message ALWAYS broadcasts the real
+    # BRDC clock coefficients (faithful payload). Default True = injected.
+    sv_clock: bool = True
     # Sinyal üretim motoru. "native" (C++ motoru, varsayılan).
     # gps-sdr-sim emekliye ayrılmıştır; tüm üretim native motor tarafından yapılır.
     engine: str = "native"
