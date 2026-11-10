@@ -220,7 +220,9 @@ def _worker(arg):
         # ---------------- 4) 每秒 bit 流（hex 源） ------------------------
         # G: 4× 抽取 30 s 分块 demod_nav_bits（快速通道），bit 按标称 20 ms
         #    栅格分桶（chunk 内对齐 ≤19 ms 的不确定度只影响秒界 1 bit）；
-        # E: 复用步骤 3 的符号流按 4 ms 栅格分桶。
+        # E: 与解码同款快速通道全程 30 s 分块 demod_symbols_e1b（pass1 块首
+        #    态为种子），符号按标称 4 ms 栅格分桶——解码 chunk 只到 complete_t
+        #    为止（~60 s），复用它会留下 60 s 后的空洞，必须全程独立提取。
         bits_by_sec: dict[int, list[int]] = {}
         if sysc == "G":
             for c0 in range(0, int(TS), 30):
@@ -240,16 +242,23 @@ def _worker(arg):
                     if 0 <= sec < int(TS):
                         bits_by_sec.setdefault(sec, []).append(int(v))
         else:
-            syms = np.concatenate(chunks) if chunks else np.zeros(0, np.int8)
-            # 符号栅格：chunk c 的符号从块首码历元起（≤4 ms 对齐误差，界内
-            # 至多错 1 个符号，报告注明）
-            k = 0
-            for c, arr in enumerate(chunks):
-                for j, v in enumerate(arr.tolist()):
-                    sec = c * 30 + int((0.004 * j + 0.002) // 1.0)
+            # 全程符号快速通道：30 s 分块，块首用 pass1 态做种子，与解码
+            # 同款 demod_symbols_e1b 配方；符号按标称 4 ms 栅格分桶（块界
+            # ≤4 ms 对齐不确定度只影响秒界 1 符号）。
+            for c0 in range(0, int(TS), 30):
+                if c0 == 0:
+                    ch, fdch = chi_seed, fd_seed
+                else:
+                    ch, fdch = float(chi1[_idx(c0)]), float(fd1[_idx(c0)])
+                iq = rd(float(c0), int(min(30, TS - c0) * fs))
+                sy = inav_decode.demod_symbols_e1b(
+                    iq, fs, prn, centre_offset_hz=if_hz,
+                    dopp_hz=fdch, code_phase_chips=ch)
+                for j, v in enumerate(np.asarray(sy, np.int8).tolist()):
+                    sec = c0 + int((0.004 * j + 0.002) // 1.0)
                     if 0 <= sec < int(TS):
                         bits_by_sec.setdefault(sec, []).append(int(v))
-                k += arr.size
+                iq = None
         out["bits_sec_n"] = {s: len(v) for s, v in sorted(bits_by_sec.items())}
 
         # ---------------- 5) 预测栅格（自解星历） ------------------------
