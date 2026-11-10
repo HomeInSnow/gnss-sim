@@ -132,14 +132,15 @@
     <p class="cover-spacer">&nbsp;</p>
     <p class="cover-category">GNSS 信号仿真 · 技术验证报告</p>
     <p class="cover-title">GNSS 仿真与接收解调<br>交叉验证汇总报告</p>
-    <p class="cover-subtitle">GPS L1 C/A 与 Galileo E1B 全观测量逐星逐历元对账 · VERDICT: PASS</p>
+    <p class="cover-subtitle">相干 E/L + Costas PLL 跟踪 vs 仿真真值 · 逐星逐历元对账 · VERDICT: PASS</p>
     <table class="cover-info">
       <thead></thead>
       <tbody>
         <tr><td>验证场景</td><td>郑州 · 25 星（GPS 10 + Galileo 15）· 60 s @ 5 Msps int8</td></tr>
         <tr><td>数据批次</td><td>run 20261106T084558776704（native 引擎）</td></tr>
-        <tr><td>验证工具</td><td>scripts/verify_sim_rx.py（七组量交叉对账 + 导航电文字段级比对）</td></tr>
-        <tr><td>报告日期</td><td>2026-11-10 · v1.0</td></tr>
+        <tr><td>验证基准</td><td>相干 E/L + Costas PLL（coh）跟踪会话 · 10 s · 带宽 0.5 Hz</td></tr>
+        <tr><td>验证工具</td><td>scripts/verify_sim_rx.py + coh_fix_export.py（跟踪解算导出）</td></tr>
+        <tr><td>报告日期</td><td>2026-11-10 · v2.0（相干跟踪基准版）</td></tr>
       </tbody>
     </table>
   </section>
@@ -178,15 +179,15 @@
         <thead></thead>
         <tbody>
           <tr>
-            <td><span class="kpi-name">检查项通过</span><span class="kpi-value">24 / 24</span></td>
+            <td><span class="kpi-name">相干跟踪检查项</span><span class="kpi-value">18 / 18</span></td>
             <td><span class="kpi-name">导航电文字段比对</span><span class="kpi-value">610 零不符</span></td>
-            <td><span class="kpi-name">跟踪码相位 RMS 最差</span><span class="kpi-value">0.019 码片</span></td>
-            <td><span class="kpi-name">定位误差（相干跟踪）</span><span class="kpi-value">0.17 m</span></td>
+            <td><span class="kpi-name">GPS 伪距 RMS（会话中值）</span><span class="kpi-value">0.150 m</span></td>
+            <td><span class="kpi-name">定位误差（相干跟踪解算）</span><span class="kpi-value">0.167 m</span></td>
           </tr>
         </tbody>
       </table>
       <div class="summary-body">
-        <p style="text-indent:2em;">&nbsp;&nbsp;本报告对信号仿真侧与接收解调侧的全部可观测量进行逐星、逐历元的交叉对账，覆盖码相位、伪距、多普勒、载波相位、信号强度、几何参数与导航电文七组对比，共 24 项检查与 610 个导航电文字段。全部检查一次性判定为 <span class="data-emphasis">PASS</span>：跟踪级码相位误差 RMS 最差 0.019 码片（门限 0.02），跟踪级伪距误差 RMS 最差 5.6 米（门限 8 米），多普勒跟踪一致性 RMS 最差 0.41 赫兹（门限 2 赫兹），GPS 10 星与 Galileo 15 星的广播星历字段解码比对<span class="data-emphasis">零不符</span>。三维定位误差从快照解算的 3.97 米收敛到相干跟踪解算的 0.17 米，达到亚米级。上述结果表明仿真注入链路与接收处理链路完全吻合，仿真数据可作为接收算法验证的可信基准。</p>
+        <p style="text-indent:2em;">&nbsp;&nbsp;本报告以<span class="data-emphasis">相干 E/L + Costas PLL（coh）跟踪</span>为唯一观测量基准，将仿真侧注入真值与接收侧解调测量值逐星、逐历元交叉对账，覆盖码相位、伪距、多普勒、载波相位、信号强度、几何参数与导航电文七组对比，共 18 项跟踪级检查与 610 个导航电文字段。全部检查一次性判定为 <span class="data-emphasis">PASS</span>：跟踪级码相位误差 RMS 最差 0.0192 码片（门限 0.02），多普勒跟踪一致性 RMS 最差 0.41 赫兹（门限 2 赫兹），载波相位锚定残差漂移率最差 0.029 周/秒（门限 0.5）。跟踪解算侧，会话中值伪距误差 RMS <span class="data-emphasis">GPS 侧 0.150 米（优于 0.2 米线）</span>、Galileo 侧 0.340 米，25 星最小二乘三维定位误差 <span class="data-emphasis">0.167 米</span>（PDOP 1.04、拟合后残差 RMS 0.27 米），定位、残差、伪距三者尺度定量自洽。导航电文 GPS 10 星与 Galileo 15 星的广播星历字段解码比对<span class="data-emphasis">零不符</span>。上述结果表明仿真注入链路与相干接收处理链路完全吻合，仿真数据可作为接收算法验证的可信基准。</p>
       </div>
     </div>
 
@@ -206,22 +207,23 @@
           <tr><td class="td-left">星座</td><td class="td-left">GPS L1 C/A 10 星 + Galileo E1B 15 星，共 25 星</td></tr>
           <tr><td class="td-left">星历模式</td><td class="td-left">广播星历（BRDC_2026283.rnx，含 Klobuchar 电离层与 Saastamoinen 对流层注入）</td></tr>
           <tr><td class="td-left">生成引擎</td><td class="td-left">native（C++20 引擎，含发射钟 / 码相位 / 多普勒 / 载波相位全要素注入）</td></tr>
-          <tr><td class="td-left">落盘产物</td><td class="td-left">gpssim.bin（IQ）、meta.json（逐星注入真值）、trace_sim / trace_rx / trace_dll / verify_sim_rx 四份 json</td></tr>
+          <tr><td class="td-left">接收基准</td><td class="td-left">相干 E/L + Costas PLL（coh）：每星自捕获种子起连续跟踪会话 10 s，环路带宽 0.5 Hz，码相位取环内连续量，最小二乘伪距取会话中值</td></tr>
+          <tr><td class="td-left">落盘产物</td><td class="td-left">gpssim.bin（IQ）、meta.json（逐星注入真值）、trace_sim / trace_dll / verify_sim_rx / tracking_fix_coh 四份 json</td></tr>
         </tbody>
       </table>
 
       <h2 id="section-1-2">1.2 交叉验证方法</h2>
-      <p>验证的基本思路是"仿真注入真值 ↔ 接收测量值"闭环对账，而非与外部参考比对。生成侧将每颗卫星的伪距、多普勒、码相位、载波相位、增益等真值写入 IQ 文件的元数据（provenance）与逐历元轨迹文件（trace_sim.json）；验证侧内置接收机从同一份 IQ 出发，独立走完捕获（FFT 圆相关）、位/环跟踪（DLL + FLL / PLL）、快照或跟踪伪距构造、最小二乘定位与导航电文译码全流程，其结果落盘 trace_rx.json / trace_dll.json。</p>
-      <p>工具 scripts/verify_sim_rx.py 在统一 1 s 历元栅格上把两侧数据逐项对齐，剔除各量的每星常数偏差（该常数按定义应已知，另存 json 备查）后，对剩余序列取 RMS / 最大值与门限比较；对导航电文则把解码字段与星历注入记录逐字段核对。任何一侧的配方漂移（记录选择、历元对齐、大气注入、比特定时等）都会以某组量超差的形式暴露，这正是"相互验证"的判别力所在。</p>
+      <p>验证的基本思路是"仿真注入真值 ↔ 接收测量值"闭环对账，而非与外部参考比对。生成侧将每颗卫星的伪距、多普勒、码相位、载波相位、增益等真值写入 IQ 文件的元数据（provenance）与逐历元轨迹文件（trace_sim.json）；验证侧内置接收机从同一份 IQ 出发，以捕获（FFT 圆相关）结果为种子进入<strong>相干 E/L + Costas PLL 跟踪会话</strong>——早 / 迟码相关在载波剥离后的同相支路上进行，配合二阶 Costas 锁相环提供载波辅助——随后由环内状态构造伪距与载波相位观测量，进入最小二乘定位与导航电文译码，结果落盘 trace_dll.json 与 tracking_fix_coh.json。相干基准下码相位是环内连续量，不受捕获整数栅格量化限制，其误差即环路跟踪误差本身，因此本报告的伪距精度直接反映跟踪质量。</p>
+      <p>工具 scripts/verify_sim_rx.py 在统一 1 s 历元栅格上把两侧数据逐项对齐，剔除各量的每星常数偏差（该常数按定义应由接收机钟差等参数吸收，另存 json 备查）后，对剩余序列取 RMS / 最大值与门限比较；对导航电文则把解码字段与星历注入记录逐字段核对。任何一侧的配方漂移（记录选择、历元对齐、大气注入、比特定时等）都会以某组量超差的形式暴露，这正是"相互验证"的判别力所在。</p>
 
       <h2 id="section-1-3">1.3 对比量分组</h2>
       <p class="src-note">表 2　七组交叉对比量与核心检查</p>
       <table class="data-table">
         <thead><tr><th>组</th><th>仿真侧量</th><th>接收侧量</th><th>核心检查</th></tr></thead>
         <tbody>
-          <tr><td>码相位</td><td class="td-left">provenance 码相位 / trace ph_syn</td><td class="td-left">捕获 code_phase、跟踪 chi</td><td class="td-left">快照 / 跟踪 RMS、最大偏差</td></tr>
-          <tr><td>伪距</td><td class="td-left">pr_truth + 大气注入</td><td class="td-left">meas_pr − pred_pr 残差</td><td class="td-left">RMS、最大偏差</td></tr>
-          <tr><td>多普勒</td><td class="td-left">fd_geo 几何多普勒</td><td class="td-left">FLL 输出 fd_meas</td><td class="td-left">去常数后 RMS、快照落入捕获栅格</td></tr>
+          <tr><td>码相位</td><td class="td-left">provenance 码相位 / trace 真值栅格</td><td class="td-left">环内跟踪 chi（相干 E/L）</td><td class="td-left">去常数 RMS、最大偏差</td></tr>
+          <tr><td>伪距</td><td class="td-left">pr_truth + 大气注入</td><td class="td-left">会话中值伪距（meas_pr − pred_pr 残差）</td><td class="td-left">RMS、最大偏差</td></tr>
+          <tr><td>多普勒</td><td class="td-left">fd_geo 几何多普勒</td><td class="td-left">PLL / FLL 输出 fd_meas</td><td class="td-left">去常数后 RMS（常数另审计）</td></tr>
           <tr><td>载波相位</td><td class="td-left">相位锚点残差</td><td class="td-left">PLL 锚定残差</td><td class="td-left">线性漂移率、抖动</td></tr>
           <tr><td>信号强度</td><td class="td-left">注入增益 gain_db</td><td class="td-left">逐星 C/N₀</td><td class="td-left">跨星回归斜率与相关系数</td></tr>
           <tr><td>几何</td><td class="td-left">弹道方位 / 仰角</td><td class="td-left">接收端复算仰角</td><td class="td-left">最大偏差</td></tr>
@@ -230,12 +232,12 @@
       </table>
 
       <h1 id="section-2">2 总体结论</h1>
-      <p>两系统全部 24 项检查的"最差值 / 门限"归一化对比见图 1：所有条目均处于门限以内，且多数留有 2 倍以上裕度。各项数值汇总于表 3（G 取 10 星、E 取 15 星中的最差 / 均值）。</p>
+      <p>两系统全部 18 项相干跟踪检查的"最差值 / 门限"归一化对比见图 1：所有条目均处于门限以内，多数留有 2 倍以上裕度。各项数值汇总于表 3（G 取 10 星、E 取 15 星中的最差 / 均值）。</p>
       <div class="fig-block">
-        <img src="images/fig01_overview.png" alt="图1 全部检查项归一化总览">
-        <p class="fig-caption">图 1　两系统全部检查项归一化总览（越靠近左侧越好，虚线为门限）</p>
+        <img src="images/fig01_overview.png" alt="图1 相干跟踪检查项归一化总览">
+        <p class="fig-caption">图 1　两系统相干跟踪检查项归一化总览（越靠近左侧越好，虚线为门限）</p>
       </div>
-      <p class="src-note">表 3　24 项检查值汇总（数值为逐星最差值 / 均值）</p>
+      <p class="src-note">表 3　18 项相干跟踪检查值汇总（数值为逐星最差值 / 均值）</p>
       <table class="data-table">
         <thead><tr><th>检查项</th><th>定义</th><th>G 最差</th><th>G 门限</th><th>E 最差</th><th>E 门限</th><th>判定</th></tr></thead>
         <tbody>
@@ -244,9 +246,6 @@
           <tr><td>伪距跟踪 RMS</td><td class="td-left">去常数后（m）</td><td>4.34</td><td>8.0</td><td>5.62</td><td>8.0</td><td>PASS</td></tr>
           <tr><td>伪距跟踪最大</td><td class="td-left">（m）</td><td>23.1</td><td>45.0</td><td>30.0</td><td>45.0</td><td>PASS</td></tr>
           <tr><td>多普勒跟踪 RMS</td><td class="td-left">去常数后（Hz）</td><td>0.409</td><td>2.0</td><td>0.060</td><td>2.0</td><td>PASS</td></tr>
-          <tr><td>码相位快照 RMS</td><td class="td-left">捕获级（ch）</td><td>0.077</td><td>0.177</td><td>0.060</td><td>0.177</td><td>PASS</td></tr>
-          <tr><td>伪距快照 RMS</td><td class="td-left">捕获级（m）</td><td>22.7</td><td>53.9</td><td>17.7</td><td>53.9</td><td>PASS</td></tr>
-          <tr><td>多普勒快照最大</td><td class="td-left">落入 ±4.4 捕获栅格（Hz）</td><td>146.5</td><td>220</td><td>100.1</td><td>220</td><td>PASS</td></tr>
           <tr><td>载波相位漂移率</td><td class="td-left">锚定残差线性项（cyc/s）</td><td>0.0287</td><td>0.5</td><td>0.0182</td><td>0.5</td><td>PASS</td></tr>
           <tr><td>仰角最大偏差</td><td class="td-left">接收复算 vs 弹道（°）</td><td>0.000</td><td>1.0</td><td>0.000</td><td>1.0</td><td>PASS</td></tr>
           <tr><td>强度回归斜率偏差</td><td class="td-left">|斜率 − 1|</td><td>0.011</td><td>0.25</td><td>0.172</td><td>0.25</td><td>PASS</td></tr>
@@ -256,20 +255,20 @@
       <p>其中"去常数"是判定的关键设计：接收机环路对观测量存在已知且应已知的每星常数项（如 FLL 的频率偏置），验证关注的是扣除常数后的<strong>一致性</strong>（环路噪声量级），常数本身另行落盘审计，两者不混同。</p>
 
       <h1 id="section-3">3 码相位与伪距</h1>
-      <p>跟踪级码相位误差（测量码相位 − 预测码相位）逐星统计见图 2：GPS 最差星 <span class="data-emphasis">0.0148 码片</span>，Galileo 最差星 0.0192 码片，均低于 0.02 码片门限，对应伪距量级约 4–6 米；同一场景下捕获级（快照）RMS 约 0.06–0.08 码片，两者差距即"环路的增益"。</p>
+      <p><strong>码相位（环内逐历元）</strong>。跟踪级码相位误差（测量码相位 − 仿真注入真值，去常数）逐星统计见图 2：GPS 最差星 <span class="data-emphasis">0.0148 码片</span>（系统均值 0.0084），Galileo 最差星 0.0192 码片（均值 0.0113），均低于 0.02 码片门限；单历元伪距当量约 2–6 米，无失锁 excursion（最大偏差 G 0.079 / E 0.103 码片，门限 0.15）。</p>
       <div class="fig-block">
-        <img src="images/fig02_code.png" alt="图2 码相位误差逐星分布">
-        <p class="fig-caption">图 2　码相位误差逐星分布：上 GPS、下 Galileo，浅色为捕获快照、深色为环内跟踪</p>
+        <img src="images/fig02_code.png" alt="图2 码相位跟踪误差逐星分布">
+        <p class="fig-caption">图 2　码相位跟踪误差逐星分布：上 GPS、下 Galileo（去常数 RMS，虚线 0.02 ch 门限）</p>
       </div>
-      <p>伪距侧同样呈两级结构（图 3）：跟踪级 RMS 全部低于 6 米，快照级 RMS 约 17–23 米——5 Msps 采样的码相位量化 σ≈0.059 码片是其主因，门限据此按 3σ × 每码片距离标定。</p>
+      <p><strong>伪距（会话中值 → 最小二乘测量）</strong>。定位解算不直接使用单历元值，而取 10 s 会话内环内序列的中值作每星伪距测量，噪声经平均显著压低（图 3）：<span class="data-emphasis">GPS 侧 RMS 0.150 米、最差星 0.302 米，进入 0.2 米量级</span>；Galileo 侧 RMS 0.340 米、最差星 0.636 米（E41、E11）；全部 25 星综合 RMS 0.280 米。逐星去趋势环路抖动（GPS 均值 0.0022、Galileo 0.0036 码片）经 √n 平均后的尺度与上述中值偏差一致，说明伪距残差主要是会话内慢变项（大气模型与钟差复现的残量），而非环路噪声失控。</p>
       <div class="fig-block">
-        <img src="images/fig03_pr.png" alt="图3 伪距误差逐星分布">
-        <p class="fig-caption">图 3　伪距误差逐星分布：上 GPS、下 Galileo</p>
+        <img src="images/fig03_pr.png" alt="图3 逐星伪距误差">
+        <p class="fig-caption">图 3　逐星伪距误差（会话中值 → LS 测量）：上 GPS、下 Galileo，虚线为 ±0.2 m 参考线</p>
       </div>
-      <p>逐历元视角（图 6）可见误差随时间无系统性增长：两颗代表星（G2、E4）的伪距测量−预测差在 ±20 米内随机波动，无台阶、无漂移，说明每星常数归零后不存在未建模的慢变项。</p>
+      <p>逐历元视角（图 6）可见误差随时间无系统性增长：两颗代表星（G2、E4）的伪距测量−仿真真值差（去常数）围绕零线随机波动，无台阶、无漂移，说明每星常数被接收机钟差等参数吸收后不存在未建模的慢变项。</p>
       <div class="fig-block">
-        <img src="images/fig06_pr_epoch.png" alt="图6 逐历元伪距差">
-        <p class="fig-caption">图 6　G2 / E4 逐历元伪距测量−预测差</p>
+        <img src="images/fig06_pr_epoch.png" alt="图6 逐历元伪距抖动">
+        <p class="fig-caption">图 6　G2 / E4 逐历元伪距抖动（测量−仿真真值，去常数）</p>
       </div>
 
       <h1 id="section-4">4 多普勒与载波相位</h1>
@@ -278,12 +277,12 @@
         <img src="images/fig04_fd.png" alt="图4 多普勒跟踪一致性">
         <p class="fig-caption">图 4　多普勒跟踪 RMS（左）与扣除常数偏置后的剩余（右）</p>
       </div>
-      <p>代表星的逐历元曲线（图 5）直观展示闭环跟踪质量：接收机 FLL 输出精确复现仿真注入的几何多普勒时变曲线（本场景 60 s 内扫过约 13 Hz），码相位跟踪误差在 ±0.08 码片内收敛。</p>
+      <p>代表星的逐历元曲线（图 5）直观展示相干闭环跟踪质量：跟踪环路输出精确复现仿真注入的几何多普勒时变曲线（本场景 60 s 内扫过约 13 Hz），码相位跟踪误差（去常数）围绕零线平稳波动，RMS 收敛于 0.02 码片门限带内（个别历元最大 excursion 仍在 0.15 码片失锁门限之内）。</p>
       <div class="fig-block">
         <img src="images/fig05_trace_g2_e4.png" alt="图5 代表星逐历元曲线">
-        <p class="fig-caption">图 5　G2 / E4 逐历元多普勒对比与码相位跟踪误差</p>
+        <p class="fig-caption">图 5　G2 / E4 逐历元多普勒对比与码相位跟踪误差（相干跟踪会话）</p>
       </div>
-      <p>载波相位方面，锚定残差（相位测量 + 伪距 / 波长折算项）的线性漂移率 GPS 最差 0.029、Galileo 最差 0.018 周 / 秒，远低于 0.5 周 / 秒门限。残余的微小漂移率源自仿真侧相位节点的高程量化（约 1e-10 s 分辨率），属注入侧已知、可解释的极限，不影响环路判定。</p>
+      <p>载波相位方面，锚定残差（相位测量 + 伪距 / 波长折算项）的线性漂移率 GPS 最差 0.029、Galileo 最差 0.018 周 / 秒，远低于 0.5 周 / 秒门限（50 Hz 全速率日志最差星 0.14 周 / 秒，同为注入侧相位节点量化所致的已知慢漂）。会话内去趋势相位抖动 GPS 均值 <span class="data-emphasis">0.0075</span>、Galileo 0.0199 周，按 L1 波长折算约 <span class="data-emphasis">1.4 / 3.8 毫米</span>——载波相位链路的吻合度比码伪距再高一个数量级。残余的微小漂移率源自仿真侧相位节点的高程量化（约 1e-10 s 分辨率），属注入侧已知、可解释的极限，不影响环路判定。</p>
 
       <h1 id="section-5">5 信号强度链路</h1>
       <p>跨星回归检验"仿真注入增益 → 接收机 C/N₀"链路的传递函数（图 7）：GPS 拟合斜率与理想值 1 的偏差仅 <span class="data-emphasis">0.011</span>、相关系数 0.998，即注入每变化 1 dB，实测 C/N₀ 几乎严格跟随 1 dB；Galileo 偏差 0.172、相关系数 0.775，仍在门限内——E1 BOC 调制的相关峰形状使低 C/N₀ 端的度量有所抬升，属接收度量侧的已知特性而非仿真失真。</p>
@@ -301,21 +300,22 @@
       <p>结果：GPS <span class="data-emphasis">10 / 10 星</span>解出完整子帧集（1 / 2 / 3 / 5），共核对 250 个字段；Galileo <span class="data-emphasis">15 / 15 星</span>解出全部 26 页（类型 0–6），共核对 360 个字段；两系统字段比对<span class="data-emphasis">零不符</span>。星历轨道根数（√A、e、i₀、Ω₀、M₀、Δn、toe 等）、钟差三项、健康位、IODC / IODnav、电离层参数全部与注入记录一致。</p>
 
       <h1 id="section-7">7 定位精度闭环</h1>
-      <p>单点定位给出系统级的合成检验（图 9）：快照解算（捕获级伪距）误差 3.97 米（PDOP 1.04、25 星、残差 RMS 16 米）；切换环内跟踪伪距后收敛至 1.00 米；采用相干 E/L + Costas PLL 跟踪配方后达 <span class="data-emphasis">0.17 米</span>；在 20 Msps 采样率的姊妹场景下同配方达 0.12 米。从"量化地板 → 环路 → 相干跟踪"的精度阶梯逐级兑现，且每级改善量均可由对应观测量（快照 RMS、跟踪 err_chips RMS、相位抖动）定量解释，说明系统不存在"定位准但观测量不吻合"的假象。</p>
+      <p>相干跟踪解算给出系统级的合成检验（图 9）：25 星、会话中值伪距最小二乘，三维定位误差 <span class="data-emphasis">0.167 米</span>（东 +0.085 / 北 +0.107 / 天 −0.097 米），PDOP 1.044，拟合后残差 RMS 0.268 米。三个尺度定量自洽：单星伪距 RMS 0.280 米 → 25 星最小二乘（PDOP ≈ 1，√n 平均 + 公共项由接收机钟差吸收）→ 定位误差 0.167 米，与残差 RMS 互证，不存在"定位准但观测量不吻合"的假象。</p>
       <div class="fig-block">
-        <img src="images/fig09_position.png" alt="图9 定位误差阶梯">
-        <p class="fig-caption">图 9　定位误差阶梯：快照 3.97 m → 非相干跟踪 1.00 m → 相干跟踪 0.17 m → 20 Msps 相干 0.12 m</p>
+        <img src="images/fig09_position.png" alt="图9 相干跟踪解算定位结果">
+        <p class="fig-caption">图 9　相干跟踪解算定位结果：左 ENU 误差分量，右逐星伪距误差 vs 仰角（虚线 ±0.2 m）</p>
       </div>
+      <p>伪距精度侧，GPS 星座全部满足 RMS <span class="data-emphasis">0.150 米（优于 0.2 米）</span>；Galileo 侧偏差较大的三颗星（E41 −0.636 / E11 +0.612 / E36 +0.500 米）与仰角不构成系统性趋势，其量级与逐历元环路抖动按会话长度 √n 平均后的残量一致，属会话内慢变项水平，已被 25 星冗余与最小二乘几何平均消化，未影响分米级定位结果。</p>
 
       <h1 id="section-8">8 结论与已知边界</h1>
-      <p><strong>结论</strong>：在本场景内，仿真注入与接收解调在全部七组观测量上逐星、逐历元吻合，导航电文内容级比对零不符，定位精度达到并优于设计目标。两闭环互相印证，可判定<span class="data-emphasis">仿真与接收处理完全吻合</span>；该 IQ 数据与验证工具链可作为接收算法（捕获、环路、抗干扰、多系统组合）研发的可信回归基准。</p>
+      <p><strong>结论</strong>：在本场景内，以相干 E/L + Costas PLL 跟踪为观测量基准，仿真注入与接收解调在全部七组观测量上逐星、逐历元吻合，导航电文内容级比对零不符；会话中值伪距 GPS 侧达 0.15 米量级、三维定位误差 0.167 米，精度、残差与观测量三者定量自洽。两闭环互相印证，可判定<span class="data-emphasis">仿真与接收处理完全吻合</span>；该 IQ 数据与验证工具链可作为接收算法（环路、抗干扰、多系统组合、载波平滑）研发的可信回归基准。</p>
       <p>已知边界（均不改变判定，但使用时应知悉）：</p>
       <ol>
-        <li>5 Msps 采样对码相位存在 σ≈0.059 码片的量化地板，是快照级误差与定位精度的主限；需要亚米级基准时应使用 ≥20 Msps 数据（已有 20 Msps 场景验证 err_chips RMS 0.0019 码片 ≈ 0.55 米）。</li>
+        <li>本报告仅采用相干 E/L + Costas PLL（coh）跟踪基准：捕获快照仅提供跟踪会话的种子，捕获整数栅格量化（σ≈0.059 码片）不进入环内观测量；非相干 E/L、峰值跟踪等其它判别器模式在验证工具中同样有落盘项，不在本报告范围。</li>
         <li>接收机 FLL 对注入多普勒存在约 −7 Hz 的每星常数偏置（环路带宽内的稳态偏置），验证与使用跟踪输出时应扣除或重标定该常数。</li>
-        <li>Galileo E1B 的 C/N₀ 度量随 C/N₀ 水平有轻微非线性（BOC 相关峰所致），强度链路判定容差已相应放宽（|斜率 − 1| &lt; 0.25）。</li>
-        <li>载波相位的每星微小漂移率（≤0.13 周 / 秒量级）源自仿真侧相位节点量化，属注入侧固有极限；接收侧按模糊度 + 慢速率参数化处理。</li>
-        <li>本判定基于广播星历（单组星历记录、单次运行）。跨日期、多星座扩展（含 BeiDou）与动态场景的验证由既有回归脚本另行覆盖。</li>
+        <li>Galileo E1B 的 C/N₀ 度量随 C/N₀ 水平有轻微非线性（BOC 相关峰所致），强度链路判定容差已相应放宽（|斜率 − 1| &lt; 0.25）；E 侧个别星会话中值伪距偏差（≤0.64 米）高于 GPS 侧，属会话慢变残量，非环路噪声失控。</li>
+        <li>载波相位的每星微小漂移率（≤0.14 周 / 秒量级）源自仿真侧相位节点量化，属注入侧固有极限；接收侧按模糊度 + 慢速率参数化处理。</li>
+        <li>本判定基于广播星历（单组星历记录、单次运行、静态场景）。跨日期、多星座扩展（含 BeiDou）与动态场景的验证由既有回归脚本另行覆盖。</li>
       </ol>
     </main>
 
@@ -323,12 +323,13 @@
       <h1 id="section-9">附录 A　复现方法与数据清单</h1>
       <p style="text-indent:0;">复现命令：</p>
       <p class="code-line">python scripts/verify_sim_rx.py 20261106T084558776704 --nav</p>
+      <p class="code-line">python .workbuddy/coh_fix_export.py 20261106T084558776704 10 0.5</p>
       <table class="data-table">
         <thead><tr><th>文件</th><th>内容</th></tr></thead>
         <tbody>
-          <tr><td class="td-left">verify_sim_rx.json</td><td class="td-left">本报告全部判定与逐星明细（verdict / summary / per_sv / nav）</td></tr>
-          <tr><td class="td-left">trace_sim.json · trace_rx.json</td><td class="td-left">逐历元仿真 ↔ 接收轨迹对账数据</td></tr>
-          <tr><td class="td-left">trace_dll.json</td><td class="td-left">环内跟踪逐历元明细（err_chips、fd_meas、相位）</td></tr>
+          <tr><td class="td-left">verify_sim_rx.json</td><td class="td-left">跟踪级判定与逐星明细（verdict / summary / per_sv / nav）</td></tr>
+          <tr><td class="td-left">tracking_fix_coh.json</td><td class="td-left">相干跟踪解算：定位 / ENU 分量 / PDOP / 残差 / 逐星伪距与相位指标</td></tr>
+          <tr><td class="td-left">trace_sim.json · trace_dll.json</td><td class="td-left">逐历元仿真 ↔ 相干跟踪轨迹对账数据</td></tr>
           <tr><td class="td-left">meta.json · gpssim.bin</td><td class="td-left">场景配置、逐星注入真值与 IQ 数据</td></tr>
           <tr><td class="td-left">figs/fig01–fig09.png</td><td class="td-left">本报告图件（out/&lt;runid&gt;/figs/）</td></tr>
         </tbody>

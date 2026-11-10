@@ -1,7 +1,11 @@
 schema_version: 1
 request_id: 2f4c0d14-0757-4213-8756-60b265f8446e
 created_at: 2026-11-10T04:52:00+08:00
-updated_at: 2026-11-10T06:11:30+08:00
+updated_at: 2026-11-10T09:15:00+08:00
+revision: v2-coh-only   # 2026-11-10 按用户要求收敛为"仅相干 E/L + Costas PLL vs 仿真真值"口径：
+                        # 删除快照/el/nc 与定位阶梯内容；新增 coh_fix_export.py 导出
+                        # tracking_fix_coh.json（定位 0.167 m、G 伪距 RMS 0.150 m / E 0.340 m）；
+                        # 9 图全部重制，S1/S2/S3 重写重转，html-review 复检 91 分。
 
 entry_type: full_pipeline
 stage_chain: [1, 2, 3]
@@ -45,7 +49,7 @@ stages:
     input_path: "working/formatted-验证汇总.inlined.html"
     conversion_note: "相对路径/file:/// 图片被引擎丢弃或降级占位，仅 base64 dataURI 可嵌入；转换前将 9 图内联为 dataURI（工作副本，stage2 主 HTML 保持相对引用）"
     output_path: "stage3/GNSS仿真与接收解调交叉验证汇总报告.docx"
-    output_size_bytes: 804337
+    output_size_bytes: 759458
     images_embedded: 9
     skill_used: ["html-to-doc"]
     present_files_opened: true
@@ -59,5 +63,5 @@ consistency_check:
   stats:
     stage1/final_draft.md: {size: 12525, mtime: "2026-11-10T05:45:47"}
     stage2/formatted-验证汇总.html: {size: 29585, mtime: "2026-11-10T06:00:04"}
-    stage3/GNSS仿真与接收解调交叉验证汇总报告.docx: {size: 804337, mtime: "2026-11-10T06:10:50"}
+    stage3/GNSS仿真与接收解调交叉验证汇总报告.docx: {size: 759458, mtime: "2026-11-10T09:10:06"}
   errors: []
