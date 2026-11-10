@@ -79,8 +79,14 @@ def _worker(arg):
                  "gain_db": sv.get("gain_db")}
 
     def rd(t0: float, ns: int) -> np.ndarray:
-        return inspector.read_iq(bf, fmt, max_samples=ns,
-                                offset_samples=int(round(t0 * fs)))
+        # file-tail windows (t_end=TS hits EOF mid-window) come back short-
+        # read from np.fromfile; pad with zeros so reshape/broadcast in the
+        # tracker see the full window. All OBS epochs (t <= TS) stay clean.
+        arr = inspector.read_iq(bf, fmt, max_samples=ns,
+                               offset_samples=int(round(t0 * fs)))
+        if arr.size < ns:
+            arr = np.pad(arr, (0, ns - arr.size))
+        return arr
 
     _wc: dict = {}
 
