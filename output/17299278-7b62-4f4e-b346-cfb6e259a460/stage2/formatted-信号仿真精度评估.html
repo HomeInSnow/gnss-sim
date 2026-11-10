@@ -176,6 +176,7 @@
       <li><a href="#section-9">9 定位精度闭环与噪声底论证</a></li>
       <li><a href="#section-10">10 结论与已知边界</a></li>
       <li><a href="#section-11">附录 A 复现方法与数据清单</a></li>
+      <li><a href="#section-12">附录 B 输出 json 字段释义</a></li>
     </ol>
   </nav>
   </section>
@@ -300,7 +301,7 @@
           <tr><td class="td-left">figs/fig01–fig09.png</td><td class="td-left">.workbuddy/make_report_charts_noclock.py</td><td class="td-left">本报告图件</td><td class="td-left">本报告</td></tr>
         </tbody>
       </table>
-      <p>代码侧对应关系：生成侧 backend/synth/engine.py（编排）+ native 引擎 DLL + backend/geometry.py（观测构造）；接收侧 backend/analysis/l1_acquire.py（捕获）、tracker.py（coh 环路）、l1_fix.py（锚定伪距与 LS）、inav_decode.py（电文）；落盘与对比 backend/analysis/trace.py、scripts/verify_sim_rx.py。</p>
+      <p>代码侧对应关系：生成侧 backend/synth/engine.py（编排）+ native 引擎 DLL + backend/geometry.py（观测构造）；接收侧 backend/analysis/l1_acquire.py（捕获）、tracker.py（coh 环路）、l1_fix.py（锚定伪距与 LS）、inav_decode.py（电文）；落盘与对比 backend/analysis/trace.py、scripts/verify_sim_rx.py。六份 json 的逐字段含义与单位，见附录 B。</p>
 
       <h1 id="section-2">2 两场景的结构一致性</h1>
       <p>为保证"剥离三项"是<strong>唯一变量</strong>，新场景与基准场景（run 20261106T084558776704）在生成后做了逐项对账：</p>
@@ -432,6 +433,140 @@
           <tr><td class="td-left">trace_sim.json · trace_dll.json</td><td class="td-left">逐历元仿真 ↔ 相干跟踪轨迹对账数据</td></tr>
           <tr><td class="td-left">meta.json · gpssim.bin</td><td class="td-left">场景策略（atmosphere off / sv_clock false）、逐星注入真值与 IQ 数据</td></tr>
           <tr><td class="td-left">figs/fig01–fig09.png</td><td class="td-left">本报告图件（out/&lt;runid&gt;/figs/）</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="appendix">
+      <h1 id="section-12">附录 B　输出 json 字段释义</h1>
+      <p>六份 json 产物的逐字段含义（实测于 out/20261110T020937303125/，字段清单由实物文件枚举核对）。说明约定：<strong>统计组</strong>指形如 {n, rms, max_abs, bias} 的子字典——n 为参与历元数，rms / max_abs 为<strong>去除常数后</strong>的波动统计，bias 为被扣除的中值常数（落盘备查）。三份 trace 文件共有的文件级字段：kind（类型标识）、runid、engine、start_utc（场景起点 UTC）、sow0（栅格起点 GPS 周秒）、step_s（栅格步长 1 s）、n_epochs（历元数 30）、t_s（逐历元相对时刻）。</p>
+
+      <h2 id="section-12-1">B.1 meta.json（native 引擎生成；策略分流入口）</h2>
+      <p class="src-note">表 B-1　meta.json 字段清单</p>
+      <table class="data-table">
+        <thead><tr><th>字段</th><th>含义</th><th>单位 / 取值</th></tr></thead>
+        <tbody>
+          <tr><td class="td-left">sample_rate</td><td class="td-left">采样率</td><td class="td-left">5×10⁶ Hz</td></tr>
+          <tr><td class="td-left">sample_format</td><td class="td-left">量化格式（gpssim.bin 为 I+Q 交织）</td><td class="td-left">int8</td></tr>
+          <tr><td class="td-left">total_samples</td><td class="td-left">复采样总数（= 采样率 × 时长）</td><td class="td-left">3×10⁸</td></tr>
+          <tr><td class="td-left">created_utc / output</td><td class="td-left">落盘时刻（UTC）/ 数据文件名</td><td class="td-left">— / gpssim.bin</td></tr>
+          <tr><td class="td-left">config.lat / lon / alt</td><td class="td-left">场景位置</td><td class="td-left">34.7466° / 113.6254° / 110 m</td></tr>
+          <tr><td class="td-left">config.start_utc / duration_s</td><td class="td-left">仿真起点 / 时长</td><td class="td-left">2026-10-10T04:00:00 / 60 s</td></tr>
+          <tr><td class="td-left">config.rinex_path / ephemeris_mode</td><td class="td-left">广播星历源文件 / 星历模式</td><td class="td-left">BRDC_2026283.rnx / broadcast</td></tr>
+          <tr><td class="td-left">config.atmosphere</td><td class="td-left"><strong>有效大气策略</strong>（验证链分流依据）</td><td class="td-left">ionosphere off · troposphere off</td></tr>
+          <tr><td class="td-left">config.sv_clock</td><td class="td-left"><strong>卫星钟注入开关</strong>（false＝已从真值剥离；TGD / BGD 不受控保留）</td><td class="td-left">false</td></tr>
+          <tr><td class="td-left">provenance.engine / ephemeris</td><td class="td-left">生成引擎 / 星历来源</td><td class="td-left">native / broadcast</td></tr>
+          <tr><td class="td-left">provenance.prns / systems</td><td class="td-left">GPS 参与星 PRN 列表 / 星座列表</td><td class="td-left">— / [E, G]</td></tr>
+          <tr><td class="td-left">provenance.nav / signals</td><td class="td-left">电文制式映射 / 信号名</td><td class="td-left">G→LNAV、E→I/NAV / GPS_L1CA、GAL_E1</td></tr>
+          <tr><td class="td-left">provenance.trajectory / phase1_approx</td><td class="td-left">卫星位置计算方式（逐 1 s 块重推外注入）</td><td class="td-left">per-block re-propagation</td></tr>
+          <tr><td class="td-left">provenance.route / fading / channel_models / impairments</td><td class="td-left">静态场景 / 衰落 / 信道模型 / 附加损伤——本 run 均关（IQ 干净叠加，噪声底仅来自 int8 量化）</td><td class="td-left">static / off / null / null</td></tr>
+          <tr><td class="td-left">provenance.svs[]</td><td class="td-left"><strong>逐星注入记录</strong>：code_len / chip_hz 码长码率；code_phase_chips 初相；code_doppler_hz / carrier_doppler_hz 注入码·载波多普勒；pseudorange_m 注入伪距；el_deg / az_deg 几何；gain / gain_db 注入幅度；fading_model 衰落编号（0=无）</td><td class="td-left">chips / Hz / m / deg</td></tr>
+          <tr><td class="td-left">provenance.warnings</td><td class="td-left">生成告警（空=无）</td><td class="td-left">—</td></tr>
+          <tr><td class="td-left">bands[]</td><td class="td-left">频段表：id / centre_hz / fs / file / systems / nsv_ref_scale 频段名、中心频率、采样率、数据文件、包含星座、功率参考刻度</td><td class="td-left">Hz</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="section-12-2">B.2 trace_sim.json（仿真侧真值，1 s 栅格）</h2>
+      <p class="src-note">表 B-2　trace_sim.json 逐星字段（数组均与 t_s 对齐）</p>
+      <table class="data-table">
+        <thead><tr><th>字段</th><th>含义</th><th>单位</th></tr></thead>
+        <tbody>
+          <tr><td class="td-left">sys / prn / band</td><td class="td-left">卫星与频段标识</td><td class="td-left">—</td></tr>
+          <tr><td class="td-left">if_hz / chip_hz / code_len</td><td class="td-left">中频中心 / 码率（C/A 与 E1B 均 1.023 M）/ 码长（1023 / 4092）</td><td class="td-left">Hz / chips</td></tr>
+          <tr><td class="td-left">code_phase0_chips</td><td class="td-left">首历元码相位</td><td class="td-left">chips</td></tr>
+          <tr><td class="td-left">code_doppler_hz</td><td class="td-left">注入码多普勒（码速率偏移）</td><td class="td-left">chips/s</td></tr>
+          <tr><td class="td-left">carrier_doppler_hz</td><td class="td-left">注入载波多普勒常数</td><td class="td-left">Hz</td></tr>
+          <tr><td class="td-left">pr_inj_m</td><td class="td-left">实际注入伪距（本策略下＝几何项）</td><td class="td-left">m</td></tr>
+          <tr><td class="td-left">gain / gain_db</td><td class="td-left">注入幅度线性值 / dB（自由空间路径损耗）</td><td class="td-left">— / dB</td></tr>
+          <tr><td class="td-left">fading_model</td><td class="td-left">衰落模型编号（0=无）</td><td class="td-left">—</td></tr>
+          <tr><td class="td-left">ph_syn_chips</td><td class="td-left">引擎合成侧码相位线性栅格</td><td class="td-left">chips</td></tr>
+          <tr><td class="td-left">pr_truth_m</td><td class="td-left"><strong>无环境项几何伪距真值</strong>（本报告判定基准）</td><td class="td-left">m</td></tr>
+          <tr><td class="td-left">fd_geo_hz</td><td class="td-left">几何载波多普勒逐历元时变值</td><td class="td-left">Hz</td></tr>
+          <tr><td class="td-left">fd_code_geo_hz</td><td class="td-left">几何码多普勒逐历元时变值</td><td class="td-left">chips/s</td></tr>
+          <tr><td class="td-left">atmo_m</td><td class="td-left">大气注入量（本策略恒 0）</td><td class="td-left">m</td></tr>
+          <tr><td class="td-left">el_deg_t / az_deg_t</td><td class="td-left">弹道仰角 / 方位角</td><td class="td-left">deg</td></tr>
+          <tr><td class="td-left">geometry_source（文件级）</td><td class="td-left">recomputed＝几何量由验证端同参重解（独立链路，非读引擎内存）</td><td class="td-left">—</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="section-12-3">B.3 trace_rx.json（FFT 圆相关捕获快照）</h2>
+      <p class="src-note">表 B-3　trace_rx.json 字段清单</p>
+      <table class="data-table">
+        <thead><tr><th>字段</th><th>含义</th><th>单位</th></tr></thead>
+        <tbody>
+          <tr><td class="td-left">acq.dopp_span_hz / dopp_step_hz / nperiods</td><td class="td-left">捕获扫描 ±300 Hz / 步进 50 Hz / 积累码周期数 2</td><td class="td-left">Hz / Hz / —</td></tr>
+          <tr><td class="td-left">ph_meas_chips</td><td class="td-left">捕获实测码相位（相关峰）</td><td class="td-left">chips</td></tr>
+          <tr><td class="td-left">fd_meas_hz</td><td class="td-left">实测多普勒（已加回预移频量还原绝对值）</td><td class="td-left">Hz</td></tr>
+          <tr><td class="td-left">metric_db</td><td class="td-left">相关峰 / 旁瓣度量</td><td class="td-left">dB</td></tr>
+          <tr><td class="td-left">err_chips</td><td class="td-left">实测 − 预测码相位（wrap 于 ±半码周期）</td><td class="td-left">chips</td></tr>
+          <tr><td class="td-left">pred_pr_m</td><td class="td-left">接收侧星历重解锚定预测伪距（本策略不加大气 / 钟差）</td><td class="td-left">m</td></tr>
+          <tr><td class="td-left">meas_pr_m</td><td class="td-left">锚定测量伪距 ≡ pred_pr + err_chips × (C / chip_hz ≈ 293.05)</td><td class="td-left">m</td></tr>
+          <tr><td class="td-left">el_rx_deg</td><td class="td-left">接收端复算仰角</td><td class="td-left">deg</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="section-12-4">B.4 trace_dll.json（coh 相干跟踪会话）</h2>
+      <p class="src-note">表 B-4　trace_dll.json 字段清单</p>
+      <table class="data-table">
+        <thead><tr><th>字段</th><th>含义</th><th>单位</th></tr></thead>
+        <tbody>
+          <tr><td class="td-left">dll.bw_hz / seed_nperiods / dopp_span_hz / dopp_step_hz / mode</td><td class="td-left">环路带宽 0.5 Hz / 种子窗 4 码周期 / 种子捕获扫描参数 / 判别器模式 coh</td><td class="td-left">—</td></tr>
+          <tr><td class="td-left">seed_metric_db</td><td class="td-left">建跟踪所用捕获度量（≥10 dB 才入跟踪，否则弃星）</td><td class="td-left">dB</td></tr>
+          <tr><td class="td-left">chi_chips</td><td class="td-left">环内连续码相位（码环判别器输出）</td><td class="td-left">chips</td></tr>
+          <tr><td class="td-left">fd_meas_hz</td><td class="td-left">PLL / FLL 输出多普勒</td><td class="td-left">Hz</td></tr>
+          <tr><td class="td-left">p_abs</td><td class="td-left">归一化相干相关峰值（锁质量，约 0–1）</td><td class="td-left">—</td></tr>
+          <tr><td class="td-left">err_chips</td><td class="td-left">码相位对 pred 锚点的 wrap 残差</td><td class="td-left">chips</td></tr>
+          <tr><td class="td-left">pred_pr_m / meas_pr_m</td><td class="td-left">锚定伪距对（配方同 B.3，1.5 节 / 附录 B.5 恒等关系）</td><td class="td-left">m</td></tr>
+          <tr><td class="td-left">el_rx_deg</td><td class="td-left">接收端复算仰角</td><td class="td-left">deg</td></tr>
+          <tr><td class="td-left">phase_cycles</td><td class="td-left">PLL 连续累积载波相位</td><td class="td-left">cycles</td></tr>
+          <tr><td class="td-left">phase_resid_cycles</td><td class="td-left">相位锚定残差（φ + 载波一致伪距 / λ，wrap 于 ±1；理想近常数）</td><td class="td-left">cycles</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="section-12-5">B.5 verify_sim_rx.json（36 项判定与电文比对）</h2>
+      <p class="src-note">表 B-5　verify_sim_rx.json 字段清单</p>
+      <table class="data-table">
+        <thead><tr><th>字段</th><th>含义</th><th>单位 / 取值</th></tr></thead>
+        <tbody>
+          <tr><td class="td-left">arrays_in</td><td class="td-left">参与对账的三份 trace</td><td class="td-left">sim / rx / dll</td></tr>
+          <tr><td class="td-left">thresholds</td><td class="td-left">15 项判定门限字典（快照两项按捕获量化 σ 自适应生成）</td><td class="td-left">各项见名定义</td></tr>
+          <tr><td class="td-left">tolk</td><td class="td-left">电文字段比对容差系数（容差 = tolk × 播发量化 LSB，整型字段精确比对）</td><td class="td-left">1.25</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.sys / gain_db / fd_inj_hz / chip_to_m / acq_quant_sigma_ch</td><td class="td-left">系统 / 注入增益 / 注入常数多普勒 / 每码片米数 / 捕获栅格量化 σ（快照门限理论参考）</td><td class="td-left">dB / Hz / m/ch / chips</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.code_snap / pr_snap / fd_snap</td><td class="td-left"><strong>快照组</strong>统计组：捕获码相位−真值栅格 / 快照伪距−真值 / 快照多普勒−几何多普勒（均去常数）</td><td class="td-left">chips / m / Hz</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.code_snap_pred</td><td class="td-left">trace_rx 侧 pred 锚定 err_chips 统计（不去常数）</td><td class="td-left">chips</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.el_max_deg / metric_mean_db</td><td class="td-left">接收仰角 vs 弹道仰角最大偏差 / 捕获度量均值</td><td class="td-left">deg / dB</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.code_trk / pr_trk / fd_trk</td><td class="td-left"><strong>跟踪组</strong>统计组：会话码相位−真值栅格 / 跟踪伪距−真值 / 跟踪多普勒−几何多普勒（去常数，且剔拉入暂态 · 种子瞬态历元）——判定量</td><td class="td-left">chips / m / Hz</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.code_trk_n_keep / fd_trk_n_keep</td><td class="td-left">锁定筛选后保留历元数</td><td class="td-left">—</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.code_trk_pred</td><td class="td-left">trace_dll 侧 pred 锚定 err_chips 统计（不去常数）</td><td class="td-left">chips</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.fd_trk_vs_const_bias_hz</td><td class="td-left">FLL 输出对注入常数多普勒的中值常数偏置（另行审计，不进判定）</td><td class="td-left">Hz</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.fd_geo_span_hz</td><td class="td-left">会话内几何多普勒时变跨度（判定量纲 sanity 参考）</td><td class="td-left">Hz</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.phase</td><td class="td-left">{drift_cycps：相位残差线性漂移率（判定项 ≤0.5），jitter_tracegrid_cyc：1 s 栅格抖动（仅供参考，权威抖动见 B.6），n_drop：无效历元数}</td><td class="td-left">cyc/s / cyc</td></tr>
+          <tr><td class="td-left">summary.G / E</td><td class="td-left">每系统：n_sv + 13 个判定项各 {worst 逐星最差, mean 逐星均值, threshold, pass}</td><td class="td-left">见名定义</td></tr>
+          <tr><td class="td-left">summary.verdict</td><td class="td-left">总判定（全过才 PASS）</td><td class="td-left">PASS / FAIL</td></tr>
+          <tr><td class="td-left">nav.&lt;星&gt;.decoded / seed</td><td class="td-left">电文重构是否成功 / 解调依据（tracked＝用跟踪种子）</td><td class="td-left">—</td></tr>
+          <tr><td class="td-left">nav.&lt;星&gt;.subframes（G）/ pages（E）</td><td class="td-left">LNAV 已解子帧号列表 / I/NAV 已解页数</td><td class="td-left">— / 页</td></tr>
+          <tr><td class="td-left">nav.&lt;星&gt;.fields / fields_checked</td><td class="td-left">解出的广播星历字段全组（G / E 各自同名字段集逐字段比对）/ 实际比对字段数</td><td class="td-left">—</td></tr>
+          <tr><td class="td-left">nav.&lt;星&gt;.mismatches / warn_zeroable</td><td class="td-left">不符清单（{f 字段名, dec 解值, ref 参考值, err}）/ "允许播零"字段告警（不计不符）</td><td class="td-left">—</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="section-12-6">B.6 tracking_fix_coh.json（相干跟踪解算）</h2>
+      <p class="src-note">表 B-6　tracking_fix_coh.json 字段清单</p>
+      <table class="data-table">
+        <thead><tr><th>字段</th><th>含义</th><th>单位</th></tr></thead>
+        <tbody>
+          <tr><td class="td-left">track_s / dll_bw_hz / dll_mode</td><td class="td-left">会话时长 / 环路带宽 / 判别器模式</td><td class="td-left">s / Hz / coh</td></tr>
+          <tr><td class="td-left">n_sv / acquired / skipped</td><td class="td-left">进 LS 星数 / 锁定成功清单 / 被弃星清单</td><td class="td-left">25</td></tr>
+          <tr><td class="td-left">error_m / enu_m</td><td class="td-left">三维定位误差 / 东·北·天误差分量（本 run 0.227；−0.037 / +0.075 / −0.211）</td><td class="td-left">m</td></tr>
+          <tr><td class="td-left">ecef / truth_ecef / llh</td><td class="td-left">解算与真值 ECEF / 解算经纬高</td><td class="td-left">m / deg, m</td></tr>
+          <tr><td class="td-left">clock_bias_s</td><td class="td-left">LS 拟合接收机钟差</td><td class="td-left">s</td></tr>
+          <tr><td class="td-left">pdop / residual_rms_m</td><td class="td-left">位置精度因子 / LS 拟合残差 RMS</td><td class="td-left">— / m</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.measured_pr_m / corrected_pr_m</td><td class="td-left">锁定点原始锚定伪距 / 按策略修正后送 LS 伪距（本口径两修正同步归零）</td><td class="td-left">m</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.err_chips / err_chips_avg / chip_rms_hist</td><td class="td-left">锁定点码相位误差 / <strong>会话均值码相位误差（进定位的测量）</strong> / 会话内码相位误差 RMS</td><td class="td-left">chips</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.fd_meas_hz / carrier_phase_cycles / pll_off_hz / n_pll_skipped</td><td class="td-left">锁定点多普勒 / 锁定点载波相位 / PLL 平均频偏 / Costas 比特沿跳块数</td><td class="td-left">Hz / cyc / Hz / —</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.phase_rms_cycles / phase_drift_cycps</td><td class="td-left">线性去趋势会话相位抖动（判定与图 9 用）/ 相位残差漂移率</td><td class="td-left">cyc / cyc/s</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.metric_db / el_deg</td><td class="td-left">捕获度量 / 仰角</td><td class="td-left">dB / deg</td></tr>
+          <tr><td class="td-left">per_sv.&lt;星&gt;.err_m / err_avg_m</td><td class="td-left">锁定点 / 会话均值伪距误差（图 3 / 图 9 数据源）</td><td class="td-left">m</td></tr>
         </tbody>
       </table>
     </div>

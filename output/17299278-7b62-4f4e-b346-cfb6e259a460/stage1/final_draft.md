@@ -231,3 +231,119 @@ python .workbuddy/make_report_charts_noclock.py 20261110T020937303125
 | out/20261110T020937303125/trace_sim.json · trace_dll.json | 逐历元仿真↔相干跟踪轨迹对账数据 |
 | out/20261110T020937303125/meta.json · gpssim.bin | 场景策略（atmosphere off / sv_clock false）、逐星注入真值与 IQ 数据 |
 | out/20261110T020937303125/figs/fig01–fig09.png | 本报告图件 |
+
+## 附录 B　输出 json 字段释义
+
+六份 json 产物的逐字段含义（实测于 out/20261110T020937303125/，字段清单由实物文件枚举核对）。说明约定：**统计组**指形如 `{n, rms, max_abs, bias}` 的子字典——n 为参与历元数，rms / max_abs 为**去除常数后**的波动统计，bias 为被扣除的中值常数（落盘备查）。三份 trace 文件共有的文件级字段：kind（文件类型标识）、runid、engine、start_utc（场景起点 UTC）、sow0（栅格起点 GPS 周秒）、step_s（栅格步长，1 s）、n_epochs（历元数 30）、t_s（逐历元相对时刻，s）。
+
+### B.1 meta.json（生成器：native 引擎；全部验证路径的策略分流入口）
+
+| 字段 | 含义 | 单位/取值 |
+|------|------|-----------|
+| `sample_rate` | 采样率 | 5×10⁶ Hz |
+| `sample_format` | 量化格式（gpssim.bin 为 I+Q 交织） | int8 |
+| `total_samples` | 复采样总数（= 采样率 × 时长） | 3×10⁸ |
+| `created_utc` / `output` | 落盘时刻（UTC）/ 数据文件名 | — / gpssim.bin |
+| `config.lat / lon / alt` | 场景位置 | 34.7466° / 113.6254° / 110 m |
+| `config.start_utc / duration_s` | 仿真起点 / 时长 | 2026-10-10T04:00:00 / 60 s |
+| `config.rinex_path` | 广播星历源文件路径 | BRDC_2026283.rnx |
+| `config.ephemeris_mode` | 星历模式 | broadcast |
+| `config.atmosphere` | **有效大气策略**（验证链分流依据） | ionosphere off · troposphere off |
+| `config.sv_clock` | **卫星钟注入开关**（false=已从真值剥离；TGD/BGD 不受控保留） | false |
+| `provenance.engine / ephemeris` | 生成引擎 / 星历来源 | native / broadcast |
+| `provenance.prns / systems` | GPS 参与星 PRN 列表 / 星座列表 | — / [E, G] |
+| `provenance.nav / signals` | 电文制式映射 / 信号名 | G→LNAV、E→I/NAV / GPS_L1CA、GAL_E1 |
+| `provenance.trajectory / phase1_approx` | 卫星位置计算方式（逐 1 s 块重推外注入） | per-block re-propagation |
+| `provenance.route / fading / channel_models / impairments` | 静态场景 / 衰落 / 信道模型 / 附加损伤——本 run 均关（IQ 干净叠加，噪声底仅来自 int8 量化） | static / off / null / null |
+| `provenance.svs[]` | **逐星注入记录**：`code_len / chip_hz` 码长与码率；`code_phase_chips` 初相；`code_doppler_hz / carrier_doppler_hz` 注入码/载波多普勒；`pseudorange_m` 注入伪距；`el_deg / az_deg` 几何；`gain / gain_db` 注入幅度（线性/dB）；`fading_model` 衰落编号（0=无） | chips / Hz / m / deg |
+| `provenance.warnings` | 生成告警（空=无） | — |
+| `bands[]` | 频段表：`id / centre_hz / fs / file / systems / nsv_ref_scale` 频段名、中心频率、采样率、数据文件、包含星座、功率参考刻度 | Hz |
+
+### B.2 trace_sim.json（`analysis/trace.py::dump_sim_trace`；仿真侧真值，1 s 栅格）
+
+| 字段（每星数组，与 t_s 对齐） | 含义 | 单位 |
+|------|------|------|
+| `sys / prn / band` | 卫星与频段标识 | — |
+| `if_hz / chip_hz / code_len` | 中频中心 / 码率（C/A 与 E1B 均 1.023 M）/ 码长（1023 / 4092） | Hz / chips |
+| `code_phase0_chips` | 首历元码相位 | chips |
+| `code_doppler_hz` | 注入码多普勒（码速率偏移） | chips/s |
+| `carrier_doppler_hz` | 注入载波多普勒常数 | Hz |
+| `pr_inj_m` | 实际注入伪距（本策略下 = 几何项） | m |
+| `gain / gain_db` | 注入幅度线性值 / dB（自由空间路径损耗） | — / dB |
+| `fading_model` | 衰落模型编号（0=无） | — |
+| `ph_syn_chips` | 引擎合成侧码相位线性栅格 | chips |
+| `pr_truth_m` | **无环境项几何伪距真值**（本报告判定基准） | m |
+| `fd_geo_hz` | 几何载波多普勒逐历元时变值 | Hz |
+| `fd_code_geo_hz` | 几何码多普勒逐历元时变值 | chips/s |
+| `atmo_m` | 大气注入量（本策略恒 0） | m |
+| `el_deg_t / az_deg_t` | 弹道仰角 / 方位角 | deg |
+| （文件级）`geometry_source` | recomputed＝几何量由验证端同参重解（独立链路，非读引擎内存） | — |
+
+### B.3 trace_rx.json（`trace.py::dump_rx_trace`；FFT 圆相关捕获快照）
+
+| 字段 | 含义 | 单位 |
+|------|------|------|
+| `acq.dopp_span_hz / dopp_step_hz / nperiods` | 捕获扫描 ±300 Hz / 步进 50 Hz / 积累码周期数 2 | Hz / Hz / — |
+| `ph_meas_chips` | 捕获实测码相位（相关峰） | chips |
+| `fd_meas_hz` | 实测多普勒（已加回预移频量还原绝对值） | Hz |
+| `metric_db` | 相关峰/旁瓣度量 | dB |
+| `err_chips` | 实测−预测码相位（wrap 于 ±半码周期） | chips |
+| `pred_pr_m` | 接收侧星历重解锚定预测伪距（本策略不加大气/钟差） | m |
+| `meas_pr_m` | 锚定测量伪距 ≡ pred_pr + err_chips×(C/chip_hz ≈ 293.05) | m |
+| `el_rx_deg` | 接收端复算仰角 | deg |
+
+### B.4 trace_dll.json（`trace.py::dump_rx_trace_dll`；coh 相干跟踪会话）
+
+| 字段 | 含义 | 单位 |
+|------|------|------|
+| `dll.bw_hz / seed_nperiods / dopp_span_hz / dopp_step_hz / mode` | 环路带宽 0.5 Hz / 种子窗 4 码周期 / 种子捕获扫描参数 / 判别器模式 coh | — |
+| `seed_metric_db` | 建跟踪所用捕获度量（≥10 dB 才入跟踪，否则弃星） | dB |
+| `chi_chips` | 环内连续码相位（码环判别器输出） | chips |
+| `fd_meas_hz` | PLL/FLL 输出多普勒 | Hz |
+| `p_abs` | 归一化相干相关峰值（锁质量，~0–1） | — |
+| `err_chips` | 码相位对 pred 锚点的 wrap 残差 | chips |
+| `pred_pr_m / meas_pr_m` | 锚定伪距对（配方同 B.3） | m |
+| `el_rx_deg` | 接收端复算仰角 | deg |
+| `phase_cycles` | PLL 连续累积载波相位 | cycles |
+| `phase_resid_cycles` | 相位锚定残差（φ + 载波一致伪距/λ，wrap 于 ±1；理想近常数） | cycles |
+
+### B.5 verify_sim_rx.json（`scripts/verify_sim_rx.py`；36 项判定与电文比对）
+
+| 字段 | 含义 | 单位/取值 |
+|------|------|-----------|
+| `arrays_in` | 参与对账的三份 trace | sim/rx/dll |
+| `thresholds` | 15 项判定门限字典（快照两项按捕获量化 σ 自适应生成） | 各项见名定义 |
+| `tolk` | 电文字段比对容差系数（容差 = tolk × 播发量化 LSB，整型字段精确比对） | 1.25 |
+| `per_sv.<星>.sys / gain_db / fd_inj_hz / chip_to_m / acq_quant_sigma_ch` | 系统 / 注入增益 / 注入常数多普勒 / 每码片米数 / 捕获栅格量化 σ（快照门限理论参考） | dB / Hz / m/ch / chips |
+| `per_sv.<星>.code_snap / pr_snap / fd_snap` | **快照组**统计组：捕获码相位−真值栅格 / 快照伪距−真值 / 快照多普勒−几何多普勒（均去常数） | chips / m / Hz |
+| `per_sv.<星>.code_snap_pred` | trace_rx 侧 pred 锚定 err_chips 统计（不去常数） | chips |
+| `per_sv.<星>.el_max_deg / metric_mean_db` | 接收仰角 vs 弹道仰角最大偏差 / 捕获度量均值 | deg / dB |
+| `per_sv.<星>.code_trk / pr_trk / fd_trk` | **跟踪组**统计组：会话码相位−真值栅格 / 跟踪伪距−真值 / 跟踪多普勒−几何多普勒（去常数，且剔拉入暂态/种子瞬态历元）——判定量 | chips / m / Hz |
+| `per_sv.<星>.code_trk_n_keep / fd_trk_n_keep` | 锁定筛选后保留历元数 | — |
+| `per_sv.<星>.code_trk_pred` | trace_dll 侧 pred 锚定 err_chips 统计（不去常数） | chips |
+| `per_sv.<星>.fd_trk_vs_const_bias_hz` | FLL 输出对注入常数多普勒的中值常数偏置（另行审计，不进判定） | Hz |
+| `per_sv.<星>.fd_geo_span_hz` | 会话内几何多普勒时变跨度（判定量纲 sanity 参考） | Hz |
+| `per_sv.<星>.phase` | `{drift_cycps：相位残差线性漂移率（判定项 ≤0.5），jitter_tracegrid_cyc：1 s 栅格抖动（仅供参考，权威抖动见 B.6），n_drop：无效历元数}` | cyc/s / cyc |
+| `summary.G / E` | 每系统：`n_sv` + 13 个判定项各 `{worst 逐星最差, mean 逐星均值, threshold, pass}` | 见名定义 |
+| `summary.verdict` | 总判定（全过才 PASS） | PASS / FAIL |
+| `nav.<星>.decoded / seed` | 电文重构是否成功 / 解调依据（tracked＝用跟踪种子） | — |
+| `nav.<星>.subframes（G）/ pages（E）` | LNAV 已解子帧号列表 / I/NAV 已解页数 | — / 页 |
+| `nav.<星>.fields / fields_checked` | 解出的广播星历字段全组（G 25 项、E 24+项同名比对）/ 实际比对字段数 | — |
+| `nav.<星>.mismatches / warn_zeroable` | 不符清单（`{f 字段名, dec 解值, ref 参考值, err}`）/ "允许播零"字段告警（不计不符） | — |
+
+### B.6 tracking_fix_coh.json（`.workbuddy/coh_fix_export.py`；相干跟踪解算）
+
+| 字段 | 含义 | 单位 |
+|------|------|------|
+| `track_s / dll_bw_hz / dll_mode` | 会话时长 / 环路带宽 / 判别器模式 | s / Hz / coh |
+| `n_sv / acquired / skipped` | 进 LS 星数 / 锁定成功清单 / 被弃星清单 | 25 |
+| `error_m / enu_m` | 三维定位误差 / 东·北·天误差分量（本 run 0.227；−0.037/+0.075/−0.211） | m |
+| `ecef / truth_ecef / llh` | 解算与真值 ECEF / 解算经纬高 | m / deg,m |
+| `clock_bias_s` | LS 拟合接收机钟差 | s |
+| `pdop / residual_rms_m` | 位置精度因子 / LS 拟合残差 RMS | — / m |
+| `per_sv.<星>.measured_pr_m / corrected_pr_m` | 锁定点原始锚定伪距 / 按策略修正后送 LS 伪距（本口径两修正同步归零） | m |
+| `per_sv.<星>.err_chips / err_chips_avg / chip_rms_hist` | 锁定点码相位误差 / **会话均值码相位误差（进定位的测量）** / 会话内码相位误差 RMS | chips |
+| `per_sv.<星>.fd_meas_hz / carrier_phase_cycles / pll_off_hz / n_pll_skipped` | 锁定点多普勒 / 锁定点载波相位 / PLL 平均频偏 / Costas 比特沿跳块数 | Hz / cyc / Hz / — |
+| `per_sv.<星>.phase_rms_cycles / phase_drift_cycps` | 线性去趋势会话相位抖动（判定/图 9 用）/ 相位残差漂移率 | cyc / cyc/s |
+| `per_sv.<星>.metric_db / el_deg` | 捕获度量 / 仰角 | dB / deg |
+| `per_sv.<星>.err_m / err_avg_m` | 锁定点 / 会话均值伪距误差（图 3/9 数据源） | m |
