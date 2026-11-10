@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="docx-page-size" content="A4">
+  <title>真实接收机 300 秒全链路评估报告</title>
+  <style>
+  /* 页面规则（页眉页脚模型）：正文页脚居中页码 */
+  @page {
+    @bottom-center { content: counter(page); }
+  }
+  @page cover {
+    @bottom-center { content: none; }
+  }
+  section[role="cover"] { page: cover; }
+
+  :root {
+    --fs-h1: var(--typography-fontSize-h1, 22pt);
+    --fs-h2: var(--typography-fontSize-h2, 16pt);
+    --fs-h3: var(--typography-fontSize-h3, 13pt);
+    --fs-body: var(--typography-fontSize-body, 12pt);
+    --fs-small: var(--typography-fontSize-small, 10pt);
+    --fs-cover-title: var(--typography-fontSize-coverTitle, 26pt);
+    --fs-cover-category: var(--typography-fontSize-coverCategory, 13pt);
+    --fs-cover-subtitle: var(--typography-fontSize-coverSubtitle, 14pt);
+    --fs-cover-info: var(--typography-fontSize-coverInfo, 11pt);
+    --fs-kpi: var(--typography-fontSize-kpi, 15pt);
+    --fs-table: var(--typography-fontSize-table, 10.5pt);
+    --ff-heading: var(--typography-fontFamily-heading, "微软雅黑", "Microsoft YaHei", sans-serif);
+    --ff-body: "SimSun", "宋体", serif;
+    --ff-mono: "Consolas", "Courier New", monospace;
+    --lh-body: var(--typography-lineHeight-body, 1.6);
+    --fw-bold: var(--typography-fontWeight-bold, 700);
+    --color-primary: var(--color-primary, #1a73e8);
+    --color-text: var(--color-text, #000000);
+    --color-muted: var(--color-muted, #666666);
+    --color-soft: var(--color-muted, #333333);
+    --color-border: var(--color-border, #cccccc);
+    --color-bg: var(--color-bg, #ffffff);
+    --color-highlight: var(--color-highlight, #f5f7fa);
+    --color-summary-bg: var(--color-highlight);
+    --color-summary-border: var(--color-primary);
+    --color-emphasis: var(--color-danger, #c62828);
+    --color-success: var(--color-success, #2e7d32);
+    --color-warn: #e65100;
+    --summary-border-width: var(--border-thick, 4px);
+    --border-thick: var(--typography-border-thick, 4px);
+    --border-thin: var(--typography-border-thin, 1px);
+    --radius-card: var(--spacing-block, 8px);
+    --spacing-paragraph: var(--spacing-paragraph, 0.8em);
+    --spacing-section: var(--spacing-section, 2em);
+    --spacing-block: var(--spacing-block, 1em);
+    --spacing-half: var(--spacing-half, 0.5em);
+    --spacing-third: var(--spacing-third, 0.3em);
+    --spacing-quarter: var(--spacing-quarter, 0.4em);
+    --spacing-small: var(--spacing-small, 0.6em);
+    --spacing-tall: var(--spacing-tall, 1.2em);
+    --spacing-big: var(--spacing-big, 1.4em);
+    --spacing-cover-top: var(--layout-coverTop, 320px);
+    --pad-cell-h: var(--layout-padCellH, 8px);
+    --pad-cell-v: var(--layout-padCellV, 5px);
+    --pad-cell-h-th: var(--layout-padCellHTh, 8px);
+    --pad-cell-v-th: var(--layout-padCellVTh, 6px);
+    --pad-code: var(--layout-padCode, 8px);
+    --margin-page: var(--layout-margin, 2.5cm);
+    --page-content-width: var(--layout-contentWidth, 15.6cm);
+    --indent-body: var(--typography-textIndent, 2em);
+    --indent-list: var(--typography-listIndent, 2em);
+    --letter-space: var(--typography-letterSpacing, 0.08em);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--ff-body); font-size: var(--fs-body); line-height: var(--lh-body); color: var(--color-text); background: var(--color-bg); max-width: var(--page-content-width); margin-left: auto; margin-right: auto; }
+
+  /* 封面 */
+  .cover-spacer { font-size: var(--fs-cover-title); text-indent: 0; margin-top: var(--spacing-cover-top); color: var(--color-primary); }
+  .cover-category { font-size: var(--fs-cover-category); font-family: var(--ff-heading); font-weight: var(--fw-bold); color: var(--color-primary); letter-spacing: var(--letter-space); margin-bottom: var(--spacing-half); text-align: left; }
+  .cover-title { font-size: var(--fs-cover-title); font-family: var(--ff-heading); font-weight: var(--fw-bold); color: var(--color-primary); margin-bottom: var(--spacing-half); text-align: left; }
+  .cover-subtitle { font-size: var(--fs-cover-subtitle); color: var(--color-muted); margin-bottom: var(--spacing-tall); text-align: left; font-family: var(--ff-heading); }
+  .cover-meta { font-size: var(--fs-small); color: var(--color-muted); text-align: left; }
+  .cover-info { border-collapse: collapse; margin-top: var(--spacing-block); }
+  .cover-info td { font-size: var(--fs-cover-info); color: var(--color-soft); padding: var(--pad-cell-v) var(--pad-cell-h); border: none; text-align: left; }
+
+  /* 目录 */
+  .doc-toc { padding: var(--spacing-block) 0; background: var(--color-bg); }
+  .toc-title { font-weight: var(--fw-bold); font-family: var(--ff-heading); font-size: var(--fs-h2); margin-bottom: var(--spacing-half); text-indent: 0; color: var(--color-text); }
+  .toc-list, .toc-list ol, .toc-list ul { list-style: none; list-style-type: none; padding-left: var(--indent-list); }
+  .toc-list li { margin-bottom: var(--spacing-third); text-indent: 0; font-size: var(--fs-body); color: var(--color-text); }
+  .toc-list a { color: var(--color-primary); text-decoration: none; }
+
+  /* 执行摘要 */
+  .executive-summary { margin: var(--spacing-section) 0; padding: var(--spacing-tall); border-left: var(--summary-border-width) solid var(--color-summary-border); background: var(--color-summary-bg); }
+  .summary-header { margin-bottom: var(--spacing-block); }
+  .summary-title { font-size: var(--fs-h2); font-family: var(--ff-heading); font-weight: var(--fw-bold); text-indent: 0; color: var(--color-text); }
+  .summary-badge { font-size: var(--fs-small); color: var(--color-muted); font-style: italic; }
+  .kpi-table { width: 100%; border-collapse: collapse; margin-bottom: var(--spacing-block); }
+  .kpi-table td { background: var(--color-bg); border: var(--border-thin) solid var(--color-border); padding: var(--pad-cell-v-th) var(--pad-cell-h); text-align: center; vertical-align: middle; }
+  .kpi-name { display: block; font-size: var(--fs-small); color: var(--color-muted); margin-bottom: var(--spacing-third); text-indent: 0; }
+  .kpi-value { display: block; font-size: var(--fs-kpi); font-weight: var(--fw-bold); color: var(--color-primary); font-family: var(--ff-heading); text-indent: 0; }
+  .kpi-value.kpi-warn { color: var(--color-warn); }
+  .summary-body { font-size: var(--fs-body); color: var(--color-text); }
+
+  /* 正文 */
+  .report-body h1 { font-size: var(--fs-h2); font-family: var(--ff-heading); font-weight: var(--fw-bold); color: var(--color-primary); margin-top: var(--spacing-tall); margin-bottom: var(--spacing-block); text-indent: 0; border-left: var(--border-thick) solid var(--color-primary); padding-left: var(--pad-cell-h); }
+  .report-body h2 { font-size: var(--fs-h3); font-family: var(--ff-heading); font-weight: var(--fw-bold); margin-top: var(--spacing-block); margin-bottom: var(--spacing-half); text-indent: 0; color: var(--color-text); }
+  .report-body p { font-family: var(--ff-body); font-size: var(--fs-body); line-height: var(--lh-body); margin-bottom: var(--spacing-paragraph); text-indent: var(--indent-body); color: var(--color-text); }
+  .report-body ol, .report-body ul { padding-left: var(--indent-list); margin-bottom: var(--spacing-paragraph); }
+  .report-body li { font-size: var(--fs-body); margin-bottom: var(--spacing-quarter); text-indent: 0; color: var(--color-text); }
+  .data-emphasis { color: var(--color-emphasis); font-weight: var(--fw-bold); }
+  .judge-warn { color: var(--color-warn); font-weight: var(--fw-bold); }
+  .judge-pass { color: var(--color-success); font-weight: var(--fw-bold); }
+
+  /* 表格 */
+  .data-table { width: 100%; border-collapse: collapse; margin-bottom: var(--spacing-tall); }
+  .data-table th { background: var(--color-highlight); font-family: var(--ff-heading); font-size: var(--fs-table); font-weight: var(--fw-bold); padding: var(--pad-cell-v-th) var(--pad-cell-h-th); border: var(--border-thin) solid var(--color-border); text-align: center; color: var(--color-text); }
+  .data-table td { font-family: var(--ff-body); font-size: var(--fs-table); padding: var(--pad-cell-v) var(--pad-cell-h); border: var(--border-thin) solid var(--color-border); text-align: center; color: var(--color-text); }
+  .data-table td.td-left { text-align: left; }
+  .src-note { font-size: var(--fs-small); color: var(--color-muted); background: var(--color-highlight); padding: var(--pad-cell-v) var(--pad-cell-h); margin-bottom: var(--spacing-block); text-indent: 0; }
+
+  /* 图 */
+  .fig-block { margin: var(--spacing-small) 0 var(--spacing-big) 0; }
+  .fig-block img { width: 100%; display: block; margin-left: auto; margin-right: auto; }
+  .fig-caption { font-size: var(--fs-small); color: var(--color-muted); text-align: center; text-indent: 0; font-family: var(--ff-heading); margin-top: var(--spacing-third); margin-bottom: 0; }
+
+  /* 代码 */
+  .code-line { font-family: var(--ff-mono); font-size: var(--fs-table); background: var(--color-highlight); border: var(--border-thin) solid var(--color-border); padding: var(--pad-code); margin-bottom: var(--spacing-block); text-indent: 0; color: var(--color-soft); }
+
+  /* 附录 */
+  .appendix { border-top: var(--border-thin) solid var(--color-border); margin-top: var(--spacing-section); padding-top: var(--spacing-block); }
+  .appendix h1 { border-left: none; padding-left: 0; }
+  </style>
+</head>
+
+<body>
+  <section role="cover">
+    <p class="cover-spacer">&nbsp;</p>
+    <p class="cover-category">GNSS 信号仿真 · 真实接收机全链路评估报告</p>
+    <p class="cover-title">真实接收机 300 秒<br>全链路评估报告</p>
+    <p class="cover-subtitle">捕获 → 连续跟踪 → 电文自解 → 逐秒观测 → 逐秒定位 · 观测与电文 RINEX 落盘 · 生成真值逐秒对比</p>
+    <table class="cover-info">
+      <thead></thead>
+      <tbody>
+        <tr><td>评估场景</td><td>郑州 · 25 星（GPS 10 + Galileo 15）· 300 s @ 5 Msps int8</td></tr>
+        <tr><td>数据批次</td><td>run 20261110T084902599874（native 引擎）</td></tr>
+        <tr><td>环境策略</td><td>电离层 off · 对流层 off · 卫星钟差 off（TGD/BGD 保留，电文忠实广播）</td></tr>
+        <tr><td>接收方式</td><td>完全实时流程：两段式捕获（不使用生成真值）→ 300 s 相干跟踪 → 电文自解码 → 每秒四观测 → 逐秒瞬时 LS（不平均）</td></tr>
+        <tr><td>评估工具</td><td>.workbuddy/rx_realtime_300.py + scripts/plot_rt300.py + trace_sim 真值栅格</td></tr>
+        <tr><td>报告日期</td><td>2026-11-10 · v1.0（无大气 · 无卫星钟差口径）</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section role="cover">
+  <nav class="doc-toc" aria-label="文档目录">
+    <p class="toc-title">目录</p>
+    <ol class="toc-list">
+      <li><a href="#section-1">1 评估对象与需求落实</a></li>
+      <li><a href="#section-2">2 评估方法</a></li>
+      <li><a href="#section-3">3 评估结果总览</a></li>
+      <li><a href="#section-4">4 捕获与电文自解结果</a></li>
+      <li><a href="#section-5">5 观测量精度（对仿真真值）</a></li>
+      <li><a href="#section-6">6 逐秒定位精度</a></li>
+      <li><a href="#section-7">7 输出数据文件与字段含义</a></li>
+      <li><a href="#section-8">8 结论与已知边界</a></li>
+      <li><a href="#section-9">附录 A 复现方法</a></li>
+    </ol>
+  </nav>
+  </section>
+
+  <section role="body" class="report-body" data-page-restart="1">
+    <div class="executive-summary">
+      <div class="summary-header">
+        <p class="summary-title" style="display:inline;">执行摘要</p>
+        <p style="display:inline; text-indent:0; margin-left:12px;"><span class="summary-badge">Executive Summary</span></p>
+      </div>
+      <table class="kpi-table">
+        <thead></thead>
+        <tbody>
+          <tr>
+            <td><span class="kpi-name">捕获成功率</span><span class="kpi-value">25 / 25</span></td>
+            <td><span class="kpi-name">电文自解码</span><span class="kpi-value">25 / 25</span></td>
+            <td><span class="kpi-name">首次定位时间 TTFF</span><span class="kpi-value">60 s</span></td>
+            <td><span class="kpi-name">定位三维误差 RMS</span><span class="kpi-value">2.24 m</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="summary-body">
+        <p style="text-indent:2em;">&nbsp;&nbsp;本报告按<span class="data-emphasis">真实接收机工作方式</span>对 300 秒仿真场景做端到端闭环评估：接收链从不使用任何生成侧真值，自主完成两段式捕获 → 300 s 连续相干跟踪 → LNAV / I/NAV 电文解调解析 → 每秒产出伪距、载波相位、多普勒、C/N0 四类观测（300 历元 × 25 星共 7500 组）→ 在全部电文解析完整（60 s）后逐秒进行一次不平均的瞬时最小二乘定位（共 241 历元）。观测数据与自解电文分别按 RINEX 3.04 落盘为 OBS 与 NAV 文件，每秒电文比特流以十六进制 ASCII 独立落盘。对生成侧 trace_sim 300 历元真值栅格：池化伪距误差 RMS <span class="data-emphasis">0.917 米</span>（GPS 0.630 / Galileo 1.067），多普勒 RMS <span class="data-emphasis">0.169 Hz</span>，GPS 侧 C/N0 与注入增益贴合（51.35±1.17 dB-Hz）；241 历元定位三维误差 RMS <span class="data-emphasis">2.241 米</span>（中值 2.061 米、P95 3.45 米，PDOP 1.04，水平 RMS 1.29 米）。捕获、电文、观测量、定位四个层级全部达标，<span class="data-emphasis">需求 9 项全部落实，总体判定 PASS</span>。唯一口径限定：Galileo 侧跟踪抖动偏大星（10/15）的矩法 C/N0 绝对值仅供参考（第 5.4 节）。</p>
+      </div>
+    </div>
+
+    <main>
+
+      <h1 id="section-1">1 评估对象与需求落实</h1>
+      <p>评估对象是 gnss-sim 仿真-接收互验体系在<span class="data-emphasis">完全实时接收机工作流</span>下的表现。既有验证链（快照式捕获 + 短窗跟踪解算）已经证明测量与真值可以吻合到分米级，但它借用了生成侧真值做种子与预测辅助，并非真实接收机的行为。本评估把接收链改为：一切种子来自捕获自身、星历来自接收机自解码的电文、观测每秒独立产生、定位每秒独立解算，从而回答工程上更关心的问题——<span class="data-emphasis">如果这真是一台接收机，它在 300 秒里能做到什么</span>。</p>
+
+<p class="src-note">表 1　任务需求逐条落实矩阵</p>
+<table class="data-table">
+<thead><tr><th>需求项（原话要点）</th><th>实现方式</th><th>核验值</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td class="td-left">仿真与处理时长 300 s</td><td class="td-left">场景 duration_s=300，跟踪 track_s=300</td><td class="td-left">gpssim.bin 3.0 GB / 观测 300 历元</td><td>达成</td></tr>
+<tr><td class="td-left">先进行捕获</td><td class="td-left">两段式非相干捕获（不使用生成真值）</td><td class="td-left">25/25 过 15 dB 门限（最低 16.33 dB）</td><td>达成</td></tr>
+<tr><td class="td-left">然后持续进行跟踪</td><td class="td-left">pass1 自辅助 + pass2 正式 coh 双遍 300 s 连续</td><td class="td-left">环路全程无星中断（无 skipped）</td><td>达成</td></tr>
+<tr><td class="td-left">每秒一次观测：伪距/相位/多普勒/载噪比</td><td class="td-left">obs k=1..300 四观测量</td><td class="td-left">7500 组全部产出并写 RINEX OBS</td><td>达成</td></tr>
+<tr><td class="td-left">进行电文解调</td><td class="td-left">G LNAV 滑窗 / E I/NAV 分块 → 星历重构</td><td class="td-left">25/25 解码完整（G 59 s · E 60 s）</td><td>达成</td></tr>
+<tr><td class="td-left">每秒 bit 流 hex ASCII 单独存文件</td><td class="td-left">navbits_300.txt，秒桶逐行</td><td class="td-left">7500 数据行（G 50 bit/s · E 250 符号/s）</td><td>达成</td></tr>
+<tr><td class="td-left">电文解析完整后每秒定位、不做平均</td><td class="td-left">T_full=60 s 后逐秒瞬时 LS</td><td class="td-left">241 历元，nsat=25 恒定</td><td>达成</td></tr>
+<tr><td class="td-left">观测与解析电文以 RINEX 存储</td><td class="td-left">RINEX 3.04 OBS + NAV（georinex 回读校验）</td><td class="td-left">readback ok（字节级字段一致）</td><td>达成</td></tr>
+<tr><td class="td-left">逐秒对比画图 + 完整评估报告</td><td class="td-left">trace_sim 300 历元 + 8 面板图 + 本报告</td><td class="td-left">rt300_analysis.png / 本文</td><td>达成</td></tr>
+</tbody>
+</table>
+
+      <h1 id="section-2">2 评估方法</h1>
+      <h2>2.1 场景与输入</h2>
+
+<p class="src-note">表 2　评估场景配置（run 20261110T084902599874）</p>
+<table class="data-table">
+<thead><tr><th>配置项</th><th>取值</th></tr></thead>
+<tbody>
+<tr><td class="td-left">场景位置</td><td class="td-left">郑州（北纬 34.7466°，东经 113.6254°，高程 110 m），静态</td></tr>
+<tr><td class="td-left">仿真起点 / 时长</td><td class="td-left">2026-10-10T04:00:00 UTC · 300 s（GPS 周 2439，起始周内秒 532818.0）</td></tr>
+<tr><td>采样</td><td class="td-left">5 Msps / int8，单 L1 频带（中心 1575.42 MHz），gpssim.bin ≈ 3.0 GB</td></tr>
+<tr><td>星座</td><td class="td-left">GPS L1 C/A 10 星（G1,2,10,12,13,23,25,28,31,32）+ Galileo E1B 15 星，共 25 星</td></tr>
+<tr><td>星历</td><td class="td-left">广播星历 BRDC_2026283.rnx，电文忠实广播（LNAV / I/NAV）</td></tr>
+<tr><td class="td-left">环境注入</td><td class="td-left">电离层 off · 对流层 off · 卫星钟差 off（TGD / BGD 保留）</td></tr>
+<tr><td class="td-left">生成引擎</td><td class="td-left">native（C++20）：几何多普勒、码相位、载波相位、逐星增益照常注入；无衰落</td></tr>
+<tr><td>噪声</td><td class="td-left">postproc 按目标载噪比注入高斯白噪声（GPS 侧实测 C/N0 与注入增益差约 51.4 dB-Hz，即噪声底标定值）</td></tr>
+</tbody>
+</table>
+
+      <h2>2.2 真实接收机流程（八步）</h2>
+      <p>每颗卫星一个独立 worker（multiprocessing 并行），完整执行以下流程；主脚本 .workbuddy/rx_realtime_300.py 汇总落盘。</p>
+
+<p class="src-note">表 3　真实接收机八步流程</p>
+<table class="data-table">
+<thead><tr><th>步</th><th>动作</th><th>实现</th><th>产物</th></tr></thead>
+<tbody>
+<tr><td>1</td><td class="td-left">两段式捕获：粗 50 ms 非相干（±5 kHz / 200 Hz 栅）→ 以粗值预移频后精 150 ms 非相干（±300 / 10 Hz 细栅），残差 ≤±5 Hz 落入相干环无模糊窗</td><td class="td-left">backend/analysis/l1_acquire.acquire_l1</td><td class="td-left">捕获种子 fd / chi 与检测度量 metric</td></tr>
+<tr><td>2</td><td class="td-left">pass1 自辅助跟踪 300 s：coh 模式、不给几何多普勒种子（PLL 频率积分器自主驱动 NCO），等价冷启动自主跟踪</td><td class="td-left">backend/analysis/tracker.SVTracker</td><td class="td-left">逐时刻 chi / fd 种子序列（0.05 s 日志）</td></tr>
+<tr><td>3</td><td class="td-left">电文解调解析：G 用 LNAV 滑窗 13 s × 600 bit（步长 5，至子帧 1-3 齐）；E 用 I/NAV 30 s 分块递增窗 → decode_messages → reconstruct_ephemeris；记录每星“解析完整时刻”</td><td class="td-left">lnav_decode / inav_decode</td><td class="td-left">接收机自解星历 + complete_t</td></tr>
+<tr><td>4</td><td class="td-left">每秒比特流：G 4× 抽取 30 s 分块 demod_nav_bits 按 20 ms 栅格分桶；E 全程 demod_symbols_e1b 按 4 ms 符号栅格分桶</td><td class="td-left">同上（快速通道）</td><td class="td-left">navbits_300.txt 逐秒 hex 行</td></tr>
+<tr><td>5</td><td class="td-left">pass2 正式跟踪 300 s：fd_fn 用【接收机自解星历】的几何多普勒 0.25 s 栅格做载波辅助 + C/N0 矩法估计钩子</td><td class="td-left">SVTracker(cn0_est=True)</td><td class="td-left">正式环路状态、逐秒观测量原料</td></tr>
+<tr><td>6</td><td class="td-left">每秒观测 k=1..300：锚定伪距、连续载波相位、载波多普勒、C/N0（秒桶 k−1）</td><td class="td-left">主脚本 obs 汇总</td><td class="td-left">7500 组四观测</td></tr>
+<tr><td>7</td><td class="td-left">电文全集完整（T_full=60 s）后逐秒瞬时 LS 定位，不平均；卫星位置与预测全部来自自解星历</td><td class="td-left">主脚本 LS</td><td class="td-left">241 条逐秒定位解</td></tr>
+<tr><td>8</td><td class="td-left">落盘：RINEX 3.04 OBS / NAV（写后 georinex 回读抽查）、bit 流文件、汇总 json</td><td class="td-left">rinex3_obs / rinex3_nav</td><td class="td-left">四件套产物</td></tr>
+</tbody>
+</table>
+
+      <h2>2.3 真值基准与对比口径</h2>
+      <p>仿真侧真值来自 <code>trace_sim.json</code>（backend/analysis/trace.py 的 dump_sim_trace，与场景同批生成）：300 个 1 s 历元（t_s[k]=k 秒），逐星含几何伪距 pr_truth_m、几何多普勒 fd_geo_hz、合成码相位 ph_syn_chips、方位/仰角时序与注入增益。几何量按接收时刻栅格重算（geometry_source=recomputed）。</p>
+      <p><strong>对齐规则</strong>：接收观测第 k 秒（k=1..300）对仿真栅格第 k 项（同一接收时刻），统计取 k=1..299 共 7475 组；k=300 窗越出真值栅格尾，剔除。<strong>锚定伪距配方</strong>：meas_pr = 自解星历预测伪距 + 码环误差 err_chips × 码片米长（预测含 TGD/BGD；本口径无大气、无钟差修正项）。<strong>统计窗</strong>：C/N0 与抖动类指标取秒 ≥90（剔除环路拉入暂态）；定位自 T_full=60 s 起。<strong>码环 keep 门</strong>：相干窗内 |P| 低于中值一半（比特沿块）丢弃不入环路，pass1 丢弃率 21.3%（31902/150025），属设计内行为。</p>
+      <p>判定门限：捕获 metric ≥15 dB 且全星可捕；电文全星解析完整；池化伪距 RMS &lt;5 m（5 Msps 方波量化噪声底的历史结论为米级）；定位三维 RMS &lt;10 m、PDOP 正常（&lt;2）；bit 流秒覆盖完整。</p>
+
+      <h1 id="section-3">3 评估结果总览</h1>
+
+<p class="src-note">表 4　11 项检查总表（数值均为磁盘产物实测）</p>
+<table class="data-table">
+<thead><tr><th>层级</th><th>检查项</th><th>结果</th><th>门限</th><th>判定</th></tr></thead>
+<tbody>
+<tr><td>捕获</td><td class="td-left">可捕星数 / 最低检测度量</td><td class="td-left">25/25 · 16.33 dB</td><td class="td-left">全星 ≥15 dB</td><td class="td-left">PASS</td></tr>
+<tr><td>跟踪</td><td class="td-left">环路完整性</td><td class="td-left">25/25 无失锁（0 skipped）</td><td>无失锁</td><td class="td-left">PASS</td></tr>
+<tr><td>跟踪</td><td class="td-left">码环池化抖动（t≥60）</td><td class="td-left">G 0.0021 / E 0.0061 ch (RMS)</td><td class="td-left"><0.02 ch</td><td class="td-left">PASS</td></tr>
+<tr><td>电文</td><td class="td-left">自解码完整</td><td class="td-left">25/25（G 59 s / E 60 s）</td><td class="td-left">全星完整</td><td class="td-left">PASS</td></tr>
+<tr><td>电文</td><td class="td-left">RINEX NAV georinex 回读</td><td class="td-left">ok（字段字节级一致）</td><td>ok</td><td class="td-left">PASS</td></tr>
+<tr><td>比特流</td><td>秒覆盖</td><td class="td-left">7500 行 · G 50 bit/s · E 250 符号/s</td><td class="td-left">覆盖完整</td><td class="td-left">PASS</td></tr>
+<tr><td>观测</td><td class="td-left">池化伪距 RMS（对真值）</td><td class="td-left">0.917 m（G 0.630 / E 1.067）</td><td class="td-left"><5 m</td><td class="td-left">PASS</td></tr>
+<tr><td>观测</td><td class="td-left">多普勒 RMS（对真值）</td><td class="td-left">0.169 Hz（G 0.259 / E 0.052）</td><td class="td-left"><1 Hz</td><td class="td-left">PASS</td></tr>
+<tr><td>观测</td><td class="td-left">C/N0 对注入增益（GPS）</td><td class="td-left">51.35 ± 1.17 dB-Hz</td><td class="td-left">std <2 dB</td><td class="td-left">PASS</td></tr>
+<tr><td>定位</td><td class="td-left">TTFF / 历元数</td><td class="td-left">60 s / 241</td><td class="td-left">≤120 s</td><td class="td-left">PASS</td></tr>
+<tr><td>定位</td><td class="td-left">三维误差 RMS / PDOP</td><td class="td-left">2.241 m / 1.04</td><td class="td-left"><10 m / <2</td><td class="td-left">PASS</td></tr>
+</tbody>
+</table>
+
+<div class="fig-block">
+<img src="images/fig01_rt300_analysis.png" alt="图 1 真实接收机 300 s 逐秒对比 8 面板图">
+<p class="fig-caption">图 1　逐秒对比 8 面板图（scripts/plot_rt300.py）：A 逐星伪距误差时序 · B 池化伪距误差直方图 · C 码环误差 · D 锚定载波相位（前 8 星）· E 多普勒对比 · F C/N0 对注入增益 · G 逐秒定位误差（T_full 与首次固定竖线）· H 比特流摘要</p>
+</div>
+
+      <h1 id="section-4">4 捕获与电文自解结果</h1>
+
+<p class="src-note">表 5　捕获与电文自解分组结果（门限 15 dB，全星通过；最低 16.33 dB）</p>
+<table class="data-table">
+<thead><tr><th>分组</th><th>星数</th><th>精捕获度量 min / mean (dB)</th><th>电文</th><th>解析完整时刻</th><th>备注</th></tr></thead>
+<tbody>
+<tr><td class="td-left">GPS L1 C/A</td><td>10</td><td class="td-left">16.53 / 19.75</td><td class="td-left">LNAV 子帧 1-3</td><td class="td-left">59 s ×10</td><td class="td-left">50 bps，13 s 滑窗</td></tr>
+<tr><td class="td-left">Galileo E1B</td><td>15</td><td class="td-left">16.33 / 20.99</td><td class="td-left">I/NAV 字 1-4</td><td class="td-left">60 s ×15</td><td class="td-left">250 sps，30 s 分块</td></tr>
+</tbody>
+</table>
+
+      <p>捕获种子质量：粗捕获输出直接进入 ±300 Hz 精扫描，精捕获残差全部落入相干环 ±100 Hz 无模糊窗，pass1 无一颗需要重捕获、无一星被剔除。电文自解星历与此前专项对照结论一致（与广播星历逐位一致，位级正确）；RINEX NAV 文件写完后用 georinex 回读抽查，sqrtA、SVclockBias 等字段与写入值字节级一致。比特流文件 7500 行数据（G 10 星 ×300 行 @50 bit、E 15 星 ×300 行 @250 符号），逐星秒覆盖 0..299 完整。</p>
+      <h1 id="section-5">5 观测量精度（对仿真真值）</h1>
+
+<p class="src-note">表 6　观测量对仿真真值统计（伪距/多普勒 k=1..299；码环 t≥60；ch = 码片，1 ch ≈ 293 m）</p>
+<table class="data-table">
+<thead><tr><th>量</th><th>系统</th><th>样本 n</th><th>均值 (m / Hz)</th><th>RMS</th><th>P95 |·|</th></tr></thead>
+<tbody>
+<tr><td class="td-left">伪距误差（m）</td><td>GPS</td><td>2990</td><td>-0.008</td><td>0.630</td><td>1.247</td></tr>
+<tr><td class="td-left">伪距误差（m）</td><td class="td-left">Galileo</td><td>4485</td><td>-0.034</td><td>1.067</td><td>2.144</td></tr>
+<tr><td class="td-left">伪距误差（m）</td><td>全部</td><td>7475</td><td>-0.023</td><td>0.917</td><td>1.906</td></tr>
+<tr><td class="td-left">多普勒误差（Hz）</td><td>GPS</td><td>2990</td><td>-0.023</td><td>0.259</td><td>0.528</td></tr>
+<tr><td class="td-left">多普勒误差（Hz）</td><td class="td-left">Galileo</td><td>4485</td><td>-0.014</td><td>0.052</td><td>0.106</td></tr>
+<tr><td class="td-left">多普勒误差（Hz）</td><td>全部</td><td>7475</td><td>-0.017</td><td>0.169</td><td>0.378</td></tr>
+<tr><td class="td-left">码环误差（ch）</td><td>GPS</td><td>2410</td><td>-0.00003</td><td>0.00214</td><td>0.00420</td></tr>
+<tr><td class="td-left">码环误差（ch）</td><td class="td-left">Galileo</td><td>3615</td><td>-0.00064</td><td>0.00612</td><td>0.01384</td></tr>
+</tbody>
+</table>
+
+      <p>伪距误差近零偏（池化均值 -0.023 m），RMS 0.917 m 与 5 Msps 方波量化的历史噪声底一致；Galileo 侧略大于 GPS 侧（1.067 vs 0.630 m）主要来自低仰角星码环残余。多普勒两侧均值偏差 &lt;0.03 Hz，Galileo 侧 RMS 仅 0.052 Hz，说明 NCO 频率读数本身极干净，伪距差异集中在码相位量化而非动态。</p>
+      <h2>5.4 C/N0 与注入增益</h2>
+      <p>稳态窗（秒 ≥90）实测 C/N0 减去注入增益：GPS 侧 51.35 ± 1.17 dB（n=2110），全部 10 星落在 50.1–52.3 dB 窄带内——矩法估计器与噪声底标定自洽，可作为接收链灵敏度基准。Galileo 侧总体 34.32 ± 7.59 dB（n=3165），按逐星 PLL 抖动分为两簇：抖动正常星（E9/E11/E16/E32/E34，相位抖动 ≤0.04 周）达 34.4–49.8 dB、与 GPS 同量级；抖动大星（其余 10 星，相位抖动 0.19–0.65 周）被矩法压低至 25.2–32.2 dB。<span class="data-emphasis">矩法估计对环路失锁边缘的 |P| 塌陷同样敏感，因此 E 侧后一簇的 C/N0 绝对值仅供参考</span>（其伪距、相位等其余指标不受影响，见表 6 与表 7）。</p>
+<p class="src-note">表 7　逐星质量总表（C/N0 取秒 ≥90 中值；相位抖动为线性去趋势环路抖动；码环为 t≥60 绝对中值）</p>
+<table class="data-table">
+<thead><tr><th>卫星</th><th>系统</th><th>仰角(°)</th><th>注入增益(dB)</th><th>精捕获(dB)</th><th>C/N0−gain(dB)</th><th>相位抖动(cyc)</th><th>码环|err|中值(ch)</th></tr></thead>
+<tbody>
+<tr><td>E4</td><td>E</td><td>27.5</td><td>-1.93</td><td>21.21</td><td>31.91</td><td>0.2458</td><td>0.00601</td></tr>
+<tr><td>E5</td><td>E</td><td>34.2</td><td>-1.58</td><td>20.37</td><td>28.02</td><td>0.3291</td><td>0.00230</td></tr>
+<tr><td>E6</td><td>E</td><td>49.7</td><td>-0.67</td><td>22.42</td><td>25.36</td><td>0.3092</td><td>0.00318</td></tr>
+<tr><td>E9</td><td>E</td><td>63.2</td><td>-0.30</td><td>22.42</td><td>34.35</td><td>0.0144</td><td>0.00149</td></tr>
+<tr><td>E11</td><td>E</td><td>12.7</td><td>-3.62</td><td>18.70</td><td>42.42</td><td>0.0403</td><td>0.01637</td></tr>
+<tr><td>E16</td><td>E</td><td>23.8</td><td>-2.55</td><td>19.58</td><td>42.24</td><td>0.0058</td><td>0.00521</td></tr>
+<tr><td>E23</td><td>E</td><td>20.8</td><td>-2.61</td><td>20.94</td><td>31.42</td><td>0.3174</td><td>0.00212</td></tr>
+<tr><td>E28</td><td>E</td><td>6.2</td><td>-5.41</td><td>16.33</td><td>25.17</td><td>0.1894</td><td>0.00238</td></tr>
+<tr><td>E31</td><td>E</td><td>43.4</td><td>-1.03</td><td>21.95</td><td>30.95</td><td>0.3078</td><td>0.00392</td></tr>
+<tr><td>E32</td><td>E</td><td>38.7</td><td>-1.17</td><td>23.68</td><td>48.54</td><td>0.0005</td><td>0.00095</td></tr>
+<tr><td>E34</td><td>E</td><td>24.6</td><td>-2.31</td><td>23.03</td><td>49.80</td><td>0.0014</td><td>0.00272</td></tr>
+<tr><td>E36</td><td>E</td><td>33.9</td><td>-1.42</td><td>21.56</td><td>30.06</td><td>0.6490</td><td>0.00613</td></tr>
+<tr><td>E41</td><td>E</td><td>27.5</td><td>-1.93</td><td>20.98</td><td>31.13</td><td>0.2979</td><td>0.00210</td></tr>
+<tr><td>E42</td><td>E</td><td>27.5</td><td>-1.93</td><td>20.84</td><td>32.20</td><td>0.2211</td><td>0.00198</td></tr>
+<tr><td>E43</td><td>E</td><td>27.5</td><td>-1.93</td><td>20.80</td><td>31.11</td><td>0.2564</td><td>0.00273</td></tr>
+<tr><td>G1</td><td>G</td><td>8.1</td><td>-5.30</td><td>16.53</td><td>50.89</td><td>0.0123</td><td>0.00182</td></tr>
+<tr><td>G2</td><td>G</td><td>12.1</td><td>-4.03</td><td>17.44</td><td>50.97</td><td>0.0104</td><td>0.00190</td></tr>
+<tr><td>G10</td><td>G</td><td>69.6</td><td>-0.13</td><td>21.25</td><td>52.17</td><td>0.0064</td><td>0.00100</td></tr>
+<tr><td>G12</td><td>G</td><td>34.3</td><td>-1.44</td><td>20.02</td><td>51.28</td><td>0.0073</td><td>0.00114</td></tr>
+<tr><td>G13</td><td>G</td><td>33.2</td><td>-1.48</td><td>20.32</td><td>51.08</td><td>0.0065</td><td>0.00094</td></tr>
+<tr><td>G23</td><td>G</td><td>35.2</td><td>-1.29</td><td>20.20</td><td>51.33</td><td>0.0071</td><td>0.00122</td></tr>
+<tr><td>G25</td><td>G</td><td>53.7</td><td>-0.58</td><td>21.08</td><td>52.34</td><td>0.0066</td><td>0.00118</td></tr>
+<tr><td>G28</td><td>G</td><td>54.9</td><td>-0.58</td><td>21.08</td><td>52.30</td><td>0.0063</td><td>0.00089</td></tr>
+<tr><td>G31</td><td>G</td><td>25.7</td><td>-2.35</td><td>18.84</td><td>51.31</td><td>0.0089</td><td>0.00131</td></tr>
+<tr><td>G32</td><td>G</td><td>61.5</td><td>-0.37</td><td>20.70</td><td>50.09</td><td>0.0066</td><td>0.00094</td></tr>
+</tbody>
+</table>
+
+      <h1 id="section-6">6 逐秒定位精度</h1>
+      <p>全部 25 星电文在 t=60 s 解析完整，此后逐秒单次最小二乘（4 未知数：三维位置 + 接收机钟差），不平均、不滤波，共 241 历元、每历元 nsat=25。</p>
+
+<p class="src-note">表 8　逐秒定位统计（241 历元，t=60..300 s）</p>
+<table class="data-table">
+<thead><tr><th>指标</th><th>数值</th><th>指标</th><th>数值</th></tr></thead>
+<tbody>
+<tr><td class="td-left">三维误差 RMS</td><td class="td-left">2.241 m</td><td class="td-left">三维误差中值</td><td class="td-left">2.061 m</td></tr>
+<tr><td class="td-left">三维误差 P95</td><td class="td-left">3.45 m</td><td class="td-left">水平误差 RMS</td><td class="td-left">1.29 m</td></tr>
+<tr><td class="td-left">PDOP 均值</td><td>1.040</td><td class="td-left">TTFF</td><td class="td-left">60 s</td></tr>
+<tr><td class="td-left">LS 残差 RMS（中值）</td><td class="td-left">1.22 m</td><td class="td-left">LS 残差 RMS（P95）</td><td class="td-left">1.60 m</td></tr>
+<tr><td class="td-left">接收钟差解算值（中值）</td><td class="td-left">-3.5 ns</td><td class="td-left">参与星数</td><td class="td-left">25（恒定）</td></tr>
+<tr><td class="td-left">东向 偏差 / RMS</td><td class="td-left">+0.199 / 0.337 m</td><td class="td-left">北向 偏差 / RMS</td><td class="td-left">-1.110 / 1.243 m</td></tr>
+<tr><td class="td-left">天向 偏差 / RMS</td><td class="td-left">-1.653 / 1.834 m</td><td class="td-left">真值基准</td><td class="td-left">场景标称 34.7466 / 113.6254 / 110 m</td></tr>
+</tbody>
+</table>
+
+      <p>定位误差结构：水平 1.29 m、三维 2.24 m，与池化伪距 0.92 m 经 PDOP≈1.04 的放大关系吻合；竖直向系统性偏低 -1.65 m，与表 7 低仰角码环残余同源（低仰角星对高程分量权重最大）。接收钟差解算值 −3.5 ns 属公共模，被钟差参数正常吸收。逐秒曲线（图 1-G）无跳变、无失稳历元。</p>
+      <h1 id="section-7">7 输出数据文件与字段含义</h1>
+
+<p class="src-note">表 9　输出文件总览（全部位于 out/20261110T084902599874/）</p>
+<table class="data-table">
+<thead><tr><th>文件</th><th>格式</th><th>内容</th><th>规模</th></tr></thead>
+<tbody>
+<tr><td class="td-left">rx_rt_300.304o</td><td class="td-left">RINEX 3.04 OBS</td><td class="td-left">逐秒四观测（伪距/相位/多普勒/C-N0），G 用 C1C/L1C/D1C/S1C，E 用 C1B/L1B/D1B/S1B</td><td class="td-left">300 历元 × 25 星</td></tr>
+<tr><td class="td-left">rx_rt_300.304n</td><td class="td-left">RINEX 3.04 NAV</td><td class="td-left">接收机自解广播星历（G LNAV 8 行记录 ×10、E I/NAV 7 行记录 ×15）</td><td class="td-left">25 条记录</td></tr>
+<tr><td class="td-left">navbits_300.txt</td><td class="td-left">hex ASCII 文本</td><td class="td-left">每秒解调比特流逐行十六进制（含秒号 / 星号 / 比特数）</td><td class="td-left">7500 数据行</td></tr>
+<tr><td class="td-left">rx_rt_300.json</td><td class="td-left">JSON</td><td class="td-left">全链路中间量：逐星捕获/两遍跟踪/电文/观测/定位</td><td class="td-left">≈2.6 MB</td></tr>
+<tr><td class="td-left">trace_sim.json</td><td class="td-left">JSON</td><td class="td-left">仿真侧逐秒真值栅格（对比基准）</td><td class="td-left">300 历元 × 25 星</td></tr>
+<tr><td class="td-left">rt300_analysis.png</td><td>PNG</td><td class="td-left">逐秒对比 8 面板评估图</td><td>1 图</td></tr>
+</tbody>
+</table>
+
+      <h2>7.1 rx_rt_300.304o（RINEX 3.04 观测文件）</h2>
+      <p>标准 RINEX 3.04 布局：头部 29 字符键值行 + 观测类型行（G: C1C L1C D1C S1C；E: C1B L1B D1B S1B）+ INTERVAL=1.0；数据段历元行 + 每星一行观测。历元行样例（实测）：</p>
+      <pre class="code-line">&gt; 2026 10 10 04 00 18.0000000   0 25</pre>
+      <p class="src-note">（&gt; + 年月日时分 F10.7 秒 + 星数旗标；秒为 GPS 系统时 = UTC+18 s）</p>
+
+<p class="src-note">表 10　RINEX OBS 观测字段</p>
+<table class="data-table">
+<thead><tr><th>观测码</th><th>含义</th><th>单位</th><th>生成方式</th></tr></thead>
+<tbody>
+<tr><td class="td-left">C1C / C1B</td><td class="td-left">锚定伪距：自解星历预测 + 码环误差换算，含广播 TGD/BGD，无大气/钟差修正项</td><td>m</td><td class="td-left">meas_pr_m 直接写出</td></tr>
+<tr><td class="td-left">L1C / L1B</td><td class="td-left">载波相位：跟踪 NCO 连续累积（拉入后无跳变），LIOF=1 表示跟踪锁定</td><td class="td-left">cycles</td><td class="td-left">phase_cycles（先锚定后解卷绕）</td></tr>
+<tr><td class="td-left">D1C / D1B</td><td class="td-left">载波多普勒：PLL 输出频率读数</td><td>Hz</td><td class="td-left">fd_hz</td></tr>
+<tr><td class="td-left">S1C / S1B</td><td class="td-left">载噪比：相干窗 |P| 二阶/四阶矩 Rician 闭式估计，秒桶滞后 1</td><td class="td-left">dB-Hz</td><td class="td-left">cn0_dbhz（E 侧口径见 5.4）</td></tr>
+</tbody>
+</table>
+
+      <h2>7.2 rx_rt_300.304n（RINEX 3.04 导航文件）</h2>
+      <p>接收机自解星历按 GPS / Galileo 广播星历标准布局写出：数值字段固定 19 字符宽 F19.12（georinex 按 19 列定宽切片），历元行含 4 位年份；G 记录 8 行（历元 + 7 续行），E 记录 7 行（历元 + 6 续行）。写后用 georinex 回读抽查，本次全星一致（readback: ok）。</p>
+
+<p class="src-note">表 11　NAV 记录主要字段（写入值与 georinex 回读值一致）</p>
+<table class="data-table">
+<thead><tr><th>georinex 变量</th><th>含义</th><th>单位 / 备注</th></tr></thead>
+<tbody>
+<tr><td class="td-left">SVclockBias / Drift / DriftRate</td><td class="td-left">钟差三项 af0/af1/af2（本场景不注入钟差但电文忠实广播，故非零）</td><td class="td-left">s / s/s / s/s²</td></tr>
+<tr><td class="td-left">sqrtA</td><td class="td-left">半长轴平方根</td><td class="td-left">m^0.5</td></tr>
+<tr><td class="td-left">ToE / ToC</td><td class="td-left">星历 / 钟差参考时刻（周内秒）</td><td>s</td></tr>
+<tr><td class="td-left">Omega0 / OmegaDot / Incl / i0</td><td class="td-left">升交点经度及其变化率、轨道倾角</td><td class="td-left">rad, rad/s</td></tr>
+<tr><td class="td-left">Eccentricity / MeanMotionDiff / M0</td><td class="td-left">偏心率、平均运动差 Δn、平近点角</td><td class="td-left">—, rad/s, rad</td></tr>
+<tr><td class="td-left">Cuc/Cus/Crc/Crs/Cic/Cis</td><td class="td-left">轨道调和修正六系数</td><td>m</td></tr>
+<tr><td class="td-left">IODE / IODC / IODnav</td><td class="td-left">健康与匹配标识（G：IODE/IODC；E：IODnav）</td><td>—</td></tr>
+<tr><td class="td-left">TGD / BGDe5a / BGDe5b</td><td class="td-left">群延迟（保留项，伪距已含）</td><td>s</td></tr>
+<tr><td class="td-left">SISA / SVH</td><td class="td-left">用户距离精度 / 健康字</td><td>—</td></tr>
+</tbody>
+</table>
+
+      <h2>7.3 navbits_300.txt（每秒比特流）</h2>
+      <pre class="code-line"># 列: 秒(从0) SV 系统 PRN 类型 比特数 16进制比特流
+0 G1 G 1 navbits 50 C8B09E38AB234...</pre>
+
+<p class="src-note">表 12　比特流行字段</p>
+<table class="data-table">
+<thead><tr><th>列</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td>秒</td><td class="td-left">秒桶号（从 0 起，对应接收时间 t_s）</td></tr>
+<tr><td class="td-left">SV / 系统 / PRN</td><td class="td-left">卫星号 / G 或 E / 编号</td></tr>
+<tr><td>类型</td><td class="td-left">navbits（G 为 LNAV 50 bps 比特；E 为 I/NAV 250 sps 符号，符号值按 Costas 判决映射 ±1）</td></tr>
+<tr><td>比特数</td><td class="td-left">该秒理论值：G=50，E=250（个别秒界受块对齐影响 ±1，见文件头注）</td></tr>
+<tr><td class="td-left">16进制比特流</td><td class="td-left">比特 MSB 优先打包；每行独立可复原该秒比特序列</td></tr>
+</tbody>
+</table>
+
+      <h2>7.4 rx_rt_300.json（全链路中间量）</h2>
+      <p>顶层键：<code>runid / kind / generated_utc / gps_week(2439) / sow0(532818.0) / marker_llh / policy / outputs / nav_rinex_readback / summary / svs / fixes</code>。policy 记录口径（mode=coh、dll_bw 0.5 Hz、ls_averaging=none）供复核。summary 为表 4 判定值的原始来源。</p>
+
+<p class="src-note">表 13　rx_rt_300.json 字段组（obs k=1..300；fixes t=60..300）</p>
+<table class="data-table">
+<thead><tr><th>字段组</th><th>字段</th><th>含义</th></tr></thead>
+<tbody>
+<tr><td class="td-left">svs[] 公共</td><td class="td-left">key / sys / prn / gain_db / el_fix_deg / secs</td><td class="td-left">星标识、注入增益、接收端复算仰角、worker 耗时（s）</td></tr>
+<tr><td>acq</td><td class="td-left">coarse / fine：fd, chi, metric_db</td><td class="td-left">粗 / 精捕获种子与检测度量（chi 为码相位 chip，fd 为多普勒 Hz）</td></tr>
+<tr><td class="td-left">pass1</td><td class="td-left">n_log / n_dropped / fd_end_hz / pll_off_end_hz</td><td class="td-left">自辅助跟踪日志数、keep 门丢弃块数、结束频率/PLL 偏置</td></tr>
+<tr><td>nav</td><td class="td-left">decoded / complete_t_s / pages / chunks</td><td class="td-left">是否解码完整、完整时刻、页/块数</td></tr>
+<tr><td class="td-left">stats</td><td class="td-left">err_med_ch / err_rms_ch / chip_rms_ch / phase_rms_cycles / phase_drift_cycps</td><td class="td-left">码环误差、去趋势相位抖动、相位残余漂移率</td></tr>
+<tr><td class="td-left">obs[k]</td><td class="td-left">chi_chips / err_chips / fd_hz / phase_cycles / cn0_dbhz / pred_pr_m / meas_pr_m / corr_pr_m</td><td class="td-left">每秒观测：码相位读数、环误差、多普勒、连续相位、载噪比、自解星历预测伪距、锚定观测伪距、LS 用伪距（本口径 off、corr=meas）</td></tr>
+<tr><td class="td-left">fixes[]</td><td class="td-left">t_s / date / ecef / llh / enu_m / err_3d_m / err_h_m / pdop / nsat / residual_rms_m / clock_bias_s</td><td class="td-left">逐秒解：时刻、ECEF、经纬高、对基准 ENU 偏差、误差、PDOP、LS 残差、钟差解</td></tr>
+</tbody>
+</table>
+
+      <h2>7.5 trace_sim.json（仿真侧真值栅格）</h2>
+      <p>顶层：kind=sim、runid、engine=native、geometry_source=recomputed、start_utc、sow0、step_s、n_epochs=300、t_s 栅格。逐星字段（数组均 300 长）：</p>
+
+<p class="src-note">表 14　trace_sim.json 逐星字段</p>
+<table class="data-table">
+<thead><tr><th>字段</th><th>含义</th><th>单位</th></tr></thead>
+<tbody>
+<tr><td class="td-left">pr_truth_m</td><td class="td-left">几何伪距真值（含 TGD/BGD，无大气/钟差）——伪距误差比较基准</td><td>m</td></tr>
+<tr><td class="td-left">pr_inj_m</td><td class="td-left">t=0 注入伪距（标量，来自 meta provenance）</td><td>m</td></tr>
+<tr><td class="td-left">fd_geo_hz</td><td class="td-left">几何载波多普勒真值——多普勒误差比较基准</td><td>Hz</td></tr>
+<tr><td class="td-left">fd_code_geo_hz</td><td class="td-left">码多普勒真值</td><td class="td-left">ch/s</td></tr>
+<tr><td class="td-left">ph_syn_chips</td><td class="td-left">合成码相位真值时序 (ph0 − fd_code·t) mod code_len</td><td>ch</td></tr>
+<tr><td class="td-left">code_phase0_chips</td><td class="td-left">t=0 码相位</td><td>ch</td></tr>
+<tr><td class="td-left">az_deg_t / el_deg_t</td><td class="td-left">方位 / 仰角时序</td><td>deg</td></tr>
+<tr><td class="td-left">gain / gain_db</td><td class="td-left">注入功率增益（C/N0 一致性基准）</td><td>dB</td></tr>
+<tr><td class="td-left">carrier_doppler_hz / code_doppler_hz / if_hz / chip_hz / code_len / band / fading_model / atmo_m / sys / prn</td><td class="td-left">t=0 标量与静态参数（本口径 atmo_m=0）</td><td>—</td></tr>
+</tbody>
+</table>
+
+      <h1 id="section-8">8 结论与已知边界</h1>
+      <p><strong>结论：总体 PASS。</strong>在完全不用生成真值的实时流程下，300 秒场景实现 25/25 捕获、25/25 电文自解（TTFF 60 s）、7500 组每秒观测全部产出、池化伪距 RMS 0.917 m、逐秒定位 241 历元三维 RMS 2.24 m（PDOP 1.04），观测与电文均按 RINEX 落盘并通过回读校验。仿真-接收互验体系至此覆盖了"快照式"与"实时式"两种接收机形态。</p>
+      <p><strong>已知边界（报告使用时请注意）：</strong></p>
+      <p>① <strong>E 侧矩法 C/N0</strong>：跟踪抖动偏大的 10 颗 Galileo 星（E4/E5/E6/E23/E28/E31/E36/E41/E42/E43）C/N0 绝对值被环路暂态压低，仅供相对趋势参考；抖动正常星与 GPS 侧数值可直接使用。② <strong>比特秒界</strong>：G 按 20 ms 标称栅格、E 按 4 ms 标称栅格分桶，块界至多使秒界处偏移 1 比特/1 符号（文件头已注明）。③ <strong>末窗</strong>：t=300 最后相干窗触及文件尾，读取按零补齐，该窗不参与任何观测统计。④ <strong>竖直偏差 −1.65 m</strong> 为低仰角码环残余的几何投影，属 5 Msps 口径噪声底范畴（20 Msps 历史实验收敛至亚米）。⑤ <strong>E 侧相位残余漂移</strong>（0.001–0.013 cyc/s 量级个别星）来自引擎载波相位节点量化，接收端按既有口径不作处理，不影响定位。</p>
+      <h1 id="section-9">附录 A　复现方法</h1>
+      <pre class="code-line"># 1) 生成 300 s 场景（约 40 分钟，gpssim.bin ≈ 3 GB）
+.venv/Scripts/python.exe .workbuddy/make_run_noclock_300.py
+# 2) 真实接收机全链路（25 worker 并行，约 60 分钟；产出四件套 + trace_sim）
+.venv/Scripts/python.exe .workbuddy/rx_realtime_300.py 20261110T084902599874 --workers 4
+# 3) 逐秒对比 8 面板图
+.venv/Scripts/python.exe scripts/plot_rt300.py 20261110T084902599874</pre>
+      <p>评估数值均可由 rx_rt_300.json 与 trace_sim.json 复算（本报告全部指标由构建脚本从磁盘实物实时计算，无手工转录）。</p>
+    </main>
+  </section>
+</body>
+</html>

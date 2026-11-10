@@ -1,0 +1,58 @@
+schema_version: 1
+request_id: 72d66621-ddd2-4bc2-8196-3a6622f0d763
+created_at: 2026-11-10T13:35:34Z
+updated_at: 2026-11-10T14:38:39Z
+
+entry_type: full_pipeline
+stage_chain: [1, 2, 3]
+
+output_docx_path: "D:\\workbuddy\\GNSSSignal\\gnss-sim\\output\\72d66621-ddd2-4bc2-8196-3a6622f0d763\\stage3\\真实接收机300秒全链路评估报告.docx"
+output_docx_user_specified: false
+
+current_stage: 3
+
+stages:
+  stage_0:
+    status: completed
+    completed_at: 2026-11-10T13:35:34Z
+    decision: full_pipeline
+
+  stage_1:
+    status: completed
+    started_at: 2026-11-10T13:35:34Z
+    completed_at: 2026-11-10T14:38:39Z
+    output_path: "stage1/final_draft.md"
+    genre: "工程测试评估报告"
+    expert_used: "general-writer"
+    route_tag: "L2兜底-general-writer"
+
+  stage_2:
+    status: completed
+    started_at: 2026-11-10T14:38:39Z
+    completed_at: 2026-11-10T14:38:39Z
+    route: "html-template"
+    html_sub: "复用既有报告 CSS 骨架（17299278 stage2）"
+    output_path: "stage2/formatted-真实接收机300秒全链路评估.html"
+    output_format: "html"
+    skills_invoked: []
+    design_tokens_path: null
+    fallback: false
+    fallback_reason: null
+
+  stage_3:
+    status: completed
+    started_at: 2026-11-10T14:38:39Z
+    completed_at: 2026-11-10T14:38:39Z
+    executor: "convert_doc.py html-to-doc"
+    input_format: "html(inlined base64)"
+    output_path: "stage3/真实接收机300秒全链路评估报告.docx"
+    skill_used: ["html-to-doc"]
+    present_files_opened: true
+    fallback: false
+    fallback_reason: null
+
+consistency_check:
+  output_files_exist: true
+  stage_chain_complete: true
+  last_checked_at: 2026-11-10T14:38:39Z
+  errors: []
