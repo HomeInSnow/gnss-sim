@@ -88,7 +88,8 @@ class SVTracker:
                  if_hz: float, fd0: float, chi0: float, boc: bool = False,
                  ell: float | None = None, pll_bw: float = 1.0,
                  dll_bw_hz: float = 0.5, t_coh_ms: float | None = None,
-                 nc: bool = True, mode: str | None = None, fd_fn=None):
+                 nc: bool = True, mode: str | None = None, fd_fn=None,
+                 cn0_est: bool = False):
         """get_window(t0, ns) -> ns complex samples starting at absolute
         time t0 (a callable lets every SV of one band share cached IQ
         windows read from disk -- full runs are hundreds of MB).
@@ -141,6 +142,7 @@ class SVTracker:
         self._aid_sign = -1.0
         self.chi = float(chi0) % self.code_len       # chips, [0, L)
         self.fd = float(fd0)                          # Hz, rel. if_hz
+        self._fd0 = float(fd0)                        # NCO base freq (pass-1)
         self.phase = 0.0                              # carrier NCO phase [rad]
         self.t_coh = float(t_coh_ms or _T_COH_MS.get(sysc, 20)) / 1e3
         self._npp = max(int(round(self.fs * self.code_len / self.chip_hz)), 4)
@@ -195,6 +197,57 @@ class SVTracker:
         self.phase_log: list[float] = []
         self.p_log: list[complex] = []
         self.e_log: list[float] = []
+        # Optional C/N0 moment estimator (OFF by default so existing
+        # regressions stay byte-identical). Per code-period block we
+        # collect |corr| samples -- the envelope of a complex Gaussian +
+        # tone, i.e. Rician / non-central chi with 2 dof -- bucketed by
+        # the SECOND the block starts in. cn0_dbhz(sec) then solves the
+        # Kay-1980 moment relation r = (y^2+4y+2)/(y+1)^2, r = M4/M2^2,
+        # y = A^2/(2 sigma_c^2) = SNR over one integration period
+        # T = npp/fs, giving C/N0 = 10*log10(y/T) dB-Hz.
+        self._cn0_acc: dict[int, list] | None = {} if cn0_est else None
+
+    # ---- C/N0 moment estimator -------------------------------------------------
+    def _cn0_push(self, mags: np.ndarray, t0: float) -> None:
+        """Accumulate per-block |corr| moments into 1-s buckets keyed by
+        floor(block start). Safe to call from every discriminator branch
+        (coh: |P| of kept blocks; el/nc: |corr| at the fitted lag)."""
+        if self._cn0_acc is None or mags.size == 0:
+            return
+        c = self._npp / self.fs                       # block period [s]
+        starts = t0 + np.arange(mags.size) * c
+        secs = np.floor(starts).astype(int)
+        for sec, v in zip(secs.tolist(), mags.tolist()):
+            acc = self._cn0_acc.get(sec)
+            if acc is None:
+                acc = self._cn0_acc[sec] = [0, 0.0, 0.0]
+            acc[0] += 1
+            acc[1] += v * v
+            acc[2] += v ** 4
+
+    def cn0_dbhz(self, sec: int, min_blocks: int = 30) -> float | None:
+        """C/N0 [dB-Hz] estimated from the blocks that started in second
+        ``sec`` (call with sec = epoch-1 for a lag-aligned 1 Hz report).
+        Returns None when the bucket is empty/thin or the moment ratio is
+        out of the solvable range (r must lie in (1, 2) for a Rician
+        envelope; noise-only buckets sit at r->2, saturated at r->1)."""
+        acc = None if self._cn0_acc is None else self._cn0_acc.get(sec)
+        if acc is None or acc[0] < min_blocks:
+            return None
+        n = acc[0]
+        m2 = acc[1] / n
+        m4 = acc[2] / n
+        if m2 <= 0.0:
+            return None
+        r = m4 / (m2 * m2)
+        if not (1.0 < r < 2.0):
+            return None
+        # (r-1) y^2 + (2r-4) y + (r-2) = 0; positive root in closed form
+        # (discriminant = 4(2-r)): y = (2-r+sqrt(2-r)) / (r-1).
+        s = np.sqrt(2.0 - r)
+        y = float((s * s + s) / (r - 1.0))
+        y = min(max(y, 1e-9), 1e9)
+        return float(10.0 * np.log10(y / (self._npp / self.fs)))
 
     # ---- signal / replica helpers -------------------------------------------
     def _derot_window(self, t0: float, T: float):
@@ -377,6 +430,8 @@ class SVTracker:
             jj = int(round(jf + delta)) % npp
             sp = np.array([cors[k][jj] for k in range(nb)])
             self._sp = sp
+            if not probe:
+                self._cn0_push(np.abs(sp), t0)
             # power metric: INCOHERENT sum. |mean(sp)| would collapse under
             # the nav-bit signs riding on the blocks (the coherent sum
             # cancels), which mis-arms the drop rule; per-block |sp| is the
@@ -399,6 +454,8 @@ class SVTracker:
         # legacy straddling-window drop rule but per block.
         if not keep.any():
             return 0.0, 0j
+        if not probe:
+            self._cn0_push(mag[keep], t0)
         # Per-block data-bit sign, decided by P against the last aligned
         # phasor (Costas 180 deg decision; the E/L blocks share the same
         # bit sign). The chain CONTINUES across windows from the previous
@@ -542,6 +599,13 @@ class SVTracker:
             h = 0.5
             fdot = (float(self._fd_fn(t0 + h))
                     - float(self._fd_fn(t0 - h))) / (2.0 * h)
+        elif self.mode == "coh":
+            # NO aiding grid (receiver self-aided cold start): the second-
+            # order loop must still close -- let the PLL frequency
+            # integrator drive the NCO exactly as (fd_fn + off) does above,
+            # so the 300 s Doppler ramp (~0.1-0.2 Hz/s here, >30 Hz total)
+            # is tracked instead of freezing the oscillator at fd0.
+            self.fd = self._fd0 + self._pll_off
         aid_t = self.chip_hz * (1.0 + self._aid_sign
                                 * self.fd / self.carrier_hz) * T \
             + 0.5 * self.chip_hz * self._aid_sign * fdot * T * T \
