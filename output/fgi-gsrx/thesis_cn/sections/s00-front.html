@@ -1,0 +1,47 @@
+<div class="titlepage">
+  <div class="tp-school">阿尔托大学 · 理工学院（Aalto University, School of Science）</div>
+  <h1 class="tp-title">新 GPS L1C 信号在软件定义全球导航卫星系统接收机中的实现</h1>
+  <div class="tp-orig">Implementation of the new GPS L1C signal in a software-defined Global Navigation Satellite System Receiver</div>
+  <div class="tp-meta">
+    <p>作者：Into J. A. Pääkkönen</p>
+    <p>学位项目：工程物理硕士（Master's Programme in Engineering Physics）</p>
+    <p>主修专业：材料物理与量子技术（编码 SCI3056）　辅修：信号处理与数据科学</p>
+    <p>论文指导教师（Supervisor）：Visa Koivunen 教授</p>
+    <p>论文指导教授（Advisor）：M. Zahidul H. Bhuiyan 教授</p>
+    <p>提交日期：2024 年 4 月 8 日　页数：90+1　语言：英语</p>
+    <p>本论文为申请理工科硕士学位（Master of Science in Technology）而提交。</p>
+    <p class="tp-copy">Copyright © 2024 Into J. A. Pääkkönen</p>
+    <p class="tp-note">译注：本中文版由英文原文全文翻译而成，图、表与公式编号与原文一致；参考文献与缩略语保留英文原文。</p>
+  </div>
+</div>
+
+<h2 class="nonum">摘要</h2>
+<p>人们对更高鲁棒性与更高精度的全球导航卫星系统（GNSS）服务的需求不断增长，使得各国不得不创建新系统并升级现有系统，美国运营的全球定位系统（GPS）亦不例外。作为 GPS 现代化工作一部分而定义的新 GPS L1C 信号采用了多项新技术来改进系统性能，包括时分二进制偏移载波（TMBOC）、低密度奇偶校验（LDPC）前向纠错以及专用导频通道。为了利用这些新特性，科研人员与其他 GNSS 用户需要新的信号处理工具；本文正是针对这一需求，提出并测试了一套完整的 GPS L1C 软件定义接收机。该 GPS L1C 接收机是在 FGI-GSRx 多星座 GNSS 软件接收机的基础上开发而成，对其各个信号处理模块进行了适配 L1C 的改造。工作定义了四个主要处理模块：GPS L1C 纯导频捕获与导频/数据合并通道捕获、采用 BOC 或 TMBOC 子载波的 L1C 导频通道跟踪、采用简单 BCH 与置信传播（BP）LDPC 译码方法的 GPS CNAV-2 导航电文译码，以及采用最小二乘方法的导航解算。所实现的接收机模块使用真实与仿真 GNSS I/Q 数据进行了测试，并将接收机精度与理论值进行了对比。本文还从理论角度讨论了新信号的意义。论文结果表明，所实现的接收机能够捕获并跟踪真实的 GPS L1C 信号。测试发现，由于 GPS 现代化仍在进行之中，实际播发的 L1C 信号缺少 CNAV-2 电文。CNAV-2 译码在变化信噪比下的高斯信道仿真数据上进行了测试：接收机在不同电文子帧类型下实现了 15.9–24.0 dB-Hz C/N0 区间内的 50% CNAV-2 译码成功率。用 RMS 误差度量的 GPS L1C 接收机定位性能表明，该实现达到了与理论预期相符的精度水平。本文结果验证了所提出接收机的正确性，为今后希望自行开发 GPS L1C 接收机的人员提供了坚实基础。</p>
+<p><b>关键词：</b>GPS、定位、导航、授时、软件接收机、卫星、通信、信号处理</p>
+
+<h2 class="nonum">缩写与符号</h2>
+<table class="abbr">
+<tr><td>ADC</td><td>模数转换器（Analog-to-digital Converter）</td><td>FDMA</td><td>频分多址（Frequency-division Multiple Access）</td></tr>
+<tr><td>AGC</td><td>自动增益控制（Automatic Gain Control）</td><td>FEC</td><td>前向纠错（Forward Error Correction）</td></tr>
+<tr><td>ARNS</td><td>航空无线电导航业务（Aeronautical Radio Navigation Service）</td><td>FFT</td><td>快速傅里叶变换（Fast Fourier Transform）</td></tr>
+<tr><td>AWGN</td><td>加性白高斯噪声（Additive White Gaussian Noise）</td><td>FLL</td><td>锁频环（Frequency-locked Loop）</td></tr>
+<tr><td>BDS</td><td>北斗卫星导航系统（BeiDou Navigation Satellite System）</td><td>GEO</td><td>地球静止轨道（Geostationary Orbit）</td></tr>
+<tr><td>BCH</td><td>Bose–Chaudhuri–Hocquenghem 码</td><td>GLRT</td><td>广义似然比检验（Generalized Likelihood-ratio Test）</td></tr>
+<tr><td>BOC</td><td>二进制偏移载波（Binary Offset Carrier）</td><td>GNSS</td><td>全球导航卫星系统（Global Navigation Satellite System）</td></tr>
+<tr><td>BPF</td><td>带通滤波器（Bandpass Filter）</td><td>GPS</td><td>全球定位系统（Global Positioning System）</td></tr>
+<tr><td>BPSK</td><td>二进制相移键控（Binary Phase-shift Keying）</td><td>ICD</td><td>接口控制文件（Interface Control Document）</td></tr>
+<tr><td>CDMA</td><td>码分多址（Code-division Multiple Access）</td><td>IF</td><td>中频（Intermediate Frequency）</td></tr>
+<tr><td>CNAV</td><td>民用导航电文（Civil Navigation message）</td><td>IGSO</td><td>倾斜地球同步轨道（Inclined Geosynchronous Orbit）</td></tr>
+<tr><td>CRC</td><td>循环冗余校验（Cyclic Redundancy Check）</td><td>LNA</td><td>低噪声放大器（Low-noise Amplifier）</td></tr>
+<tr><td>DFT</td><td>离散傅里叶变换（Discrete Fourier Transform）</td><td>LDPC</td><td>低密度奇偶校验（Low-density Parity-check）</td></tr>
+<tr><td>DLL</td><td>延迟锁定环（Delay-locked Loop）</td><td>MBOC</td><td>复用二进制偏移载波（Multiplexed Binary Offset Carrier）</td></tr>
+<tr><td>ECEF</td><td>地心地固坐标系（Earth-centered, Earth-fixed Coordinate System）</td><td>MEO</td><td>中地球轨道（Medium Earth Orbit）</td></tr>
+<tr><td>ECI</td><td>地心惯性坐标系（Earth-centered Inertial Coordinate System）</td><td>NCO</td><td>数控振荡器（Numerically-controlled Oscillator）</td></tr>
+<tr><td>PLL</td><td>锁相环（Phase-locked Loop）</td><td>RAAN</td><td>升交点赤经（Right Ascension of the Ascending Node）</td></tr>
+<tr><td>PNT</td><td>定位、导航与授时（Positioning, Navigation, and Timing）</td><td>PRN</td><td>伪随机噪声码（Pseudorandom Noise）</td></tr>
+<tr><td>PVT</td><td>位置、速度与时间（Position, Velocity, and Time）</td><td>QPSK</td><td>正交相移键控（Quadrature phase-shift keying）</td></tr>
+<tr><td>RF</td><td>射频（Radio Frequency）</td><td>SV</td><td>航天器/卫星（Space Vehicle）</td></tr>
+<tr><td>RMS</td><td>均方根（Root Mean Squared）</td><td>TMBOC</td><td>时分二进制偏移载波（Time-multiplexed Binary Offset Carrier）</td></tr>
+<tr><td>TOA</td><td>到达时刻（Time-of-arrival）</td><td>TOF</td><td>飞行时间（Time-of-flight）</td></tr>
+<tr><td>TOS</td><td>发送时刻（Time-of-sending）</td><td>VCO</td><td>压控振荡器（Voltage-controlled Oscillator）</td></tr>
+</table>

@@ -1,0 +1,50 @@
+<h1 class="ch">4　GPS L1C 信号</h1>
+<p>GPS L1C 信号由导频（pilot）与数据（data）两个通道组成，在中心频率 1575.42 MHz 的 L1 频段上发射，参考带宽为 30.69 MHz[11]。两个通道同相发射，在名义工作条件下，两通道测距码之间的平均码片延迟被保证不超过 10 ns。两通道共享大部分结构，并包含各自独特的 PRN 测距码，使两通道可以被同时访问。导频通道不含导航电文，而是包含一个二级 PRN 覆盖码 L1CO。加载于 L1C 数据通道上的导航电文称为 CNAV-2。覆盖码 L1CO 的长度与速率等于 CNAV-2 电文的长度与符号速率；覆盖码的码片跳变与 CNAV-2 符号跳变在时间上保持同步。与 GPS 先前使用的 LNAV 和 CNAV 电文不同，CNAV-2 不包含用于标记每份电文或电文子帧起始的前导字（preamble）。取而代之的是，接收机在搜索导航电文起始时刻时将利用覆盖码与 CNAV-2 电文之间的时间同步[16]。与其他 GPS 信号一样，L1C 的导航电文、测距码、子载波与载波均由一个公共的 10.23 MHz 时钟源相干产生。图 14 突出了这一点并给出了 GPS L1C 信号的总体结构。</p>
+<div class="fig">{{FIG:14}}<div class="figcap"><b>图 14</b>：GPS L1C 方框图：载波、子载波、PRN 码与 CNAV-2 符号由公共的 10.23 MHz 时钟源相干产生。每段 10230 码片的主码序列跨越一个 CNAV-2 符号或一个 L1CO 码片；CNAV-2 符号与 L1CO 码片的跳变在时间上同步。</div></div>
+<p>在 30.69 MHz 参考带宽下，GPS L1C 数据与导频通道合并后的最低地面接收功率为 −157 dBW，比 GPS III 期卫星播发的 L1 C/A 或 L2C 的最低功率高约 1.5 dB[11, 28]。L1C 的载波功率并非在两通道间均分：75% 分配给导频通道，其余 25% 分配给数据通道。与其他 GNSS 信号一样，GPS L1C 以右旋圆极化（RHCP）发射。若仅考虑 L1C 导频通道 −158.25 dBW 的最低接收功率，这一新 GPS 信号相比 L1 C/A 或 L2C 提供了对干扰与接收机噪声略强的抵御能力。表 9 汇总了 GPS L1C 的信号定义。为使读者具备实现一个可用的 GPS L1C 接收机所需的定义，下面几节分别介绍 GPS L1C 测距码的生成、TMBOC 子载波调制与 CNAV-2 信道编码。</p>
+<table>
+<caption><b>表 9</b>：IS-GPS-800J ICD[11] 所列 GPS L1C 信号规格。</caption>
+<tr><th>信号参数</th><th>规格</th></tr>
+<tr><td>信号</td><td>GPS L1C</td></tr>
+<tr><td>频段</td><td>L1</td></tr>
+<tr><td>中心频率</td><td>1575.42 MHz</td></tr>
+<tr><td>多址方式</td><td>CDMA</td></tr>
+<tr><td>PRN 码族</td><td>Weil 码 &amp; M 序列/Gold 码</td></tr>
+<tr><td>主 PRN 码长度</td><td>10230</td></tr>
+<tr><td>PRN 码频率</td><td>1.023 MHz</td></tr>
+<tr><td>信号分量</td><td>数据通道 ／ 导频通道</td></tr>
+<tr><td>二级码</td><td>— ／ 1800 码片 @ 100 cps</td></tr>
+<tr><td>数据速率</td><td>50 bps @ 100 sps ／ —</td></tr>
+<tr><td>子载波调制</td><td>BOC(1,1) ／ BOC(1,1) &amp; BOC(6,1)</td></tr>
+<tr><td>子载波频率</td><td>1.023 MHz ／ 1.023 MHz &amp; 6.138 MHz</td></tr>
+<tr><td>最低接收功率</td><td>−163 dBW ／ −158.25 dBW</td></tr>
+<tr><td>联合最低接收功率</td><td>−157 dBW</td></tr>
+</table>
+
+<h2>4.1　GPS L1C 测距码与覆盖码</h2>
+<p>GPS L1C 信号包含三种不同的 PRN 码：导频码 L1CP、数据码 L1CD 与覆盖码 L1CO[11]。前两者分别是 L1C 导频与数据通道的主测距码。这两个码由 10223 比特长的 Weil 序列插入 7 个扩展比特扩展而成，因此每个码的总长度为 10230 码片。为不同卫星生成的 Weil 序列互不相同且互相关极小，以利于 DS-CDMA。码的码片速率为 1.023 Mcps，故每个码在时间上跨越 10 ms。来自同一卫星的 L1CP 与 L1CD 码片跳变之间的延迟可认为低于 10 ns，且有 95% 的概率低于 1 ns[11]。覆盖码 L1CO 是添加到 GPS L1C 导频通道上的 1800 比特长二级 PRN 序列。覆盖码与 L1C 数据通道的 CNAV-2 导航电文相干生成，其长度与 CNAV-2 一致[11]。由于在获得初始码同步之后即可预测覆盖码的码片，覆盖码提供了导航电文同步与无调制的导频通道跟踪：在不存在未知相位调制的情况下可使用相干相位判别器，从而有助于信号跟踪。覆盖码 L1CO 与导频通道测距码 L1CP 一起构成一个分级码（tiered code），其不重复长度远大于单独的 L1CP。二级码还通过减少谱线改善了窄带干扰抑制[16]。</p>
+
+<h3>4.1.1　GPS L1C 测距码的生成</h3>
+<p>GPS L1C 主测距码用 Weil 序列定义——Weil 序列是长度为素数的伪随机序列[11]。对 L1CP 与 L1CD，该长度为 10223。PRN 号 <span class="eq">i ∈ {1, …, 210}</span> 的 GPS 卫星的 Weil 序列 W<sub>i</sub> 由 Legendre 序列 <span class="eq">L[t]</span>（<span class="eq">t ∈ {0, …, 10222}</span>）构造而成，其中 <span class="eq">L[0] = 0</span>；若存在整数 <span class="eq">x</span> 使 <span class="eq">t</span> 同余于 <span class="eq">x² mod 10223</span>，则 <span class="eq">L[t] = 1</span>；若不存在这样的整数 <span class="eq">x</span>，则 <span class="eq">L[t] = 0</span>。由 <span class="eq">L[t]</span> 定义 Weil 序列 <span class="eq">W<sub>i</sub>[t]</span>：</p>
+<p class="eqd"><span class="eq">W<sub>i</sub>[t] = L[t] ⊕ L[(t + w<sub>i</sub>) mod 10223]，　t ∈ {0, …, 10222}</span></p>
+<p>其中 <span class="eq">w<sub>i</sub></span> 是 PRN 为 <span class="eq">i</span> 的卫星独有的 Weil 索引；同一卫星的数据与导频通道的索引互不相同。生成的 Weil 码通过在码中预定位置插入 7 码片长的扩展序列 <span class="eq">E[t] = [0, 1, 1, 0, 1, 0, 0]</span> 扩展至所需长度 10230 码片：</p>
+<p class="eqd"><span class="eq">L1CD<sub>i</sub>[t]／L1CP<sub>i</sub>[t] = W<sub>i</sub>[t]，t = 0, …, p<sub>i</sub>−2；　E[t−(p<sub>i</sub>−1)]，t = p<sub>i</sub>−1, …, p<sub>i</sub>+5；　W<sub>i</sub>[t−7]，t = p<sub>i</sub>+6, …, 10229</span></p>
+<p>其中 <span class="eq">p<sub>i</sub></span> 是 PRN 为 <span class="eq">i</span> 的卫星独有的插入索引；与 <span class="eq">w<sub>i</sub></span> 一样，数据与导频通道的插入索引也互不相同。所有 GPS 卫星、两个信道的参数 <span class="eq">w<sub>i</sub></span> 与 <span class="eq">p<sub>i</sub></span> 均列于 IS-GPS-800 接口控制文件（ICD）[11]。</p>
+
+<h3>4.1.2　GPS L1C 覆盖码的生成</h3>
+<p>GPS L1C 覆盖码 L1CO 由一个或两个截短 M 序列定义。长度为 <span class="eq">2¹¹−1 = 2047</span> 的 M 序列由 11 级线性反馈移位寄存器（LFSR）生成，再截短至所需的 1800 符号。对 PRN 号介于 1 与 63 之间的 GPS 卫星——当前在轨的全部 GPS 卫星都在此范围内——只使用单个 M 序列。GPS 文档支持最高 210 的 PRN 号，对 PRN 64–210，覆盖码改由截短 Gold 码定义：截短 Gold 码由两个截短 M 序列模 2 相加生成。图 15 展示了 11 级 LFSR 的工作方式：每个周期，符号 <span class="eq">n₁₁</span> 被取作输出 M 序列的新 LSB；LFSR 下一级的第一个符号由模 2 和 <span class="eq">n′₁ = (Σ<sub>j=1</sub><sup>11</sup> m<sub>j</sub>n<sub>j</sub>) mod 2</span> 生成，其中 <span class="eq">m<sub>j</sub> ∈ {0, 1}</span> 是该卫星专属生成多项式的系数；各级符号整体右移产生下一 LFSR 状态：<span class="eq">n′<sub>j</sub> = n<sub>j−1</sub></span>，<span class="eq">j ∈ {2, …, 11}</span>。所有 GPS 卫星 PRN 号的生成多项式与 LFSR 初始状态均列于 IS-GPS-800 ICD[11]。</p>
+<div class="fig">{{FIG:15}}<div class="figcap"><b>图 15</b>：用于生成 GPS L1C 覆盖码 M 序列的 11 级线性反馈移位寄存器[11]。系数 m<sub>i</sub>（i = 1, …, 11）由本原生成多项式定义。</div></div>
+
+<h2>4.2　TMBOC 子载波调制</h2>
+<p>GPS L1C 数据与导频通道的测距码按 sinBOC 定义[11]，用 BOC(1,1) 与 BOC(6,1) 二进制偏移载波调制。数据通道的调制是纯 BOC(1,1)；导频通道则用时分的 BOC(1,1) 与 BOC(6,1) 调制。数据与导频通道合并后的调制方案称为时分复用 BOC，即 TMBOC(6,1,1/11)，它是 MBOC(6,1,1/11) 调制的 GPS 版本——后者亦被 Galileo E1 OS、QZSS L1C 与 BDS B1C 采用。MBOC(6,1,1/11) 各种实现的功率谱密度（PSD）等价，只是各系统所采用的设计导致时域实现不同。数字 1/11 表示发射功率中有 1/11 用 BOC(6,1) 调制、其余用 BOC(1,1) 调制。由于子载波占数据通道功率的 100%、占导频通道功率的 <span class="eq">1 − 4/33 ≈ 88%</span>，BOC(1,1) 可以较好地近似两个 L1C 通道的本地信号副本调制；而且 BOC(1,1) 的频谱旁峰比 BOC(6,1) 更靠近 L1C 中心频率，意味着该分量可以用更低的前端带宽与采样率跟踪。整个导频通道的子载波调制称为 TMBOC(6,1,4/33)。GPS L1C 子载波的时域实现如图 16 所示；图 17 给出无限带宽 BOC(1,1)、TMBOC(6,1,4/33) 与 TMBOC(6,1,1/11) 子载波的自相关函数。更尖锐的自相关峰支持噪声更小的码定时与伪距估计。</p>
+<div class="fig">{{FIG:16}}<div class="figcap"><b>图 16</b>：以 33 码片长序列展示的施加于 GPS L1C 数据通道（a）与导频通道（b）的 TMBOC 调制。数据通道为纯 BOC(1,1)；导频分量同时包含 BOC(1,1) 与 BOC(6,1) 调制并按时分复用：长度 10230 码片的测距码中编号为 0+33t、4+33t、6+33t 与 29+33t（t = 0, …, 309）的码片用 BOC(6,1) 调制，其余用 BOC(1,1) 调制。时分复用 BOC 序列每 33 个测距码码片重复一次，故仅画出一个周期。</div></div>
+<div class="fig">{{FIG:17}}<div class="figcap"><b>图 17</b>：无限带宽 BOC(1,1)、TMBOC(6,1,4/33) 与 TMBOC(6,1,1/11) 子载波调制的自相关函数，按其在 GPS L1C 信号中的归一化功率缩放。</div></div>
+
+<h2>4.3　CNAV-2 导航电文</h2>
+<p>GPS L1C 数据通道以 CNAV-2 导航电文格式承载导航数据[11]。每份 CNAV-2 电文长 1800 个符号，在时间上跨越 18 秒。格式由三个子帧组成，如图 18 所示：</p>
+<ul>
+<li><b>子帧 1</b> 包含时间区间（TOI）数据。TOI 的 8 个最低有效位（LSB）用生成多项式为八进制 763 的 BCH(51,8) 方法做信道编码[11]；再把 TOI 数据的第 9 位（最高有效位 MSB）模 2 加到每个 BCH 编码符号上并前置到序列之前，形成 52 符号的编码 TOI 电文。TOI 数据自子帧 2 所给出的区间周内时间（ITOW）所代表的最近两小时时段起点起，按 18 秒一份的 CNAV-2 电文计数。</li>
+<li><b>子帧 2</b> 包含 576 比特的时间、钟差改正与星历数据，外加 24 比特的 CRC-24Q 冗余校验[11]。这 600 比特长的电文用 1/2 码率 LDPC 编码器编码，其 600 × 1200 稀疏监督矩阵 H2 由 ICD 给出[11]。为进一步保护电文免受突发错误影响，还对子帧 2 与子帧 3 联合施加一个 38 × 46 的块交织器。子帧 2 的内容在两小时发送时段内名义上保持不变——这一性质可用于单次电文译码失败的低信噪比条件：此时可将编码子帧 2 的每个符号估计为，例如，多份接收电文中多数对应符号的取值。</li>
+<li><b>子帧 3</b> 包含多变的附加数据，如卫星历书、电离层改正参数、差分改正、卫星构型信息与完好性支持电文[11]。CNAV-2 电文格式不会在一份导航电文中包含全部这些数据，而是为每类数据设置专用页（page）。一份 CNAV-2 电文中只发送一页，页类型由子帧 3 第 9 至 14 位给出的 6 比特页号标识。所发送的页在各电文间变化，并且明确地不遵循任何预定顺序。目前 GPS L1C ICD 定义了编号 1 至 8 的页类型结构[11]。与子帧 2 类似，子帧 3 的页数据之后也附加了 CRC-24Q；子帧 3 总长 274 比特，用 ICD 给出的 274 × 548 稀疏监督矩阵 H3 编码为 548 符号长的电文[11]。同样，38 × 46 的块交织器联合施加于子帧 2 与子帧 3，构成 CNAV-2 电文的后半部分。</li>
+</ul>
+<div class="fig">{{FIG:18}}<div class="figcap"><b>图 18</b>：CNAV-2 导航电文编码方框图[11]。子帧 1（时间区间，9 比特）经 BCH(51,8) 编码；子帧 2（时间与星历，576 比特 + 24 比特 CRC）与子帧 3（可变数据，250 比特 + 24 比特 CRC）分别经 1/2 LDPC 编码；子帧 2 与 3 联合经 38 × 46 块交织，整个 CNAV-2 电文共 1800 符号，以 100 sps 发送 18 秒。</div></div>

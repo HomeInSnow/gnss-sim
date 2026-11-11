@@ -1,0 +1,136 @@
+<h1 class="ch">3　GNSS 接收机与信号处理</h1>
+<p>GNSS 接收机是所有 GNSS 用户利用并受益于 GNSS 服务的必备工具。GNSS 接收机可以按其能力、用途与实现方式等标准进行分类：</p>
+<ul>
+<li><b>接收机所利用的频率数目</b>可以不同。按可用频段的数目，接收机通常被分为单频、双频与多频接收机。能够补偿电离层伪距偏差，是双频或多频接收机相对单频接收机的一项主要优势。双频与多频接收机还能获得对干扰或服务降级的更强抵御能力。</li>
+<li><b>使用多于一个星座</b>（例如同时使用 GPS 与 Galileo）的 GNSS 接收机可称为多星座接收机。一个实现良好的多星座方案尤其受益于天空中更多的可用卫星——更好的整体星座几何构型可改善服务连续性与 PNT 精度[60]。更多的卫星数也有助于在可见天空受限的环境中维持 GNSS 工作[61]。</li>
+<li><b>GNSS 接收机的用途</b>可以多种多样。许多接收机在设计时针对特定使用场景，或被集成到手机、车辆等设备之中。应用领域的不同可能对接收机设计提出运行与法律两方面必须满足的标准，例如测量所需的精度或航空应用所需的可靠性。</li>
+<li><b>GNSS 接收机的实现方式</b>可以不同。现代 GNSS 接收机使用前端（front-end）模块调理模拟输入信号并将其数字化[14, p. 235–236]。后续的数字信号处理（DSP）可以在专用硬件（如 ASIC 或 FPGA）上实现，也可以在 CPU 或数字信号处理器等微处理器上以软件方式运行[62]。市面上典型的商用接收机将所有部件集成在单颗芯片或 SoC 之中。DSP 以软件实现的接收机可称为软件接收机。</li>
+</ul>
+
+<h2>3.1　接收机前端</h2>
+<p>接收机前端用于将天线捕获的输入模拟带通射频信号调理为等效的中频（IF）信号，同时滤除带外分量，并施加低噪声放大以提升可用信号功率[8, ch. 1.43]。几乎所有 GNSS 前端都使用模数转换器（ADC）将模拟中频信号数字化以供后续处理[14, ch. 5.12]。接收机前端可分为几个主要部件：</p>
+<ul>
+<li><b>前端带通滤波器（BPF）</b>用于抑制存在于所接收信号射频频段之外的噪声与干扰信号。带通滤波器的两个重要特性是带宽与选择性：带宽描述可以通过滤波器的频带宽度，选择性则描述滤波器过渡带中衰减上升的快慢。高选择性有利于良好的带外抑制，但代价是更高的滤波器复杂度。一般而言，为兼顾性能与良好的带外抑制特性，应选用恰好覆盖 GNSS 信号射频频段、足以达到所需精度的较低滤波器带宽。</li>
+<li><b>前端低噪声放大器（LNA）</b>用于提升接收信号功率以补偿传输损耗。放大器在提供增益的同时也引入附加噪声，可能对信噪比产生不利影响。因此，LNA 通常置于前端初始射频滤波之后的第一个位置——该滤波可防止放大器因带外干扰而饱和。若天线与接收机之间的传输线较长，LNA 也可集成在 GNSS 天线内。</li>
+<li><b>下变频</b>用于将射频信号从其载波频段搬移到所需的中频频率，同时保留携带发射信息的任何信号调制。下变频可通过外差（heterodyning）实现：以中心频率为 <span class="eq">f<sub>RF</sub></span> 的接收射频信号与本振频率 <span class="eq">f<sub>LO</sub></span> 的本振信号在晶体管或二极管等非线性器件中混频。混频器的输出不仅包含原始频率分量，还包含位于 <span class="eq">|f<sub>RF</sub> ± f<sub>LO</sub>|</span> 的两个外差频率分量，以及可能存在的高阶互调产物。其中最感兴趣的是以 <span class="eq">f<sub>IF</sub> = |f<sub>RF</sub> − f<sub>LO</sub>|</span> 为中心的低外差频段，因为它含有射频信号下变频后的中频版本。外差接收机还会将一个镜像频带（image-band）——即按本振频率对射频频带作镜像反射得到的复制品——一并下变频，必须将其滤除以避免引入带外干扰。外差接收机可以经过多级变换将射频信号变频至基带，以缓解镜像抑制滤波器的设计复杂度；但多级外差接收机也存在缺点，如多频使用时的灵活性差、镜像抑制滤波器难以在集成电路中实现、功耗高等[63]。为解决这些问题，现代 GNSS 接收机通常采用所谓直接变频接收机（DCR）或低中频接收机，以单级将射频信号下变频到基带或低中频。零中频接收机消除了镜像频带问题，但可能易受直流偏置或 1/f 噪声的影响。图 6 给出单级外差前端的方框图。</li>
+<li><b>模数转换（ADC）</b>用于对模拟中频信号进行采样与量化，得到数字等效信号[8, p. 35–36]。ADC 因表示数字样本所用的比特数有限而引入量化噪声。该附加噪声取决于样本位宽以及所选的量化区间。鉴于 GNSS 信号相对微弱，1 比特与 2 比特 ADC 在商用 GNSS 接收机中得到广泛应用；超过 4 比特量化之后的量化噪声通常可以忽略不计[8, p. 36]。量化位数高于 1 比特的模数转换器通常配有一个自动增益控制（AGC）——一种反馈控制装置，试图将 ADC 量化区间与接收机噪声之比保持在恒定的最优值[64]。AGC 的实现方式例如：基于输入样本估计信号 RMS 噪声，并据此控制前端 LNA 增益或 ADC 的量化区间。</li>
+</ul>
+<div class="fig">{{FIG:6}}<div class="figcap"><b>图 6</b>：单级外差前端的方框图。</div></div>
+
+<h2>3.2　GNSS 信号捕获</h2>
+<p>信号捕获在 GNSS 接收机内完成两项任务：检测天线上方天空中存在的卫星，以及估计初始化信号跟踪所需的多普勒频移与码定时延迟的粗估计[8, p. 38–41]。为更好地描述信号捕获过程，这里给出数字化、下变频后基带信号的模型：</p>
+<p class="eqd"><span class="eq">r[n] = √C · c[n−τ] d[n−τ] s[n−τ] e<sup>j(2πνn+θ)</sup> + ω[n]</span><span class="eqnum">（3）</span></p>
+<p>其中 <span class="eq">C</span> 为经前端放大、滤波与量化后的载波功率；<span class="eq">c[n−τ]</span> 为被未知延迟 <span class="eq">τ</span> 平移的测距码码片；<span class="eq">d[n−τ]</span> 为导航电文符号；<span class="eq">s[n−τ]</span> 为子载波调制；<span class="eq">ν</span> 为下变频后残留的频率偏差；<span class="eq">θ</span> 为载波相位；<span class="eq">ω[n] ~ CN(0, σ²)</span> 为样本噪声，建模为方差 <span class="eq">σ²</span> 的复加性高斯白噪声（AWGN）。信号捕获包括：生成局部的多普勒移频载波、子载波与测距码副本；用相干与非相干两级将输入信号与各副本相关；并进行假设检验，判断输入中是否存在来自被搜索卫星（SV）发射的信号。这些步骤针对不同的候选多普勒频移与码延迟 <span class="eq">{ν′, τ′}</span> 对（例如采用网格搜索）反复执行，直到找到被搜索的卫星或遍历所有可能的组合为止。图 7 以方框图形式说明了信号捕获过程。</p>
+<p>1. <b>局部副本生成与混频</b>：利用候选多普勒频率 <span class="eq">ν′</span> 与前端中频生成一个波形，用于补偿输入信号中的残留频率偏差；类似地，基于候选码延迟 <span class="eq">τ′</span> 生成经子载波调制的测距码副本，以解扩展 CDMA 的 GNSS 信号。将各局部副本与假定符合式 (3) 模型的输入中频样本 <span class="eq">r[n]</span> 相混合（即相乘）。</p>
+<div class="fig">{{FIG:7}}<div class="figcap"><b>图 7</b>：用于检测卫星存在并对信号多普勒频移与码延迟作粗估计的信号捕获方框图[8, p. 39]。</div></div>
+<p>2. <b>相关计算</b>：将混频后的信号送入积分器，在相干驻留时间 <span class="eq">T<sub>C</sub> = N/F<sub>S</sub></span>（<span class="eq">F<sub>S</sub></span> 为信号采样率）内对指定数目 <span class="eq">N</span> 个样本求和：</p>
+<p class="eqd"><span class="eq">R<sub>C</sub>(τ′, ν′) = (1/N) Σ<sub>n=0</sub><sup>N−1</sup> c[n−τ′] s[n−τ′] e<sup>−j2πν′n</sup> r[n]</span><span class="eqnum">（4）</span></p>
+<p>式 (4) 的结果称为相干积分结果，因为它是对同相与正交分量分别求和得到的。它同时保留了幅度与相位信息；但其缺点是，长时间的相干积分可能因残余频率误差造成的相位失准而导致相消干扰。这就为最大积分时间设置了上限，且该上限取决于多普勒频率估计 <span class="eq">ν′</span> 的分辨率。二级码或导航电文符号 <span class="eq">d[n]</span> 的相位调制也可能引起相消干扰。为解决相位失准问题，可用非相干积分方法进一步延长相关周期。在非相干积分中，先丢弃按式 (4) 得到的相干积分结果的相位信息，再将其结果求和。将多个较短的相干积分周期非相干地组合可以避免相位失准，但会因引入噪声幅度偏差而降低信噪比（SNR）。基于幅度平方的非相干积分定义为</p>
+<p class="eqd"><span class="eq">R<sub>NC</sub>(τ′, ν′) = Σ<sub>k=0</sub><sup>K−1</sup> |R<sub>C</sub>(τ′, ν′; k)|²</span><span class="eqnum">（5）</span></p>
+<p>其中 <span class="eq">k</span> 遍历 <span class="eq">K</span> 个长度为 <span class="eq">N</span> 的相干积分箱。可以像例如[65]那样证明：当被搜索的卫星不存在时，按相干积分噪声方差 <span class="eq">σ²<sub>C</sub> ≈ σ²/N</span> 归一化的非相干积分结果服从自由度为 <span class="eq">2K</span> 的卡方分布。需要强调的是，式 (3) 的信号模型并未包含来自干扰信号等的非高斯噪声项——若存在此类项，则须对相干积分结果的方差估计作额外考虑。当被搜索的卫星存在时，归一化积分结果服从自由度为 <span class="eq">2K</span>、非中心参数为</p>
+<p class="eqd"><span class="eq">λ(ν′, τ′) ≈ (CNK/σ²) · [sin²(πN(ν−ν′)) / sin²(π(ν−ν′))] · [R²(τ−τ′) / R²(0)]</span><span class="eqnum">（6）</span></p>
+<p>的非中心卡方分布，其中 <span class="eq">R</span> 为子载波调制测距码的自相关函数。该式还假定二级码或导航电文符号在相干积分期间不会引起相消干扰。</p>
+<p>3. <b>检测</b>：判断被搜索卫星的信号是否存在并与所生成的局部信号副本同步，需要使用二元假设检验。卫星不存在（H₀）与存在（H₁）两种情形下非相干积分结果的相应分布可按式 (6) 建模为</p>
+<p class="eqd"><span class="eq">H₀: R<sub>NC</sub>(ν′, τ′)/σ²<sub>C</sub> ~ χ²<sub>2K</sub>　　H₁: R<sub>NC</sub>(ν′, τ′)/σ²<sub>C</sub> ~ χ′²<sub>2K</sub>(λ(ν′, τ′))</span><span class="eqnum">（7）</span></p>
+<p>图 8 示意了 <span class="eq">√R<sub>NC</sub>(τ′, ν′)</span> 在 H₀ 与 H₁ 下的分布。一个门限 <span class="eq">β</span> 将两个分布划分为分别对应接受或拒绝假设 H₁ 的两个区域。即便检测成功（即 H₁ 为真时拒绝 H₀），若 <span class="eq">ν′</span> 与 <span class="eq">τ′</span> 与其真值 <span class="eq">ν</span>、<span class="eq">τ</span> 的差距超出一定的拉入范围，也未必能成功初始化信号跟踪。这些范围由接收机的信号跟踪架构决定，并反过来定义了捕获网格搜索所需的分辨率。Neyman–Pearson 引理确立：对于完美建模的积分结果，似然比检验是一致最大功效（UMP）检验。该检验可改造为恒定虚警率（CFAR）形式：依据观测到的背景或其他网格搜索 <span class="eq">{ν′, τ′}</span> 单元调整检测门限，从而实现给定的虚警率 <span class="eq">P<sub>fa</sub></span>。CFAR 似然比检验定义为</p>
+<p class="eqd"><span class="eq">Λ(τ′, ν′) = P(R<sub>NC</sub>(τ′, ν′) | σ², C, ν, τ, H₁) / P(R<sub>NC</sub>(τ′, ν′) | σ², H₀) ≶ H₁/H₀ γ</span></p>
+<p>其中门限 <span class="eq">γ</span> 的调整应使 <span class="eq">P(Λ(τ′, ν′) &gt; γ | H₀) = P<sub>fa</sub></span>。</p>
+<p>Neyman–Pearson 引理只适用于 H₀ 与 H₁ 下概率分布被完美建模的情形，而这需要从分布 (7) 中知晓 <span class="eq">σ²</span>、<span class="eq">C</span>、<span class="eq">ν</span> 与 <span class="eq">τ</span>。由于这些参数并不能直接获得，可以改由输入信号以例如最大似然（ML）估计来估计它们，由此得到所谓广义似然比检验（GLRT）。在 GLRT 中，所有干扰参数被其 ML 估计 <span class="eq">σ̂²、P̂、ν̂</span> 与 <span class="eq">τ̂</span> 替代：</p>
+<p class="eqd"><span class="eq">Λ<sub>GLRT</sub>(τ′, ν′) = P(R<sub>NC</sub>(τ′, ν′) | σ̂², Ĉ, ν̂, τ̂, H₁) / P(R<sub>NC</sub>(τ′, ν′) | σ̂², H₀) ≶ H₁/H₀ γ</span></p>
+<p>由于捕获要搜索多个多普勒频率与码延迟的 <span class="eq">{ν′, τ′}</span> 组合，单个卫星可能观测到多个真阳性或假阳性。可以对这些阳性结果作进一步检验，以剔除虚警并找出与被测卫星发送信号相匹配的正确 <span class="eq">{ν′, τ′}</span> 组合。进一步检验的方式例如对每一个阳性 <span class="eq">{ν′, τ′}</span> 单元重复捕获过程，即所谓多驻留（multi-dwell）检测。捕获的最终目标，是在某个最低载噪功率密度比之上检测出足够数目的 GNSS 信号并成功初始化其跟踪。捕获参数的调节——虚警率、相干驻留时间、非相干积分轮数、驻留次数、<span class="eq">ν′</span> 与 <span class="eq">τ′</span> 候选的分辨率以及信号检测概率——可用于在接收机的功耗、捕获卫星数目、跟踪初始化所需时间与接收机设计复杂度之间取得平衡。</p>
+<div class="fig">{{FIG:8}}<div class="figcap"><b>图 8</b>：卫星不存在 H₀ 与卫星存在 H₁ 两种假设下 √R<sub>NC</sub>(τ′, ν′) 的判决区域。检测门限设为 √β。</div></div>
+
+<h2>3.3　GNSS 信号跟踪</h2>
+<p>GNSS 信号跟踪是指随时间迭代更新多普勒频率、载波相位与测距码相位等时变观测量[8, p. 57–66]，以维持输入信号与局部生成信号之间同步的过程。与捕获一样，信号跟踪也基于局部信号副本与输入样本的相关，但两者的不同在于：跟踪是对先前获得的观测量进行更新，以跟踪其随时间的细微变化。单次跟踪更新的计算量远小于捕获，因而适于频繁更新观测量。跟踪能对观测量进行精细估计，同时兼顾引起接收信号持续变化的卫星与接收机动态。通常，GNSS 信号跟踪基于在递归控制反馈环中反复计算接收信号与局部载波、测距码副本之间的相关。为简便起见，将跟踪环分为载波跟踪与码跟踪两个环节，尽管这两个环节无法独立工作。维持良好的信噪比并获得新的观测量，都需要多普勒频率与码定时二者已有的粗同步或细同步——它们来自捕获或此前的跟踪环更新。</p>
+
+<h3>3.3.1　载波跟踪环</h3>
+<p>载波跟踪的任务是补偿变化的多普勒频率，并维持接收信号与由反馈控制 NCO 生成的局部副本之间的相位同步[8, p. 58–62]。用于调节 NCO 的信号由判别器产生：其输出正比于接收信号与局部副本信号之间的频率误差或相位误差。根据判别器测量的是频率误差还是相位误差，载波跟踪环分别称为锁频环（FLL）或锁相环（PLL）。由于 FLL 自身无法纠正相位误差，它必须与 PLL 配合使用。频率与相位判别函数作用于接收信号与局部副本信号之间的同相与正交相关结果[14, p. 168]。取复相关结果的辐角即可得到最大似然相位估计，此外也存在多种低复杂度判别器的替代方案。用相邻两次相位测量之差除以测量间隔时间，即可由相位判别器构造出频率判别器。图 9 给出一个示例载波跟踪环的信道方框图。FLL 与 PLL 判别器的输出经滤波以抑制热噪声与接收机钟相位抖动的影响，从而维持反馈环的稳定[14, p. 179–193]。由于跟踪环滤波器对 GNSS 定位定时精度以及接收机在各种信号条件下的正常运行至关重要，它一直是 GNSS 研究的常见主题。跟踪环的阶数决定了该环能够补偿的卫星与接收机动态水平。例如，三阶 PLL 与二阶 FLL 相结合可以在保证反馈环稳定的同时消除卫星加速度应力偏差[14, p. 180]。</p>
+<div class="fig">{{FIG:9}}<div class="figcap"><b>图 9</b>：单个跟踪信道载波跟踪环的方框图[8, p. 59]。</div></div>
+
+<h3>3.3.2　码跟踪环</h3>
+<p>码跟踪环用于使局部副本测距码的相位与速率和接收信号保持同步[8, p. 62–66]。由于多普勒效应、振荡器频率偏差等原因，观测到的码速率会偏离其标称值。码跟踪基于延迟锁定环（DLL）：在判别器中比较时移相关器的输出，判断局部副本码是落后还是超前于接收信号。与前述 FLL、PLL 判别器一样，DLL 判别器的输出用于调节负责生成本地码副本与子载波波形的 NCO，并利用环路滤波器抑制判别器噪声。图 10 展示了一个基于三个相关器的早期–晚期型码跟踪 DLL 示例。早减晚（EML）判别器通过比较延迟或超前的测距码副本的相关结果，估计局部码与接收码之间的码相位偏差[8, p. 64–66]。EML 判别器可使用一个或多个早期与late相关器，其时间间隔取决于输入码速率、子载波调制类型以及可用前端带宽等因素。码速率更高、ACF 峰更窄的子载波会收窄 DLL 可用的码定时窗口，因而需要更窄的早期–late 间距。DLL 判别器还可以利用一个即时（prompt）相关器对输出归一化：即时相关器与输入信号零码相位偏差对齐，除用于估计信号的功率与相位外，也用于载波跟踪。由于卫星与接收机的动态对载波环和码环是共有的，DLL 可以利用载波多普勒频率测量值精确估计码速率偏差。这一技术称为载波辅助（carrier aiding），它能有效消除动态引起的任何码定时误差[14, p. 162–164]。码速率偏差 <span class="eq">ΔR</span> 可由测得的载波多普勒频率计算：</p>
+<p class="eqd"><span class="eq">ΔR = Δf / f<sub>carr</sub> × R<sub>c</sub></span><span class="eqnum">（8）</span></p>
+<p>其中 <span class="eq">R<sub>c</sub></span> 为标称码速率，<span class="eq">f<sub>carr</sub></span> 为标称载波频率，<span class="eq">Δf</span> 为包含振荡器频率偏差的载波多普勒频率。载波辅助允许降低码跟踪环滤波器的带宽、更新率与阶数，从而同时提高码跟踪环的精度与效率。</p>
+<div class="fig">{{FIG:10}}<div class="figcap"><b>图 10</b>：单个跟踪信道的测距码与子载波跟踪环方框图。早期与late相关器相对即时相关器 Y<sub>P</sub> 在时间上偏移 ±D/2[8, p. 62]。</div></div>
+
+<h2>3.4　导航电文的解调与解码</h2>
+<p>当跟踪环信道对输入信号获得载波相位锁之后，接收机即可开始访问导航电文符号。电文符号的解调包括消除多普勒频率，并将信号与子载波调制测距码的副本在单个导航电文符号周期内相关。这就解扩展了 CDMA 信号，并可访问编码于信号相位中的导航电文符号。解码过程实际上与 FLL、PLL、DLL 已经在使用的即时相关器结果获取相同，因此无需额外实现相关器。判决规则用于判断观测到的相关结果对应被跟踪卫星发送的 0 还是 1。GNSS 导航电文采用多种编码技术——如差错检测码、前向纠错（FEC）编码与交织——作为减轻电文传输中断的工具。GNSS 导航电文的编码与解码过程如图 11 所示。依接收机设计不同，电文解码器可分为硬判决与软判决两类：前者作用于由判决规则得到的二进制符号，后者作用于包含符号不确定性信息的软判决符号、仅在解码之后才施加判决规则。软判决解码器的优势在于能在 FEC 过程中对不同符号赋予权重，从而着重纠正不确定性高的符号。</p>
+<div class="fig">{{FIG:11}}<div class="figcap"><b>图 11</b>：GNSS 卫星与接收机中导航电文的编码与解码步骤。</div></div>
+<p>1. <b>差错检测</b>的目标是向接收机指示电文是否被正确接收。GNSS 中使用的差错检测方法包括 Hamming 码与循环冗余校验（CRC），后者是更常用的选择。差错检测基于随电文一同发送的附加冗余比特。这些冗余比特按电文内容构造，例如 Hamming 码就是对电文比特不同子集计算的监督比特。一旦发生比特错误，编码于冗余比特中的信息便与内容不再一致，从而指示出错。冗余比特有多种构造方式，由此产生 Hamming 码、CRC 等不同的检测方法。GNSS 中常用的 CRC 差错检测方法是 GPS、Galileo 与 BDS 均采用的高通 24 位 CRC（CRC-24Q）[10, 11, 48]。CRC 纯粹是错误电文的检测手段，不提供定位或纠正比特错误的任何工具。在双向通信系统中，CRC 校验失败可用于触发错误电文的重发。然而 GNSS 空间段与用户段之间的链路一般是单向的，只是电文会重复播发；因此未通过 CRC 校验的电文可以丢弃，稍后再尝试获取新的电文。</p>
+<p>2. <b>前向纠错（FEC）编码</b>亦称信道编码，由添加到导航电文中的附加冗余符号以及一种编码方法组成：该方法将电文信息编码进冗余比特，使得仅凭接收到的电文即可纠正可能的比特错误。FEC 方法与差错检测方案关系密切，因为按定义，纠错必然也要求检错；但有效纠错所需的冗余比特远多于单纯检错。最简单的 FEC 方法或许是重复码：每个电文比特以奇数次重复发送，接收端将对应比特的大部分接收符号中出现最多的值赋给该比特——只要出错的符号只占少数，比特即可被正确接收。不过，电信中使用的现代 FEC 方法比重复码复杂得多、也强大得多。GNSS 使用的 FEC 方法包括卷积码、BCH 码、Reed–Solomon 码与低密度奇偶校验（LDPC）码[11, 66]。</p>
+<p>3. <b>电文交织</b>在发送前以可预测的方式打乱电文符号，目的是改善 FEC 性能。电文符号错误通常以突发形式出现——多个连续符号被翻转或被置为同一常数。接收机所做的去交织将可能的突发错误以貌似随机的顺序散布到整段电文之中。这有助于纠错，因为 FEC 对随机噪声通常比对相关突发更有效。最简单的交织方法或许是块交织：长度为 <span class="eq">NM</span> 的电文按行写入 <span class="eq">N × M</span> 矩阵，再按列读出得到交织后的电文；接收端按列写入、按行读出即完成去交织。</p>
+<p>导航电文符号周期因 GNSS 信号而异。GPS L1C 的符号周期为 10 ms，且符号与长度 10 ms 的测距码同步；而 GPS L1 C/A 的符号周期为 20 ms，其测距码只长 1 ms，因此每个符号内 C/A 测距码需重复 20 次，要充分利用整个 20 ms 进行相干相关还需要符号级同步。利用先前定义的式 (3) 信号模型，跟踪获得的即时相关结果可写为</p>
+<p class="eqd"><span class="eq">Y<sub>P</sub>[k] = (1/N<sub>d</sub>) Σ<sub>n=kN<sub>d</sub></sub><sup>(k+1)N<sub>d</sub>−1</sup> c[n−τ̂[k]] s[n−τ̂[k]] e<sup>−j(2πν̂[k]n+θ̂[k])</sup> r[n]<br>
+= √C · [sin(πN<sub>d</sub>(ν−ν̂[k])) / sin(π(ν−ν̂[k]))] · [R(τ−τ̂[k]) / R(0)] · e<sup>j(θ−θ̂[k])</sup> d[k] + ω<sub>d</sub>[k]<br>
+= f(ν̂[k], τ̂[k], θ̂[k]) × d[k] + ω<sub>d</sub>[k]</span><span class="eqnum">（9）</span></p>
+<p>其中 <span class="eq">ω<sub>d</sub>[k] ~ CN(0, σ²/N<sub>d</sub>)</span> 为复加性高斯白噪声。对于持续时间超过一个跟踪环更新周期的电文符号，式 (9) 中对应同一符号的各相关结果可以累加：</p>
+<p class="eqd"><span class="eq">R[j] = Σ<sub>k=jN<sub>j</sub>+J</sub><sup>(j+1)N<sub>p</sub>+J−1</sup> Y<sub>P</sub>[k]</span><span class="eqnum">（10）</span></p>
+<p>其中 <span class="eq">J</span> 为符号级同步获得的偏移。</p>
+<p>包含在式 (10) 同相分量中的导航电文符号可通过将结果投影到实轴上获取：</p>
+<p class="eqd"><span class="eq">R<sub>I</sub>[j] = Re(R[j]) = Σ<sub>k=jN<sub>j</sub>+J</sub><sup>(j+1)N<sub>p</sub>+J−1</sup> Re(f(ν̂[k], τ̂[k], θ̂[k]) × d[k] + ω[j])</span></p>
+<p>其中 <span class="eq">ω<sub>I</sub>[j] ~ N(0, σ²/2N<sub>d</sub>N<sub>j</sub>)</span>。正交通道上的符号可类似地通过投影到虚轴获得。实践中 <span class="eq">f(ν̂[k], τ̂[k], θ̂[k])</span> 的分布难以估计，因此在软判决解码器中评估软判决符号分布时，可采用基于信号跟踪环设计、信道建模以及对观测相关输出的估计所得的近似模型。对硬判决解码器或不含 FEC 的信号，符号的简单判决规则可定义为</p>
+<p class="eqd"><span class="eq">d̂[j] = 1，若 R<sub>I</sub>[j] &gt; 0；　d̂[j] = 0，若 R<sub>I</sub>[j] &lt; 0</span></p>
+<div class="fig">{{FIG:12}}<div class="figcap"><b>图 12</b>：基于硬判决（上）与软判决（下）的导航电文接收与解码。若 GNSS 信号不含交织、FEC 或 CRC，相应的解码模块可以省略。</div></div>
+
+<h2>3.5　导航解算</h2>
+<p>如 2.1 节所述，GNSS 的定位与定时解算基于对多颗卫星的伪距测量 <span class="eq">ρ<sup>(p)</sup></span>（以下用上标 <span class="eq">p = 0, 1, …</span> 索引）。伪距测量通过比较信号从卫星 <span class="eq">p</span> 到用户的信号到达时刻（TOA）与发送时刻（TOS）得到：</p>
+<p class="eqd"><span class="eq">ρ<sup>(p)</sup> = c(t<sub>r</sub><sup>(p)</sup> − t<sub>s</sub><sup>(p)</sup>)</span><span class="eqnum">（11）</span></p>
+<p>其中 <span class="eq">t<sub>r</sub><sup>(p)</sup></span> 为信号 TOA，<span class="eq">t<sub>s</sub><sup>(p)</sup></span> 为信号 TOS，<span class="eq">c</span> 为光速。该时间差称为飞行时间（TOF）。求解接收机的三个未知位置坐标以及接收机钟与 GNSS 系统时间之间的钟偏差，至少需要来自不同卫星的四个伪距测量。位于 <span class="eq">x</span> 的用户对卫星 <span class="eq">p</span> 的伪距测量按如下模型建模：</p>
+<p class="eqd"><span class="eq">ρ<sup>(p)</sup>(x, Δt<sub>u</sub>) = ‖x − x<sup>(p)</sup>‖ + c(Δt<sub>u</sub> − Δt<sup>(p)</sup>) + I<sup>(p)</sup> + T<sup>(p)</sup> + ε<sup>(p)</sup></span><span class="eqnum">（12）</span></p>
+<p>其中 <span class="eq">‖x − x<sup>(p)</sup>‖</span> 为卫星与用户之间的物理距离；<span class="eq">Δt<sub>u</sub></span> 与 <span class="eq">Δt<sup>(p)</sup></span> 分别为用户钟与卫星钟相对 GNSS 系统时间的钟偏差；<span class="eq">I<sup>(p)</sup></span> 为电离层延迟误差；<span class="eq">T<sup>(p)</sup></span> 为对流层延迟误差；<span class="eq">ε<sup>(p)</sup></span> 包含残余项，如 DLL 定时抖动、多径定时偏差以及卫星星历与钟差等各类在基于码的定位定时中可忽略的小误差。应当注意，所有参数都随时间变化，只是为记号简洁而未显式写出时间依赖。尤其地，<span class="eq">x</span> 与 <span class="eq">x<sup>(p)</sup></span> 并非同一时刻测得，而是分别按 GNSS 系统时间度量的信号发送时刻与到达时刻取值。</p>
+
+<h3>3.5.1　卫星钟与群延迟改正</h3>
+<p>GNSS 导航电文中包含其星历信息适用性的参考时间以及钟改正参数，用于补偿播发卫星的原子钟与 GNSS 系统时间之间的钟偏差[8, p. 74]。所有现役 GNSS 都以 <span class="eq">a<sub>f0</sub>、a<sub>f1</sub>、a<sub>f2</sub></span> 三个参数一组的形式播发钟改正，用于计算时刻 <span class="eq">t</span> 的卫星钟偏差：</p>
+<p class="eqd"><span class="eq">Δt<sup>(p)</sup> = a<sub>f0</sub> + a<sub>f1</sub>(t − t<sub>0e</sub>) + a<sub>f2</sub>(t − t<sub>0e</sub>)² + Δt<sub>rel</sub></span><span class="eqnum">（13）</span></p>
+<p>其中 <span class="eq">a<sub>f0</sub>、a<sub>f1</sub>、a<sub>f2</sub></span> 分别为钟偏差、漂移与漂移率改正系数，<span class="eq">t<sub>0c</sub></span> 为系数的参考时间，<span class="eq">Δt<sub>rel</sub></span> 为相对论改正项，定义为</p>
+<p class="eqd"><span class="eq">Δt<sub>rel</sub> = F e √a sin(E<sub>t</sub>) = −(2√μ/c²) e √a sin(E<sub>t</sub>)</span><span class="eqnum">（14）</span></p>
+<p>其中 <span class="eq">F = −2√μ/c² = −4.442807633 × 10⁻¹⁰</span>，<span class="eq">E<sub>t</sub></span> 为卫星偏近点角；按 3.5.2 节所述计算卫星位置时即可获得偏近点角。相对论改正刻画了位于 MEO 轨道的卫星钟与定义于地球表面的 GNSS 系统时间之间的时间膨胀[8, p. 74–75]。若轨道是完美圆轨道，该效应只需对卫星钟速率作恒定调整即可补偿；但 GNSS 轨道的微小椭圆度要求引入一个随卫星运动而变化的附加改正项。卫星钟速率相对 GNSS 系统时间的差异，源于卫星相对地面参考钟在地球引力势阱中的速度与位置。卫星钟改正基于地面段为双频无电离层服务所开展的测量；然而星上设备的仪器延迟既与频率有关也与码有关，因此还会通过卫星播发面向单频单码用户的附加改正参数。这些改正参数在不同文献中被称为播发群延迟（BGD）、差分码偏差（DCB）或信号间改正（ISC）等。</p>
+
+<h3>3.5.2　用播发星历计算卫星位置</h3>
+<p>作为 GNSS 导航电文一部分播发的星历，包含估计该系统卫星短期轨道状态所需的信息。以 GPS 为例，星历每两小时更新一次，其参数可用开普勒根数及考虑轨道摄动的改正参数计算发射卫星的在轨位置与速度等。开普勒根数是定义椭圆轨道上卫星位置的六个参数，其含义如图 13 所示并在下列清单中说明：</p>
+<ul>
+<li>轨道半长轴 <span class="eq">a</span>。</li>
+<li>偏心率 <span class="eq">e</span>，定义轨道半长轴与半短轴之间的关系。</li>
+<li>轨道倾角 <span class="eq">i</span>，即地球赤道面与轨道平面之间的夹角。</li>
+<li>升交点赤经（RAAN）<span class="eq">Ω</span>，即春分点方向与轨道升交点之间的经度角。春分点定义为春分日太阳穿越赤道面的方向；升交点是轨道自南向北穿越赤道面的点。</li>
+<li>近地点幅角 <span class="eq">ω</span>，即升交点与近地点（轨道上最接近地心的点）之间的夹角。</li>
+<li>真近点角 <span class="eq">ν</span>，即从地心看近地点与卫星之间的夹角。</li>
+</ul>
+<div class="fig">{{FIG:13}}<div class="figcap"><b>图 13</b>：用于定义卫星位置的六个开普勒根数。倾角 i 与 RAAN Ω 描述轨道平面的取向，半长轴 a 与偏心率 e 定义轨道的形状；近地点幅角 ω 描述轨道在该平面内的取向，真近点角 ν 定义卫星在轨道上的位置。</div></div>
+<p>GNSS 播发星历以在星历参考时刻 <span class="eq">t<sub>0e</sub></span> 定义的略微改化的形式给出这些开普勒参数。接收机可以将卫星的近点角异常向未来外推来预测卫星位置，具体计算如例如[8, p. 73–74]所详述。若直接用真近点角，外推是非线性的，因此星历中实际随卫星播发的是与之相关的平近点角：平近点角可在时间上线性外推，之后再变换为真近点角。时刻 <span class="eq">t</span> 的真近点角 <span class="eq">ν<sub>t</sub></span> 按下式计算：</p>
+<p class="eqd"><span class="eq">M<sub>t</sub> = M<sub>0</sub> + √(μ/a³) (t − t<sub>0e</sub>)<br>
+M<sub>t</sub> = E<sub>t</sub> − e sin(E<sub>t</sub>)<br>
+ν<sub>t</sub> = 2 atan( √((1+e)/(1−e)) · tan(E<sub>t</sub>/2) )</span><span class="eqnum">（15）</span></p>
+<p>其中 <span class="eq">M<sub>0</sub></span> 为参考时刻 <span class="eq">t<sub>0e</sub></span> 的平近点角，<span class="eq">M<sub>t</sub></span> 为时刻 <span class="eq">t</span> 的平近点角，<span class="eq">μ</span> 为引力常数，<span class="eq">E<sub>t</sub></span> 为时刻 <span class="eq">t</span> 的偏近点角；<span class="eq">E<sub>t</sub></span> 可由第二式用定点迭代求解[11]。将时刻 <span class="eq">t</span> 的真近点角与近地点幅角 <span class="eq">ω</span> 相加，得到纬度幅角 <span class="eq">Φ<sub>t</sub></span>：</p>
+<p class="eqd"><span class="eq">Φ<sub>t</sub> = ν<sub>t</sub> + ω</span></p>
+<p>对纬度幅角 <span class="eq">Φ<sub>t</sub></span> 与轨道半径 <span class="eq">r<sub>t</sub> = a(1 − e cos(E<sub>t</sub>))</span> 施加一组轨道改正。这些改正考虑了例如太阳、月球等第三体的引力效应、地球引力场的不均匀性以及太阳辐射压力。改正后的参数为</p>
+<p class="eqd"><span class="eq">u<sub>t</sub> = Φ<sub>t</sub> + C<sub>us</sub> sin(2Φ<sub>t</sub>) + C<sub>uc</sub> cos(2Φ<sub>t</sub>)　　r<sub>t</sub> = a(1 − e cos(E<sub>t</sub>)) + C<sub>rs</sub> sin(2Φ<sub>t</sub>) + C<sub>rc</sub> cos(2Φ<sub>t</sub>)</span></p>
+<p>其中 <span class="eq">C<sub>us</sub>、C<sub>uc</sub>、C<sub>rs</sub>、C<sub>rc</sub></span> 为卫星播发星历中包含的纬度幅角与轨道半径谐波改正系数。用改正后的 <span class="eq">u<sub>t</sub></span> 与 <span class="eq">r<sub>t</sub></span> 计算卫星在其轨道平面内的位置：</p>
+<p class="eqd"><span class="eq">x′<sub>t</sub> = r<sub>t</sub> cos(u<sub>t</sub>)　　y′<sub>t</sub> = r<sub>t</sub> sin(u<sub>t</sub>)</span><span class="eqnum">（16）</span></p>
+<p>为轨道平面定义的坐标需要变换到地心地固（ECEF）坐标参考系（如 GPS 卫星使用的 WGS 84）。这需要轨道的升交点经度 <span class="eq">Ω<sub>t</sub></span> 与倾角 <span class="eq">i<sub>t</sub></span>。由于 ECEF 固连于地球自转，升交点经度随地球自转速度随时间变化。这两个确定平面取向的参数按下式获得：</p>
+<p class="eqd"><span class="eq">Ω<sub>t</sub> = Ω<sub>0</sub> + (Ω̇ − Ω̇<sub>e</sub>)(t − t<sub>0e</sub>) − Ω̇<sub>e</sub> t<sub>0e</sub>　　i<sub>t</sub> = i<sub>0</sub> + i̇(t − t<sub>0e</sub>) + C<sub>is</sub> sin(2Φ<sub>t</sub>) + C<sub>ic</sub> cos(2Φ<sub>t</sub>)</span></p>
+<p>其中 <span class="eq">Ω<sub>0</sub></span> 为参考升交点经度，<span class="eq">Ω̇</span> 为卫星升交点赤经变化率，<span class="eq">Ω̇<sub>e</sub></span> 为地球自转角速度，<span class="eq">C<sub>is</sub></span> 与 <span class="eq">C<sub>ic</sub></span> 为倾角改正系数。卫星的 ECEF 坐标最终由式 (16) 计算为</p>
+<p class="eqd"><span class="eq">x<sub>t</sub> = x′<sub>t</sub> cos(Ω<sub>t</sub>) − y′<sub>t</sub> cos(i<sub>t</sub>) sin(Ω<sub>t</sub>)　　y<sub>t</sub> = x′<sub>t</sub> cos(Ω<sub>t</sub>) + y′<sub>t</sub> cos(i<sub>t</sub>) cos(Ω<sub>t</sub>)　　z<sub>t</sub> = y′<sub>t</sub> sin(i<sub>t</sub>)</span><span class="eqnum">（17）</span></p>
+<p>由于 ECEF 坐标的非惯性性质，卫星与接收机之间的信号并不沿直线传播，难以直接用标准欧氏距离为伪距建模。一种简单的处理办法是把卫星的 ECEF 坐标变换到地心惯性（ECI）坐标系——该系在选定的参考时刻 <span class="eq">t<sub>0</sub></span> 与 ECEF 重合。可在 ECI 中计算接收机位置，再用逆变换换回 ECEF。时刻 <span class="eq">t</span> 由 ECEF 到 ECI 的坐标变换定义为绕地球自转轴的旋转：</p>
+<p class="eqd"><span class="eq">[x′<sub>t</sub>, y′<sub>t</sub>, z′<sub>t</sub>]ᵀ = R(Ω̇<sub>e</sub>(t − t<sub>0</sub>)) [x<sub>t</sub>, y<sub>t</sub>, z<sub>t</sub>]ᵀ，其中旋转矩阵为<br>
+[ cos(Ω̇<sub>e</sub>(t−t<sub>0</sub>))　−sin(Ω̇<sub>e</sub>(t−t<sub>0</sub>))　0；　sin(Ω̇<sub>e</sub>(t−t<sub>0</sub>))　cos(Ω̇<sub>e</sub>(t−t<sub>0</sub>))　0；　0　0　1 ]</span></p>
+<p>其中 <span class="eq">[x′<sub>t</sub>, y′<sub>t</sub>, z′<sub>t</sub>]ᵀ</span> 为卫星在时刻 <span class="eq">t</span> 的 ECI 坐标。</p>
+
+<h3>3.5.3　伪距的大气改正</h3>
+<p>式 (12) 所考虑的伪距模型同时包含电离层与对流层效应造成的误差。对单频接收机而言，前者通常是更严重的定位与定时误差来源[8, p. 80]。电离层效应与频率有关，其强度随太阳活动、地磁场、接收机纬度、季节与时辰等因素变化[67]。电离层效应用总电子含量（TEC）建模：TEC 定义为从地球表面到空间的传播路径上每平方米内的电子总数。电离层信号延迟可作一阶近似：</p>
+<p class="eqd"><span class="eq">I<sup>(p)</sup>(f) = 40.3 m³Hz⁻² · TEC<sup>(p)</sup> / f²</span></p>
+<p>其中 <span class="eq">f</span> 为信号载波频率，<span class="eq">TEC<sup>(p)</sup></span> 为总电子含量，通常以 TEC 单位给出（1 TECU = 10¹⁶ e⁻/m²）[8, p. 77]。双频接收机可以利用 <span class="eq">I<sup>(p)</sup></span> 的频率相关性精确补偿电离层误差；单频接收机则没有这一选项，只能使用 GNSS 卫星播发的改正参数或从外部来源获取的改正。GPS 播发中包含 8 个 Klobuchar 模型参数 <span class="eq">α<sub>i</sub>、β<sub>i</sub>，i = 0…3</span>，用于单频电离层改正[68]。Klobuchar 模型对电离层采用简化几何：假设电子位于地球表面上方平均约 350 km 高度的薄壳上。估计电离层延迟时，先找到卫星至接收机天线的视线穿透薄壳的穿刺点，计算该点的天顶电离层延迟，再利用卫星天顶角换算出计入卫星仰角的斜路径电离层延迟。一般而言，各种电离层模型可通用于所有 GNSS：例如，Galileo 支持的 NeQuick-G 模型所得的改正同样可以用于 GPS。对流层延迟刻画源自大气最低层的伪距误差[8, p. 78]。与电离层延迟不同，对流层延迟对信号频率的依赖不强，因此基于对流层模型与测量的估计对单频与多频用户都有意义。对流层延迟可分为两部分：流体静力（hydrostatic）部分对应干燥气体，湿（wet）部分对应对流层中的水汽与凝结水。斜路径总对流层延迟（STD）按这两部分定义为</p>
+<p class="eqd"><span class="eq">STD = Z<sub>HD</sub> · m<sub>h</sub>(θ) + Z<sub>WD</sub> · m<sub>wv</sub>(θ)</span><span class="eqnum">（18）</span></p>
+<p>其中 <span class="eq">Z<sub>HD</sub></span> 与 <span class="eq">Z<sub>WD</sub></span> 分别为天顶流体静力延迟与天顶湿延迟；<span class="eq">m<sub>h</sub>(θ)</span> 与 <span class="eq">m<sub>wv</sub>(θ)</span> 为考虑卫星天顶角 <span class="eq">θ</span> 的流体静力与水汽映射函数。天顶延迟已有多种模型，如 Hopfield[69]、Saastamoinen[70] 与 Mendes &amp; Langley[71]；映射函数亦有多种，如 Black &amp; Eisner[72]、Niell[73] 与 Vienna[74]。探讨使用这些模型的优势与要求已超出本文范围。</p>
+
+<h3>3.5.4　导航解算求解器</h3>
+<p>当至少四颗卫星按式 (17) 与 (13) 定义的卫星位置与钟偏差可用后，接收机即可开始获取导航解。导航解通常包含大地参考系中定义的接收机位置、速度与时间（PVT），以及所用 GNSS 的系统时间。获取导航解通常从接收机位置与 GNSS 系统时间的粗略初值开始；不过也存在 Bancroft 法之类无需任何接收机状态先验信息的算法[75]。位置与时间的初值可以基于例如存入接收机存储器的上一次导航解、接收机内部时钟，或基于观测到的卫星与信号从 MEO 传到地面所需飞行时间的估计。</p>
+<p>为获得定位解，将式 (11) 与 (12) 定义的伪距测量与模型、结合卫星钟偏差 (13) 与大气延迟改正，合并为单一方程：</p>
+<p class="eqd"><span class="eq">ρ<sup>(p)</sup>(x, b) = c(t<sub>r</sub><sup>(p)</sup> − t<sub>s</sub><sup>(p)</sup>) = ‖x − x<sup>(p)</sup>‖ + b + ε<sup>(p)</sup></span><span class="eqnum">（19）</span></p>
+<p>其中 <span class="eq">t<sub>r</sub><sup>(p)</sup></span> 为测得的信号 TOA，<span class="eq">t<sub>s</sub><sup>(p)</sup></span> 为已知的信号 TOS，<span class="eq">b = cΔt</span> 为以米为单位的接收机钟偏差，<span class="eq">ε<sup>(p)</sup></span> 包含所有残差。直接求解非线性方程 (19) 的四个未知量很困难，因此采用基于线性化的迭代方法，主要是 Gauss–Newton 法与扩展卡尔曼滤波。本文实现的 GPS L1C 软件接收机使用 Gauss–Newton 算法，其详述见《GNSS Software Receivers》一书第 1.10 章[8]。简而言之，每次迭代中，接收机求解一组线性化的伪距误差方程，得到当前天线位置估计 <span class="eq">Δx<sub>k</sub></span> 与钟偏差估计 <span class="eq">Δb<sub>k</sub></span> 的修正量；该方程组的矩阵形式为</p>
+<p class="eqd"><span class="eq">Δρ<sub>k</sub> = [Δρ<sup>(1)</sup>(x<sub>k</sub>, b<sub>k</sub>)　Δρ<sup>(2)</sup>(x<sub>k</sub>, b<sub>k</sub>)　…　Δρ<sup>(N)</sup>(x<sub>k</sub>, b<sub>k</sub>)]ᵀ = A [Δx<sub>k</sub>, Δy<sub>k</sub>, Δz<sub>k</sub>, Δb<sub>k</sub>]ᵀ</span><span class="eqnum">（20）</span></p>
+<p>其中 <span class="eq">Δρ<sup>(p)</sup>(x<sub>k</sub>, b<sub>k</sub>) = c(t<sub>r</sub><sup>(p)</sup> − t<sub>s</sub><sup>(p)</sup>) − ρ<sup>(p)</sup>(x<sub>k</sub>, b<sub>k</sub>)</span> 是在当前接收机位置与钟偏差估计下测量伪距与模型伪距之差；几何矩阵 <span class="eq">A</span> 的第 <span class="eq">p</span> 行为 <span class="eq">[(x<sub>k</sub>−x<sup>(p)</sup>)/‖x<sub>k</sub>−x<sup>(p)</sup>‖,　(y<sub>k</sub>−y<sup>(p)</sup>)/‖x<sub>k</sub>−x<sup>(p)</sup>‖,　(z<sub>k</sub>−z<sup>(p)</sup>)/‖x<sub>k</sub>−x<sup>(p)</sup>‖,　1]</span>，即其前三列是由接收机天线指向各被跟踪卫星的单位向量。式 (20) 的线性方程组用普通最小二乘求解：</p>
+<p class="eqd"><span class="eq">[Δx<sub>k</sub>, Δb<sub>k</sub>]ᵀ = (AᵀA)⁻¹ Aᵀ Δρ<sub>k</sub></span><span class="eqnum">（21）</span></p>
+<p>每次迭代中，接收机根据由式 (21) 解出的修正量更新位置与钟偏差估计：</p>
+<p class="eqd"><span class="eq">x<sub>k</sub> = x<sub>k−1</sub> + Δx<sub>k−1</sub>，　b<sub>k</sub> = b<sub>k−1</sub> + Δb<sub>k−1</sub></span></p>
+<p>其中 <span class="eq">k = 1, 2, …, k<sub>max</sub></span>，<span class="eq">k<sub>max</sub></span> 为算法最大迭代次数。通常约 4 次迭代即足以获得良好的定位与定时解[8, p. 81]。</p>

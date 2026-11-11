@@ -1,0 +1,113 @@
+<h1 class="ch">5　GPS L1C 接收机实现</h1>
+<p>本文在芬兰大地测量研究所（FGI）开发的 FGI-GSRx GNSS 软件接收机上实现了 GPS L1C 接收机。该接收机由以 MATLAB 函数实现的多个信号处理模块组成，其四大主要模块为：信号捕获、信号跟踪、导航电文解码，以及位置-速度-时间（PVT）解算。各模块按上述顺序以流水线方式执行。为 FGI-GSRx 编程实现 L1C 接收机的方式，是将这四个模块改造为兼容 GPS L1C。捕获与跟踪模块需要基于上一章的测距码与 TMBOC 调制定义生成本地 L1C 副本信号；CNAV-2 译码则因电文定义完全是新的而从零实现。所实现的 GPS L1C 接收机 PVT 解算模块相比 FGI-GSRx 现有实现几乎无需改动，唯一变化是如何由电文数据计算 CNAV-2 电文起始时刻以确定信号发送时刻。图 19 展示了 FGI-GSRx GPS L1C 接收机的处理链。接收机对来自输入文件的原始信号 I/Q 样本做后处理，产出可用的信号观测量与 PVT 解。某模块一旦执行完毕，接收机在本次运行中便不再回到该模块——例如，接收机不会尝试重新捕获已被跟踪模块丢失的信号。各模块生成的输出覆盖整个处理时段：例如，不同卫星的信号跟踪信道把各自在既定处理时间内的信号观测量存入 MATLAB 数据结构，供后续的 CNAV-2 译码与 PVT 解算模块使用，最终产出 GPS L1C PVT 解。</p>
+<div class="fig">{{FIG:19}}<div class="figcap"><b>图 19</b>：FGI-GSRx 的 GPS L1C 接收机实现模块图。接收机处理由射频前端或 GNSS 模拟器获得的原始 I/Q 文件，输出码相位估计等观测量以及接收机天线位置与 GPS 系统时间的 PVT 解。</div></div>
+
+<h2>5.1　GPS L1C 信号模型</h2>
+<p>实现中采用导频与数据通道结构加性高斯白噪声（AWGN）对采样的 GPS L1C 信号建模：</p>
+<p class="eqd"><span class="eq">r[n] = ( √(3C/4) · c<sub>P</sub>[n−τ] c<sub>O</sub>[n−τ] s<sub>P</sub>[n−τ] + √(C/4) · c<sub>D</sub>[n−τ] d[n−τ] s<sub>D</sub>[n−τ] ) e<sup>j(2πνn+θ)</sup> + ω[n]</span><span class="eqnum">（22）</span></p>
+<p>其中 <span class="eq">n</span> 为样本索引；<span class="eq">C</span> 为总载波功率；<span class="eq">τ</span> 为码延迟；<span class="eq">ν</span> 为下变频后的载波频率偏移；<span class="eq">θ</span> 为载波相位；<span class="eq">c<sub>P</sub></span> 与 <span class="eq">c<sub>D</sub></span> 为导频与数据通道主测距码；<span class="eq">c<sub>O</sub></span> 为覆盖码码片；<span class="eq">d</span> 为 CNAV-2 电文符号；<span class="eq">s<sub>P</sub></span> 与 <span class="eq">s<sub>D</sub></span> 为 TMBOC(6,1,1/11) 子载波的导频与数据通道分量；<span class="eq">ω</span> 为方差 <span class="eq">σ²</span> 的复 AWGN。</p>
+
+<h2>5.2　信号捕获</h2>
+<p>FGI-GSRx 接收机的信号捕获模块采用全并行网格搜索：对称为网格搜索单元的所有候选频率偏移 <span class="eq">ν′</span> 与码延迟 <span class="eq">τ′</span> 组合计算式 (26) 定义的非相干积分结果，随后仅对观测到的最大结果计算二元假设检验统计量。全并行捕获方法利用卷积定理与经 FFT 实现的离散傅里叶变换（DFT），在所有网格搜索单元上高效地计算相关结果。相干积分结果针对候选频率偏移 <span class="eq">ν′</span> 与一切换率分辨率下的全部候选码延迟值，在频域同时计算。首先，计算被搜索卫星的 TMBOC 调制 GPS L1C 测距码副本的 DFT：</p>
+<p class="eqd"><span class="eq">C[m] = Σ<sub>n=1</sub><sup>N</sup> c[n] s[n] e<sup>−j2πmn/N</sup></span><span class="eqnum">（23）</span></p>
+<p>其中 <span class="eq">c[n]</span> 与 <span class="eq">s[n]</span> 是重采样至与输入信号 <span class="eq">r[kN<sub>d</sub>+n]</span>（假定服从式 (22)）采样率 <span class="eq">F<sub>S</sub></span> 一致的卫星 PRN 码与子载波调制本地副本。单次相干驻留内的样本数 <span class="eq">N</span> 等于 10 ms 的码周期 <span class="eq">T<sub>c</sub></span> 乘以采样率 <span class="eq">F<sub>S</sub></span>。输入信号与频率为 <span class="eq">ν′</span> 的复正弦混频后作离散傅里叶变换：</p>
+<p class="eqd"><span class="eq">r′<sub>ν′</sub>[n] = r[kN<sub>d</sub>+n] e<sup>−j2πν′n</sup>，　R′<sub>ν′</sub>[m] = Σ<sub>n=0</sub><sup>N−1</sup> r′<sub>ν′</sub>[n] e<sup>−j2πmn/N</sup></span><span class="eqnum">（24）</span></p>
+<p>对式 (23) 的局部码副本与式 (24) 的混频输入信号之积取逆 DFT，即可同时得到所有候选码延迟值的相干相关结果：</p>
+<p class="eqd"><span class="eq">R<sub>C</sub>(ν′, τ′) = r′<sub>ν′</sub>[τ′] ∗ c*[−τ′] = (1/N) Σ<sub>m=0</sub><sup>N−1</sup> R′<sub>ν′</sub>[m] C*[m] e<sup>j2πmτ′/N</sup></span><span class="eqnum">（25）</span></p>
+<p>相干积分过程对输入数据的后续数据箱重复 <span class="eq">K ≥ 1</span> 次，各次结果用式 (26) 求和得到最终的非相干积分结果：</p>
+<p class="eqd"><span class="eq">R<sub>NC</sub>(τ′, ν′) = Σ<sub>k=0</sub><sup>K−1</sup> |R<sub>C</sub><sup>(k)</sup>(τ′, ν′)|²</span><span class="eqnum">（26）</span></p>
+<p>其中 <span class="eq">k</span> 为相干积分箱索引。所得非相干积分结果存入大小 <span class="eq">N<sub>τ</sub> × N<sub>ν</sub></span> 数组的一列（<span class="eq">N<sub>τ</sub></span> 为所搜索码延迟值数目，<span class="eq">N<sub>ν</sub></span> 为所搜索多普勒频率数目）；对全部网格搜索单元重复该过程直至整个数组填满。相关计算完成后，对观测到的最大非相干积分结果计算信号检测检验统计量。与最大相关结果匹配的候选参数 <span class="eq">τ′</span> 与 <span class="eq">ν′</span> 被取作信号频率偏移与码定时延迟的粗估计：</p>
+<p class="eqd"><span class="eq">τ̂, ν̂ = arg max<sub>{ν′,τ′}</sub> R<sub>NC</sub>(ν′, τ′)</span><span class="eqnum">（27）</span></p>
+<p>在输入样本中检测 GPS L1C 信号，依据的是对被测单元 <span class="eq">{τ̂, ν̂}</span> 定义的简单噪声比检验：</p>
+<p class="eqd"><span class="eq">(R<sub>NC</sub>(τ̂, ν̂) − µ<sub>NC</sub>) / σ<sub>NC</sub> ≶ H₁/H₀ γ</span><span class="eqnum">（28）</span></p>
+<p>其中 <span class="eq">γ</span> 为用户设定的检测门限，<span class="eq">µ<sub>NC</sub></span> 与 <span class="eq">σ<sub>NC</sub></span> 为背景非相干积分结果的均值与标准差。用于计算 <span class="eq">µ<sub>NC</sub></span> 与 <span class="eq">σ<sub>NC</sub></span> 的结果包含多普勒频率为 <span class="eq">ν̂</span>、且码延迟与 <span class="eq">ν̂</span> 的组合偏离 <span class="eq">ν̂</span> 至少一个码片的所有网格搜索单元——该偏移可避免在估计背景均值与标准差时采到信号 ACF 峰。应当注意，由于非相干积分结果已知为非高斯，所定义的噪声比检验并不产生最优接收机工作特性；但该检验统计量的选择在接收机的大多数应用中提供了简单而够用的解。研究场景中被测卫星的存在性通常是已知的，用户可以调节捕获模块以获得正确检测并避免虚警。只要信号产生的相关结果高于背景噪声产生的其他结果，为初始化信号跟踪而寻找多普勒频率 <span class="eq">ν</span> 与码延迟 <span class="eq">τ</span> 粗估计这一最关键的任务就完成了。GPS L1C 捕获可以基于信号的单一通道或两个通道。本文的 L1C 接收机实现了两种方案：纯导频捕获与合并通道捕获。后者先用式 (25) 分别为数据与导频通道计算相干相关结果，再按式 (29) 计算结果的加权和与加权差；随后按式 (30)，每轮取加权和与加权差中幅度较大者作半相干（semi-coherent）相加，共累加 <span class="eq">K ≥ 1</span> 个积分结果。作为参考，基于幅度平方的半相干积分此前已在例如 [65, ch. 7.3.3] 中探讨过。导频与数据通道的加权和与加权差为</p>
+<p class="eqd"><span class="eq">R<sub>C+</sub>(ν′, τ′; a) = a × R<sub>C,pilot</sub>(ν′, τ′) + (1−a) × R<sub>C,data</sub>(ν′, τ′)<br>R<sub>C−</sub>(ν′, τ′; a) = a × R<sub>C,pilot</sub>(ν′, τ′) − (1−a) × R<sub>C,data</sub>(ν′, τ′)</span><span class="eqnum">（29）</span></p>
+<p>其中 <span class="eq">a ∈ [0, 1]</span> 为导频通道权重；半相干积分结果为</p>
+<p class="eqd"><span class="eq">R<sub>NC</sub>(ν′, τ′; a) = Σ<sub>k=0</sub><sup>K−1</sup> max( |R<sub>C+</sub><sup>(k)</sup>(ν′, τ′; a)|, |R<sub>C−</sub><sup>(k)</sup>(ν′, τ′; a)| )</span><span class="eqnum">（30）</span></p>
+<p>其中 <span class="eq">k</span> 为相干相关箱索引。对每个网格搜索单元算得式 (30) 后，按与纯导频捕获相同的方式用式 (27) 与 (28) 检验。系数 <span class="eq">a</span> 的求取假定两通道的相干相关结果相互独立且均服从正态分布。图 20 展示了归一化 SNR 随 <span class="eq">a</span> 的变化，最优值 <span class="eq">a<sub>opt</sub></span> 为</p>
+<p class="eqd"><span class="eq">a<sub>opt</sub> = arg max<sub>a</sub> ( mean(R<sub>C+/−</sub>(ν′, τ′; a)) / √var(R<sub>C+/−</sub>(ν′, τ′; a)) ) = √3 / (1 + √3)</span></p>
+<div class="fig">{{FIG:20}}<div class="figcap"><b>图 20</b>：GPS L1C 导频与数据通道合并相关结果的归一化 SNR 随权重参数 a 的变化。</div></div>
+
+<h2>5.3　信号跟踪</h2>
+<p>FGI-GSRx 的信号跟踪用锁频环（FLL）与锁相环（PLL）的组合进行载波跟踪，用延迟锁定环（DLL）进行码跟踪。各环路以 1 kHz 的恒定更新率工作：每次迭代将 <span class="eq">N<sub>d</sub> = 1 ms × F<sub>S</sub></span> 个输入样本与载波、码 NCO 生成的本地副本作相干相关；相关结果用于估计输入信号与本地副本间的偏差，并以此在反馈控制环中调节 NCO。每颗被跟踪的 GPS 卫星分配一个独立跟踪信道，每次环路更新逐一更新各信道。载波 NCO 相位 <span class="eq">θ̂ ∈ [0, 2π[</span]（弧度）作为输入样本编号 <span class="eq">kN<sub>d</sub>+n</span>（<span class="eq">n ∈ [0, N<sub>d</sub>−1]</span>）的函数，由下式计算：</p>
+<p class="eqd"><span class="eq">θ̂[kN<sub>d</sub>+n] = 2π (ν<sub>IF</sub> + ν<sub>acq</sub> + Δν[k]) n / F<sub>S</sub> + θ[kN<sub>d</sub>] mod 2π</span><span class="eqnum">（31）</span></p>
+<p>其中 <span class="eq">ν<sub>IF</sub></span> 为前端中频，<span class="eq">ν<sub>acq</sub></span> 为设为捕获多普勒频率的频率偏置，<span class="eq">Δν[k]</span> 为 FLL 与 PLL 判别器经滤波后的载波误差。跟踪开始时频率误差与载波相位均初始化为零。码 NCO 相位 <span class="eq">τ̂ ∈ [0, 10230[</span>（单位：码片）类似地计算：</p>
+<p class="eqd"><span class="eq">τ̂[kN<sub>d</sub>+n] = ( (1 + ν[k]/f<sub>carr</sub>) f<sub>c</sub> + Δf<sub>c</sub>[k] ) n / F<sub>S</sub> + τ[kN<sub>d</sub>] mod 10230</span><span class="eqnum">（32）</span></p>
+<p>其中 <span class="eq">ν[k] = ν<sub>acq</sub> + Δν[k]</span> 为跟踪到的载波多普勒频率，<span class="eq">f<sub>carr</sub> = 1575.42 MHz</span> 为标称 L1 载波频率，<span class="eq">f<sub>c</sub> = 1.023 MHz</span> 为码片速率，<span class="eq">Δf<sub>c</sub></span> 为 DLL 判别器经滤波后的码误差。载波多普勒估计提供的辅助有效补偿了任何码动态，使热噪声成为码定时抖动的唯一主要来源。每次环路迭代 <span class="eq">k</span> 用本地信号副本由输入样本计算即时相关结果：</p>
+<p class="eqd"><span class="eq">I<sub>P</sub>[k] + jQ<sub>P</sub>[k] = Σ<sub>n=0</sub><sup>N<sub>d</sub>−1</sup> c<sub>P</sub>(τ̂[kN<sub>d</sub>+n]) s<sub>P</sub>(τ̂[kN<sub>d</sub>+n]) e<sup>−jθ̂[kN<sub>d</sub>+n]</sup> r[kN<sub>d</sub>+n]</span><span class="eqnum">（33）</span></p>
+<p>其中 <span class="eq">c<sub>P</sub></span> 与 <span class="eq">s<sub>P</sub></span> 为以码相位为自变量的 L1C 导频码与子载波，<span class="eq">r</span> 为输入样本。接收机还用式 (33) 计算早期（I<sub>E</sub>+jQ<sub>E</sub>）、late（I<sub>L</sub>+jQ<sub>L</sub>）与超早期（I<sub>EE</sub>+jQ<sub>EE</sub>）相关结果，只需把 <span class="eq">τ̂[kN<sub>d</sub>+n]</span> 在时间上分别偏移 D/2（早期）、−D/2（late）与 <span class="eq">δ<sub>EE</sub> = 2</span> 码片（超早期）。同相数据通道即时相关器 I<sub>P,data</sub> 也按式 (33) 计算，只是把导频通道的码 <span class="eq">c<sub>P</sub></span> 与子载波 <span class="eq">s<sub>P</sub></span> 换成数据通道对应量。数据相关器输出不用于 GPS L1C 接收机的信号跟踪，而是供后续解码时访问 CNAV-2 符号。超早期相关器用于估计信道噪声功率以确定信号载噪比密度（C/N₀）。超早期相关器偏移 <span class="eq">δ<sub>EE</sub></span> 设为比即时相关器早两个主码码片，以保证只采到噪声功率。选用早期而非 late相关器是为了避开出现在相关峰延迟侧的多径副本[76]。即时相关器功率 <span class="eq">C<sub>n</sub></span>、噪声功率 <span class="eq">N</span> 与 C/N₀ 的估计由即时与超早期相关器计算：</p>
+<p class="eqd"><span class="eq">C<sub>n</sub>[k] = (1/M) Σ<sub>m=0</sub><sup>M−1</sup> ( I<sub>P</sub>[k−m]² + Q<sub>P</sub>[k−m]² )<br>N[k] = (1/M) Σ<sub>m=0</sub><sup>M−1</sup> ( I<sub>EE</sub>[k−m]² + Q<sub>EE</sub>[k−m]² )</span><span class="eqnum">（34）</span></p>
+<p class="eqd"><span class="eq">C/N₀[k] = 10 × log₁₀( (C<sub>n</sub>[k] − N[k]) / (N[k] × 1/T<sub>cor</sub>) )</span><span class="eqnum">（35）</span></p>
+<p>其中 <span class="eq">T<sub>cor</sub> = 1 ms</span> 为跟踪环相关周期。取 <span class="eq">M = 1000</span>、<span class="eq">T<sub>cor</sub> = 1 ms</span> 时，估计中的滑动平均在一个一秒窗口上计算。</p>
+
+<h3>5.3.1　载波跟踪环判别器</h3>
+<p>载波跟踪环用于控制 NCO，使本地载波副本的频率与相位匹配受多普勒效应影响的输入信号；载波跟踪将 FLL 与 PLL 结合以产生所需的 NCO 控制信号。所实现的 FLL 与 PLL 用反正切判别器测量频率与相位误差，定义为</p>
+<p class="eqd"><span class="eq">ε<sub>FLL</sub>[k] = (1/(2πT<sub>cor</sub>F<sub>S</sub>)) · atan( (I<sub>P</sub>[k−1]Q<sub>P</sub>[k] − I<sub>P</sub>[k]Q<sub>P</sub>[k−1]) / (I<sub>P</sub>[k]I<sub>P</sub>[k−1] + Q<sub>P</sub>[k]Q<sub>P</sub>[k−1]) )</span><span class="eqnum">（36）</span></p>
+<p class="eqd"><span class="eq">ε<sub>PLL</sub>[k] = (1/2π) · atan( Q<sub>P</sub>[k] / I<sub>P</sub>[k] )</span><span class="eqnum">（37）</span></p>
+<p>其中 <span class="eq">T<sub>cor</sub> = 1 ms</span> 为跟踪环更新间隔，<span class="eq">F<sub>S</sub></span> 为输入采样率，<span class="eq">I<sub>P</sub></span> 与 <span class="eq">Q<sub>P</sub></span> 为即时相关器结果的同相与正交分量。所选的两个判别器都对导频通道上因 GPS L1C 覆盖码未同步而存在的 180° 相位翻转保持不变。图 21 展示了判别器输出随频率误差与相位误差的变化。式 (36) 的频率判别器通过比较前后两个即时相关器结果的相位工作：由于两次相位测量的时间间隔已知，相位差除以该间隔即得瞬时频率误差的估计，该频率判别器可视作信号相位导数的一阶后向差分近似。</p>
+<div class="fig">{{FIG:21}}<div class="figcap"><b>图 21</b>：无噪声无限带宽信号下，归一化频率误差 vs 式 (36) 的 FLL 判别器（a）与相位误差 vs 式 (37) 的 PLL 判别器（b）。</div></div>
+
+<h3>5.3.2　码跟踪环判别器</h3>
+<p>GPS L1C 导频通道的测距码用延迟锁定环跟踪。L1C 接收机实现选用的环路判别函数是所谓归一化非相干早减 late（NNEML）判别器，定义为</p>
+<p class="eqd"><span class="eq">ε<sup>dll</sup><sub>NNEML</sub>[k] = ( 1/|k| − D/2 ) · ( √(I²<sub>E</sub>[k]+Q²<sub>E</sub>[k]) − √(I²<sub>L</sub>[k]+Q²<sub>L</sub>[k]) ) / ( √(I²<sub>E</sub>[k]+Q²<sub>E</sub>[k]) + √(I²<sub>L</sub>[k]+Q²<sub>L</sub>[k]) )</span><span class="eqnum">（38）</span></p>
+<p>其中 <span class="eq">k</span> 为信号归一化自相关函数（见图 17）在主峰附近的斜率，<span class="eq">D</span> 为早–late相关器间距[8, p. 65]。式 (38) 的缩放因子选得使无限带宽 GPS L1C 信号的判别器输出与码相位误差一一对应。线性一一对应区域的宽度取决于 BOC(1,1) 或 TMBOC(6,1,4/33) 自相关函数中心峰的宽度以及早–late间距 D 的选取：BOC(1,1) 在 <span class="eq">D = 1/3</span> 码片、TMBOC(6,1,4/33) 在 <span class="eq">D = 1/12</span> 码片时获得最宽 DLL 线性区。取更小的 D 可改善码跟踪精度，代价是线性区变窄。D 的最小可用值可按下式计算：<span class="eq">f<sub>c</sub>/B<sub>fe</sub></span>，其中 <span class="eq">f<sub>c</sub></span> 为码片速率、<span class="eq">B<sub>fe</sub></span> 为前端带宽[77]。两种调制的斜率绝对值由无限带宽 ACF 近似为：BOC(1,1) 每码片 <span class="eq">|k| = 3</span>；TMBOC(6,1,4/33) 每码片 <span class="eq">|k| = (29×3 + 4×23)/33 = 179/33</span>。NNEML 判别器使用早期与late相关器的幅度，因而对输入信号的相位变化不敏感；代价是噪声与非线性增大，最终降低码定时精度。FGI-GSRx 中类似的 NNEML 判别器已用于跟踪其他 GNSS 信号并被证明有效。图 22 展示了 NNEML 判别器输出随码延迟误差的变化；图中 TMBOC 调制信号线性区宽度只有 BOC 调制信号线性区宽度的四分之一。</p>
+<div class="fig">{{FIG:22}}<div class="figcap"><b>图 22</b>：无噪声无限带宽 BOC(1,1) 与 TMBOC(6,1,4/33) 信号下，式 (38) 的 NNEML 判别器输出随码相位误差的变化（BOC(1,1)：D = 1/3 码片，|k| = 3/码片；TMBOC(6,1,4/33)：D = 1/12 码片，|k| = 179/33 每码片）。</div></div>
+
+<h3>5.3.3　跟踪环滤波器</h3>
+<p>跟踪环滤波器用于削弱噪声对载波与测距码判别器输出的影响。FGI-GSRx 所用滤波器在接收机设计论文[78]中有详述。简言之，FLL、PLL 与 DLL 均采用二阶环路滤波器；滤波器带宽、控制环增益与阻尼比等参数可在处理前通过接收机配置文件手动调节，用于测试 GPS L1C 实现的滤波参数在论述接收机设置的第 6 章给出。所实现的 GPS L1C 跟踪采用三阶段载波跟踪设计，依据载波频率与相位估计的稳定程度改变 FLL 与 PLL 的滤波带宽。三个阶段为：拉入（pull-in）、粗跟踪与精跟踪。起初处于拉入模式，FLL 与 PLL 滤波带宽保持较大，以便快速收敛捕获残留的频率偏移与初始未同步的载波相位；随着跟踪环锁定输入信号，滤波带宽逐渐减小，进一步压低噪声对载波频率与相位估计的影响。GPS L1C 接收机的码定时精度可基于 NNEML 判别器定时抖动的理论模型预测：定时抖动由热噪声以及高阶卫星与接收机动态引起的动态应力误差主导，后者借助载波辅助码跟踪环被有效消除。非相干 DLL 判别器剩余的热噪声定时抖动可由式 (39) 数值估计——该式在结果部分 7.4.2 节中被用来比较所实现 L1C 接收机的精度与理论预期。NNEML 码跟踪环来自热噪声的定时抖动 <span class="eq">σ<sub>th</sub></span> 建模为</p>
+<p class="eqd"><span class="eq">σ<sub>th</sub> = √( B<sub>n</sub> ∫<sub>−B<sub>fe</sub>/2</sub><sup>B<sub>fe</sub>/2</sup> S(f) sin(πfDT<sub>c</sub>) df / ( (2π)² C/N₀ ( ∫<sub>−B<sub>fe</sub>/2</sub><sup>B<sub>fe</sub>/2</sup> f S(f) sin(πfDT<sub>c</sub>) df )² ) )<br>
+　　× √( 1 + ∫<sub>−B<sub>fe</sub>/2</sub><sup>B<sub>fe</sub>/2</sup> S(f) cos(πfDT<sub>c</sub>) df / ( T × C/N₀ ( ∫<sub>−B<sub>fe</sub>/2</sub><sup>B<sub>fe</sub>/2</sup> S(f) cos(πfDT<sub>c</sub>) df )² ) )</span><span class="eqnum">（39）</span></p>
+<p>其中 <span class="eq">S(f)</span> 为调制信号在无限带宽上按单位面积归一化的功率谱密度；<span class="eq">T<sub>c</sub></span> 为码片周期；<span class="eq">D</span> 为早–late相关器间距（码片）；<span class="eq">C/N₀</span> 为载噪比密度；<span class="eq">B<sub>n</sub> = 1 Hz</span> 为 DLL 环路滤波带宽；<span class="eq">B<sub>fe</sub></span> 为接收机前端带宽；<span class="eq">T = 1 ms</span> 为信号跟踪所用的相干积分时间[14, p. 194–195]。</p>
+
+<h2>5.4　CNAV-2 导航电文译码</h2>
+<p>FGI-GSRx 的信号跟踪模块以 1 ms 间隔输出 GPS L1C 导频与数据通道两条即时相关结果流 I<sub>P</sub> 与 I<sub>P,data</sub>。由于每个 GPS L1C 覆盖码码片或 CNAV-2 符号在时间上跨越 10 ms，结果按 10 个间隔平均以改善 SNR。L1C 覆盖码与 CNAV-2 电文保持同步，因此用本地副本覆盖码 L1CO 与导频通道相关结果作相关，来搜索电文起始位置。跟踪获得的覆盖码码片由导频通道即时相关器 I<sub>P</sub> 经判决规则取得：</p>
+<p class="eqd"><span class="eq">L1Ô<sub>O</sub>[n] = 1，若 Σ<sub>k=10n</sub><sup>10n+9</sup> I<sub>P</sub>[k] &gt; 0；　L1Ô<sub>O</sub>[n] = −1，若 Σ<sub>k=10n</sub><sup>10n+9</sup> I<sub>P</sub>[k] &lt; 0</span><span class="eqnum">（40）</span></p>
+<p>然后将跟踪到的覆盖码与本地副本 <span class="eq">L1C<sub>O</sub>[n]</span> 互相关；若结果超过用户设定门限，就把对应最大相关结果的延迟值 <span class="eq">n₀</span> 设为新覆盖码与新 CNAV-2 导航电文的起点。实现中使用门限 1700，而每码共 1800 个码片。至于导航电文译码，从新 CNAV-2 电文起点起取 18 秒的数据通道即时相关结果，并按 10 ms 符号周期求和：</p>
+<p class="eqd"><span class="eq">R[n] = Σ<sub>k=10n+1</sub><sup>10(n+1)</sup> I<sub>P,data</sub>[k]</span><span class="eqnum">（41）</span></p>
+<p>其中 <span class="eq">n = n₀, …, n₀+1799</span>，<span class="eq">n₀</span> 标记新电文的起始符号。这些结果被建模为围绕对应已发 CNAV-2 符号的两个均值正态分布；符号方差由式 (34) 定义的信道噪声测量 <span class="eq">N[k]</span> 估计：</p>
+<p class="eqd"><span class="eq">σ²<sub>R</sub>[n] = ( Σ<sub>k=10n+1</sub><sup>10(n+1)</sup> N[k] ) / 2</span><span class="eqnum">（42）</span></p>
+
+<h3>5.4.1　时间区间（TOI）译码</h3>
+<p>GPS L1C 接收机实现所用的 TOI 译码遵循 IS-GPS-800 ICD[11] 建议的最大似然方法。简言之，接收机对 BCH(51,8) 编码 TOI 字的 256 种可能 8 比特 LSB 序列各计算一个对数似然；然后取绝对值最大的对数似然所对应的 8 比特作为接收 9 比特 TOI 字的 LSB，并按该对数似然的符号设定字的 MSB。各子帧 1 符号的不确定性用 AWGN 信道模型建模。实现如算法 1 所述。</p>
+<div class="alg"><p class="algtitle">算法 1　CNAV-2 电文软判决 BCH 译码器</p>
+<p><b>输入</b>：软判决符号 R[n] 及其方差 σ²<sub>R</sub>[n]，n = 0, 1, …, 51。<b>输出</b>：时间区间值 TOI ∈ [0, 399]</p>
+<pre>for all n = 0, 1, ..., 51 do
+    z_n ← log [ P(d[n] = 1 | R[n]) / P(d[n] = −1 | R[n]) ] ≈ 2R[n] / σ²_R[n]
+for i = 0, 1, ..., 255 do
+    用生成多项式 763（八进制）为候选 TOI 字值 i 生成 BCH(51,8) 编码字
+    c_j ∈ {0, 1}，j = 0, 1, ..., 50
+    for all k = 0, 1, ..., 51 do
+        C_i ← z_0                                    （k = 0 时）
+        C_i ← C_i + (1 − 2c_{k−1}) z_k               （k = 1, ..., 51 时）
+î ← arg max_i |C_i|
+TOI ← î            若 Ĉ_î &gt; 0
+TOI ← î + 256      若 Ĉ_î &lt; 0</pre></div>
+
+<h3>5.4.2　低密度奇偶校验译码</h3>
+<p>译码 LDPC 编码电文的典型方法是使用某种变体的置信传播（BP）[79, ch. 8]。BP LDPC 译码器通过计算已发符号在给定接收符号与低密度监督矩阵条件下的边际分布来工作：单个监督方程纠正某个错误符号的有效性，取决于参与该方程的其他符号正确的概率，因此边际分布的计算需迭代多次以提高纠错概率；迭代持续到 LDPC 矩阵定义的所有监督方程全部通过或达到最大迭代次数为止。接收机实现采用的算法详述于 Johannesson 与 Zigangirov 的著作[79, ch. 8.5]。选择该算法是因为其直观而强大的运作方式，以及用稀疏运算在 MATLAB 中的快速实现。该算法是适用于不同信道模型的软判决 LDPC 译码器；与 TOI 字译码一样，置信传播前用加性高斯信道噪声建模输入符号的先验分布。算法如算法 2 所述。</p>
+<div class="alg"><p class="algtitle">算法 2　去交织 CNAV-2 电文软判决 LDPC 译码器[79, p. 535]</p>
+<p><b>参数</b>：L×N LDPC 矩阵 H；迭代次数 I。<b>输入</b>：软判决符号 R[n] 及其方差 σ²<sub>R</sub>[n]，n = 0, …, N−1。<b>输出</b>：译码出的导航电文比特 v̂<sub>n</sub>，n = 0, 1, …, N−1</p>
+<pre>L(n) ← { l ∈ [0, L−1] | H_ln = 1 }        N(l) ← { n ∈ [0, N−1] | H_ln = 1 }
+for n = 0, 1, ..., N−1 do
+    z_n^(0) ← log [ P(d[n] = 1 | R[n]) / P(d[n] = −1 | R[n]) ] ≈ 2R[n] / σ²_R[n]
+    for all l ∈ L(n) do  z_nl^(0) ← z_n^(0)
+for i = 1, 2, ..., I−1 do
+    for all n ∈ N(l), where l = 0, 1, ..., L−1 do
+        y_ln^(i) ← log [ (1 + Π_{n′∈N(l)\{n}} tanh(z_{n′l}^(i−1)/2))
+                        / (1 − Π_{n′∈N(l)\{n}} tanh(z_{n′l}^(i−1)/2)) ]
+    for all l ∈ L(n), where n = 0, 1, ..., N−1 do
+        z_nl^(i) ← z_n^(0) + Σ_{l′∈L(n)\{l}} y_l′n^(i)
+for all n ∈ N(l), where l = 0, 1, ..., L−1 do
+    y_ln^(I) ← log [ (1 + Π_{n′∈N(l)\{n}} tanh(z_{n′l}^(I−1)/2))
+                   / (1 − Π_{n′∈N(l)\{n}} tanh(z_{n′l}^(I−1)/2)) ]
+for n = 0, 1, ..., N−1 do
+    z_n^(I) ← z_n^(0) + Σ_{l∈L(n)} y_ln^(I)
+    v̂_n ← 0   若 z_n^(I) &gt; 0
+    v̂_n ← 1   若 z_n^(I) &lt; 0</pre></div>
+
+<h2>5.5　获取 GPS L1C 导航解</h2>
+<p>对被跟踪卫星完成播发 CNAV-2 导航电文的译码后，GPS L1C 接收机进入 PVT 模块，估计接收机天线位置与 GPS 系统时间（GPST）。FGI-GSRx 也估计天线速度，但这不在本文讨论范围内。位置与时间解要求对至少四颗卫星解出信号发送时刻、到达时刻以及发送时刻的卫星位置。按卫星原子钟计量的发送时刻基于译码出的 CNAV-2 发送信息与跟踪的测距码计算。信号的发送周内时刻（TOW）计数自最近 GPS 周起点以来的秒数，对跟踪中的 GPS L1C 信号按下式计算：</p>
+<p class="eqd"><span class="eq">t<sub>s</sub><sup>(p)</sup> = 7000 s × ITOW + 18 × (TOI − 1) + 0.010 × (N<sub>c</sub><sup>(p)</sup> + τ<sup>(p)</sup>/10230) [s]</span></p>
+<p>其中 ITOW 为 CNAV-2 子帧 2 的区间周内时间，TOI 为子帧 1 的时间区间，<span class="eq">N<sub>c</sub><sup>(p)</sup></span> 为跟踪信道 p 自一份已译码 CNAV-2 电文起点以来观测到的测距码数目，<span class="eq">τ<sup>(p)</sup></span> 为 PVT 解算时刻测得的码相位。任意解算时刻信号的码相位由各自 DLL 码相位估计线性插值获得。以卫星钟时计量的发送时刻用播发的钟改正参数换算到 GPST，再用卫星星历参数计算卫星位置——钟改正与卫星轨道位置计算见本文 3.5 节。PVT 模块还要求接收机钟与 GPST 的初始粗略同步以初始化 Gauss–Newton 算法：FGI-GSRx 假定 GPS 信号从 MEO 轨道卫星到达接收机约需 80 ms，由此取得该同步——信号到达时刻（TOA）即通过在某一被跟踪信号的 TOS 上简单加 80 ms 近似：</p>
+<p class="eqd"><span class="eq">t<sub>r</sub><sup>(1)</sup> = t<sub>s</sub><sup>(1)</sup> + 0.080 s</span></p>
+<p>FGI-GSRx 用于计算接收机天线位置、以及初始粗略 GPST 时间与测量时点真实 GPST 时间之间钟偏差的 Gauss–Newton 算法，已在本文 3.5.4 节做过简要说明。</p>
