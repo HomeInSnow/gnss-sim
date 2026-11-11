@@ -1318,7 +1318,13 @@ def run_receiver(body: dict):
                 tfix = fix_from_iq_l1_multi_tracked(
                     outdir, meta, eph, _gps_tow(start),
                     approx_llh=approx_llh, marker_llh=mk, atmo_fn=afn,
-                    sv_clock=_svc, dll_mode=dm)
+                    sv_clock=_svc, dll_mode=dm,
+                    **({"min_metric_db": float(body["min_metric_db"])}
+                       if body.get("min_metric_db") is not None else {}),
+                    **({"track_s": float(body["track_s"])}
+                       if body.get("track_s") is not None else {}),
+                    **({"dll_bw_hz": float(body["dll_bw_hz"])}
+                       if body.get("dll_bw_hz") is not None else {}))
                 res["tracking_fix"] = tfix
             except Exception as exc:             # noqa: BLE001 - best effort
                 res["tracking_fix"] = {"error": f"{type(exc).__name__}: {exc}"}

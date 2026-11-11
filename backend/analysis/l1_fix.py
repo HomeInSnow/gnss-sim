@@ -427,6 +427,7 @@ def fix_from_iq_l1_multi_tracked(
                         fd0=fd_seed,
                         chi0=acq["code_phase_chips"],
                         boc=(sig.boc is not None), mode=dll_mode,
+                        cn0_est=True,
                         dll_bw_hz=dll_bw_hz,
                         fd_fn=(lambda t, tg=t_g, fg=fd_g:
                                float(np.interp(t, tg, fg))))
@@ -513,6 +514,11 @@ def fix_from_iq_l1_multi_tracked(
             "n_pll_skipped": m.get("n_pll_skipped"),
             "metric_db": acq["metric_db"],
             "el_deg": o["el_deg"],
+            # Kay-1980 moment C/N0 (tracker.cn0_dbhz) over the fix-second of
+            # the session -- same estimator family as the thesis (eq. 35).
+            "cn0_dbhz": next((trk.cn0_dbhz(s) for s in
+                              range(int(round(track_s)), 0, -1)
+                              if trk.cn0_dbhz(s) is not None), None),
         }
         # Session jitter: chi legitimately SWEEPS at ~-code_dop (up to a few
         # ch/s), so spread vs a fixed base measures the ramp itself; unwrap,

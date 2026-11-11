@@ -1,0 +1,11 @@
+{
+ "outdir": "20261111T111314224260",
+ "marker": {
+  "lat": 60.182537,
+  "lon": 24.82826,
+  "alt": 47.248
+ },
+ "tracking": true,
+ "dll_mode": "coh",
+ "min_metric_db": 10.0
+}

@@ -762,7 +762,16 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
     # as an unmodelled residual the LS cannot absorb.
     atmo_fn = None
     _cfg_d = (meta.get("config") or {}) if isinstance(meta, dict) else {}
-    if meta.get("config", {}).get("rinex_path"):
+    # Same de-remove policy the multi-GNSS branch applies (see above):
+    # subtract only what the generator physically injected. Runs whose meta
+    # predates these keys keep the historical fully-injected behavior.
+    _atm = _cfg_d.get("atmosphere")
+    _iono_on = (_atm is None
+                or str(_atm.get("ionosphere", "off")) != "off")
+    _tropo_on = (_atm is None
+                 or str(_atm.get("troposphere", "off")) != "off")
+    _svc = bool(_cfg_d.get("sv_clock", True))
+    if meta.get("config", {}).get("rinex_path") and (_iono_on or _tropo_on):
         from backend.analysis.l1_fix import default_atmo_fn
         _allh = marker_llh or (_cfg_d.get("lat", 0.0), _cfg_d.get("lon", 0.0),
                               _cfg_d.get("alt", 0.0))
@@ -830,7 +839,8 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
             svb = geometry.group_delay_bias_s("G", "L1",
                                               eph_by_prn[prn])
             pr[prn] = (e["pseudorange_m"] + err_c * m_per_chip
-                       + config.C * (clk + svb) - e["atmo_delay_m"])
+                       + config.C * ((clk if _svc else 0.0) + svb)
+                       - e["atmo_delay_m"])
             usable.append(prn)
         acq = {p: acq[p] for p in usable}
         if len(acq) < 4:
@@ -851,15 +861,15 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
             svb = geometry.group_delay_bias_s(
                 "G", "L1", rec if isinstance(rec, dict) else None)
             atmo_m = 0.0
+            losv = pos - approx_rx
+            g = float(np.linalg.norm(losv))
             if atmo_fn is not None:
-                losv = pos - approx_rx
-                g = float(np.linalg.norm(losv))
                 _e, _n, _u = geometry._enu(approx_rx)
                 az = float(np.degrees(np.arctan2(losv @ _e, losv @ _n))) % 360.0
                 el = float(np.degrees(np.arcsin(np.clip(losv @ _u / g, -1, 1))))
                 atmo_m = atmo_fn(np.radians(az), np.radians(el))
-            svcorr[prn] = (clk, svb, atmo_m)
-            predicted[prn] = (g - config.C * (clk + svb) + atmo_m)
+            svcorr[prn] = (clk if _svc else 0.0, svb, atmo_m)
+            predicted[prn] = (g - config.C * (svcorr[prn][0] + svb) + atmo_m)
 
         ref = max(acq, key=lambda p: predicted[p] * -1)  # shortest range ~ highest el
         code_m = {p: (acq[p]["code_phase_chips"] / config.CA_CHIP_HZ) * config.C
