@@ -30,3 +30,6 @@ Thumbs.db
 ~$*
 NUL
 FGI-GSRx-2.1.3/
+docs/
+.workbuddy/pdf_thesis/
+.workbuddy/aalto_search.json
