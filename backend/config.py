@@ -33,6 +33,15 @@ LOG_DIR = pathlib.Path(_str("LOG_DIR", str(_ROOT / "logs")))
 
 GPS_SDR_SIM_BIN = _str("GPS_SDR_SIM_BIN", str(_ROOT / "gps-sdr-sim" / "gps-sdr-sim"))
 RINEX_MIRRORS = [
+    # --- Wuhan Univ. IGS Data Center (境内快源, anonymous FTP, verified
+    # 2026-11-12): pub/gps/data/daily/{yyyy}/brdc/ mirrors the CDDIS layout
+    # and carries BRDC00IGS_R (daily, freshest), BRDC00WRD_R (partial) and
+    # legacy brdc{ddd}0.{yy}n. HTTP(S) endpoints of the portal are down;
+    # only ftp:// works, and ephemeris._download routes ftp:// URLs through
+    # urllib (requests has no FTP adapter).
+    "ftp://igs.gnsswhu.cn/pub/gps/data/daily/{yyyy}/brdc/BRDC00IGS_R_{yyyy}{ddd}0000_01D_MN.rnx.gz",
+    "ftp://igs.gnsswhu.cn/pub/gps/data/daily/{yyyy}/brdc/BRDC00WRD_R_{yyyy}{ddd}0000_01D_MN.rnx.gz",
+    "ftp://igs.gnsswhu.cn/pub/gps/data/daily/{yyyy}/brdc/brdc{ddd}0.{yy}n.gz",
     # BKG serves the combined nav file as "MN" (mixed GNSS nav), not "GN" --
     # confirmed against the live directory listing; georinex's use="G" filter
     # picks the GPS records back out of it.

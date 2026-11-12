@@ -284,11 +284,21 @@ def _download(date: dt.date) -> pathlib.Path | None:
     for tmpl in config.RINEX_MIRRORS:
         url = tmpl.format(yyyy=date.year, ddd=ddd, yy=yy)
         try:
-            r = requests.get(url, timeout=30)
-            r.raise_for_status()
-        except requests.RequestException:
+            if url.startswith("ftp://"):
+                # requests has no FTP adapter (InvalidSchema); the stdlib
+                # urllib speaks anonymous FTP natively -- used for the WHU
+                # IGS mirror (see config.RINEX_MIRRORS).
+                import urllib.request
+                with urllib.request.urlopen(url, timeout=60) as resp:
+                    content = resp.read()
+            else:
+                r = requests.get(url, timeout=30)
+                r.raise_for_status()
+                content = r.content
+        except Exception:
             continue
-        content = r.content
+        if not content:
+            continue
         data = gzip.decompress(content) if content[:2] == b"\x1f\x8b" else content
         if b"RINEX VERSION" not in data[:200]:
             continue  # mirror returned an error page / HTML, not a RINEX file
