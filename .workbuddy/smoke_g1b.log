@@ -1,0 +1,23 @@
+sv: {'sys': 'G', 'prn': 1, 'gain_db': -5.3, 'if_hz': 0.0}  truth fd: 1182.3852682508716
+[18:18:26]   G1: pass1 done +1149.3Hz (0 drop)
+[18:18:26]     G1 G-decode win t_a=21 sfs=[]
+[18:19:16]     G1 G-decode win t_a=26 sfs=[3]
+[18:20:06]     G1 G-decode win t_a=31 sfs=[3, 4]
+[18:20:57]     G1 G-decode win t_a=36 sfs=[3, 4]
+[18:21:47]     G1 G-decode win t_a=41 sfs=[3, 4, 5]
+[18:22:37]     G1 G-decode win t_a=46 sfs=[1, 3, 4, 5]
+[18:23:28]   G1: nav OK complete_t=59.0s
+[18:24:29]   G1: ERROR KeyError: 'secs'
+wall: 383.5 s
+acq: {"coarse": {"fd": 1200.0, "chi": 371.5536, "metric_db": 16.527077464756335}, "fine": {"fd": -10.0, "chi": 371.5536, "metric_db": 16.53091950570329}}
+pass1: {'n_log': 1201, 'n_dropped': 0, 'fd_end_hz': 1149.3079309871036, 'pll_off_end_hz': -40.53609048296547}
+nav: {'decoded': True, 'complete_t_s': 59.0, 'subframes': [1, 2, 3, 4, 5], 'pages': None, 'reason_last': None}
+stats: {'err_med_ch': 4.8334077291656286e-05, 'err_rms_ch': 0.0021168772397480223, 'chip_rms_ch': 0.04526262783378044, 'phase_drift_cycps': 34.88099998714421, 'phase_rms_cycles': 70.23799954143533}
+bits seconds: 60 sample sizes: [50, 50, 49]
+skipped: None error: KeyError: 'secs'
+Traceback (most recent call last):
+  File "d:\workbuddy\GNSSSignal\gnss-sim\.workbuddy/rx_realtime_300.py", line 305, in _worker
+    f"({stats['secs']:.0f}s)")
+        ~~~~~^^^^^^^^
+KeyError: 'secs'
+

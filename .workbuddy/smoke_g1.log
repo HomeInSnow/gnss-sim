@@ -1,0 +1,22 @@
+[17:54:35]   G1: pass1 done +1430.6Hz (366 drop)
+[17:54:35]     G1 G-decode win t_a=1 sfs=[]
+[17:55:25]     G1 G-decode win t_a=6 sfs=[]
+[17:56:15]     G1 G-decode win t_a=11 sfs=[]
+[17:57:04]     G1 G-decode win t_a=16 sfs=[]
+[17:57:54]     G1 G-decode win t_a=21 sfs=[]
+[17:58:44]     G1 G-decode win t_a=26 sfs=[]
+[17:59:34]     G1 G-decode win t_a=31 sfs=[]
+[18:00:24]     G1 G-decode win t_a=36 sfs=[]
+[18:01:14]     G1 G-decode win t_a=41 sfs=[]
+[18:02:04]     G1 G-decode win t_a=46 sfs=[]
+[18:02:54]     G1 G-decode win t_a=51 sfs=[]
+[18:03:55]     G1 G-decode win t_a=56 sfs=[]
+[18:04:52]   G1: NAV FAIL 
+wall 636.6s
+err: None
+tb: 
+acq fine: {'fd': -50.0, 'chi': 371.5536, 'metric_db': 15.522706129193505}
+pass1: {'n_log': 1201, 'n_dropped': 366, 'fd_end_hz': 1430.631268957759, 'pll_off_end_hz': 83.97717962476158}
+nav: {'decoded': False, 'complete_t_s': None, 'subframes': []}
+stats: None
+bits secs: 0

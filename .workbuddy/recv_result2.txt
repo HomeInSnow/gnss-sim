@@ -1,0 +1,19 @@
+status 200 elapsed 857 s
+result_file : 20261111T111314224260/receiver_result.json
+trace_rx_file : 20261111T111314224260/trace_rx.json
+trace_dll_file : 20261111T111314224260/trace_dll.json
+SNAPSHOT: error_m 5.041138224865526  pdop 1.4253738370668596  prns [4, 5, 9, 11, 12, 18, 20, 25, 26, 29, 31]
+TRACKING: error_m 0.5469729480186974  pdop 1.426  prns ['G11', 'G12', 'G18', 'G20', 'G25', 'G26', 'G29', 'G31', 'G4', 'G5', 'G9']
+  skipped: {}
+  G11 el= 33.5 cn0=43.52 metric= 14.7 err_avg=-0.00130 chipRMS=0.00228 phRMS=0.0126
+  G12 el= 16.4 cn0=41.96 metric= 12.5 err_avg=0.00120 chipRMS=0.00235 phRMS=0.0153
+  G18 el= 10.6 cn0=41.56 metric= 11.1 err_avg=-0.00276 chipRMS=0.00554 phRMS=0.0164
+  G20 el= 29.4 cn0=43.87 metric= 15.9 err_avg=-0.00179 chipRMS=0.00272 phRMS=0.0157
+  G25 el= 52.9 cn0=45.19 metric= 15.5 err_avg=-0.00343 chipRMS=0.00293 phRMS=0.0118
+  G26 el= 24.6 cn0=43.50 metric= 13.8 err_avg=-0.00237 chipRMS=0.00217 phRMS=0.0123
+  G29 el= 75.2 cn0=45.09 metric= 16.3 err_avg=0.00163 chipRMS=0.00289 phRMS=0.0110
+  G31 el= 41.1 cn0=44.84 metric= 15.0 err_avg=0.00167 chipRMS=0.00243 phRMS=0.0152
+  G4 el= 13.7 cn0=42.20 metric= 10.9 err_avg=0.00544 chipRMS=0.00241 phRMS=0.0162
+  G5 el= 16.5 cn0=41.72 metric= 12.9 err_avg=0.00337 chipRMS=0.00287 phRMS=0.0166
+  G9 el=  7.7 cn0=40.41 metric= 12.0 err_avg=0.00005 chipRMS=0.00362 phRMS=0.0141
+  MEAN C/N0 = 43.08 dB-Hz (n=11)

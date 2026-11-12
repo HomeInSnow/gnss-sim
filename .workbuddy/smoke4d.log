@@ -1,0 +1,34 @@
+[19:20:15] run 20261110T084902599874  4 SVs  fs=5000000.0  marker=(34.7466, 113.6254, 110.0)  gps_week=2439 sow0=532818.0
+[19:21:04]   G1: pass1 done +1117.5Hz (0 drop)
+[19:21:04]     G1 G-decode win t_a=21 sfs=[]
+[19:21:04]   G2: pass1 done -423.3Hz (0 drop)
+[19:21:04]     G2 G-decode win t_a=21 sfs=[]
+[19:21:05]   E5: pass1 done +1507.3Hz (52 drop)
+[19:21:05]   E4: pass1 done -1535.7Hz (0 drop)
+[19:21:05]     E5 E-chunk c0=0 W=60 seed=(1541.25ch,+1500.0Hz)
+[19:21:05]     E4 E-chunk c0=0 W=60 seed=(2888.95ch,-1530.0Hz)
+[19:21:19]     E5 E-chunk c0=30 W=60 seed=(1511.87ch,+1509.7Hz)
+[19:21:19]     E4 E-chunk c0=30 W=60 seed=(2918.66ch,-1531.2Hz)
+[19:21:32]   E5: nav OK complete_t=60.0s
+[19:21:33]   E4: nav OK complete_t=60.0s
+[19:22:06]     G1 G-decode win t_a=26 sfs=[3]
+[19:22:07]     G2 G-decode win t_a=26 sfs=[3]
+[19:22:17]   E4: pass2 OK err_med=-0.00665ch (121s)
+[19:22:17]   E5: pass2 OK err_med=+0.00030ch (121s)
+[19:23:03]     G1 G-decode win t_a=31 sfs=[3, 4]
+[19:23:03]     G2 G-decode win t_a=31 sfs=[3, 4]
+[19:23:58]     G1 G-decode win t_a=36 sfs=[3, 4]
+[19:23:59]     G2 G-decode win t_a=36 sfs=[3, 4]
+[19:24:55]     G1 G-decode win t_a=41 sfs=[3, 4, 5]
+[19:24:56]     G2 G-decode win t_a=41 sfs=[3, 4, 5]
+[19:25:50]     G1 G-decode win t_a=46 sfs=[1, 3, 4, 5]
+[19:25:51]     G2 G-decode win t_a=46 sfs=[1, 3, 4, 5]
+[19:26:46]   G1: nav OK complete_t=59.0s
+[19:26:47]   G2: nav OK complete_t=59.0s
+[19:29:00]   G1: pass2 OK err_med=-0.00006ch (524s)
+[19:29:00]   G2: pass2 OK err_med=-0.00088ch (524s)
+[19:29:00] workers done in 8.7 min
+[19:29:00] LS done: 61 epochs from t=60s
+[19:29:01] T_full=60.0s  first fix t=60s  n_fix=61
+[19:29:01] err3d: rms=8.23981165223213 med=6.352268023750486 p95=16.687450131975506  PDOP~7.063407490189242
+[19:29:01] nav readback: ok   usable=4 (G2/E2)

@@ -1313,7 +1313,9 @@ def run_receiver(body: dict):
                 _tropo_on = (_atm is None
                              or str(_atm.get("troposphere", "off")) != "off")
                 _svc = bool(meta["config"].get("sv_clock", True))
-                afn = default_atmo_fn(rp, approx_llh, _gps_tow(start)) \
+                afn = default_atmo_fn(rp, approx_llh, _gps_tow(start),
+                                      ionosphere=_iono_on,
+                                      troposphere=_tropo_on) \
                     if (rp and (_iono_on or _tropo_on)) else None
                 tfix = fix_from_iq_l1_multi_tracked(
                     outdir, meta, eph, _gps_tow(start),

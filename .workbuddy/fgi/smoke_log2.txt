@@ -1,0 +1,22 @@
+
+Welcome to:  FGI-GSRx software GNSS receiver
+by the Finnish Geospatial Research Institute
+
+                   -------------------------------
+
+gpsl1 Enabled
+
+Acquiring gpsl1 signals...
+*================================================================================================*
+|01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 |
+*================================================================================================*
+Found gpsl1 signals:
+*================================================================================================*
+|.. .. .. 04 05 .. .. .. 09 .. 11 12 .. .. .. .. .. 18 .. 20 .. .. .. .. 25 26 .. .. 29 .. 31 .. |
+*================================================================================================*
+11 gpsl1 signals acquired in  81.81 sec.
+error: save: unable to open output file 'D://workbuddy//GNSSSignal//gnss-sim//out//fgi//fgi_smoke_state.mat.saving_in_progress'
+error: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7

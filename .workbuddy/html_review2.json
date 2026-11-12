@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "score": 91,
+  "dimensions": {
+    "design_token_compliance": {
+      "passed": true,
+      "score": 80,
+      "issues": [
+        "[DT-03] style 中 margin-left 使用了裸间距 \"12px\"，请替换为 var(--spacing-*)"
+      ]
+    },
+    "structural_integrity": {
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    "typographic_quality": {
+      "passed": true,
+      "score": 80,
+      "issues": [
+        "[TQ-04] 文档出现 9 个 <h1>，每个文档只应有 1 个主标题"
+      ]
+    },
+    "genre_fit": {
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    "decoration_usage": {
+      "passed": true,
+      "score": 100,
+      "issues": []
+    },
+    "security": {
+      "passed": true,
+      "score": 100,
+      "issues": []
+    }
+  },
+  "actionable_feedback": [
+    "[DT-03] style 中 margin-left 使用了裸间距 \"12px\"，请替换为 var(--spacing-*)",
+    "[TQ-04] 文档出现 9 个 <h1>，每个文档只应有 1 个主标题"
+  ]
+}

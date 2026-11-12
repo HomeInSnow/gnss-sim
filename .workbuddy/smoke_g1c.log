@@ -1,0 +1,23 @@
+sv: {'sys': 'G', 'prn': 1, 'gain_db': -5.3, 'if_hz': 0.0}  truth fd: 1182.3852682508716
+[18:31:54]   G1: pass1 done +1149.3Hz (0 drop)
+[18:31:54]     G1 G-decode win t_a=21 sfs=[]
+[18:32:44]     G1 G-decode win t_a=26 sfs=[3]
+[18:33:33]     G1 G-decode win t_a=31 sfs=[3, 4]
+[18:34:23]     G1 G-decode win t_a=36 sfs=[3, 4]
+[18:35:13]     G1 G-decode win t_a=41 sfs=[3, 4, 5]
+[18:36:03]     G1 G-decode win t_a=46 sfs=[1, 3, 4, 5]
+[18:36:53]   G1: nav OK complete_t=59.0s
+[18:37:54]   G1: pass2 OK err_med=+0.00005ch (381s)
+wall: 380.8 s
+acq: {"coarse": {"fd": 1200.0, "chi": 371.5536, "metric_db": 16.527077464756335}, "fine": {"fd": -10.0, "chi": 371.5536, "metric_db": 16.53091950570329}}
+pass1: {'n_log': 1201, 'n_dropped': 0, 'fd_end_hz': 1149.3079309871036, 'pll_off_end_hz': -40.53609048296547}
+nav: {'decoded': True, 'complete_t_s': 59.0, 'subframes': [1, 2, 3, 4, 5], 'pages': None, 'reason_last': None}
+stats: {'err_med_ch': 4.8334077291656286e-05, 'err_rms_ch': 0.0021168772397480223, 'chip_rms_ch': 0.04526262783378044, 'phase_drift_cycps': -1130.9733574193415, 'phase_rms_cycles': 0.012651494534490137}
+bits seconds: 60 sample sizes: [50, 50, 49]
+skipped: None error: None
+  k=1 chi=370.8334 err=-0.002878 fd=+1181.66 ph=1182.120130056849 cn0=45.68923245107791
+  k=2 chi=370.0661 err=-0.002967 fd=+1180.66 ph=2363.632227472181 cn0=45.04370998947862
+  k=31 chi=347.9723 err=+0.000072 fd=+1164.92 ph=36392.809887703304 cn0=46.180901822702396
+  k=59 chi=326.9176 err=+0.000166 fd=+1150.81 ph=68817.26403179471 cn0=46.92173090530429
+  k=60 chi=326.1733 err=+0.002761 fd=+1149.38 ph=69967.42832093693 cn0=46.152387730259015
+dumped probe_g1c.json

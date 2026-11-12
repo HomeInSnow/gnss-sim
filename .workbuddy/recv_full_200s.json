@@ -1,0 +1,676 @@
+{
+ "ecef": [
+  2885620.482413706,
+  1335072.254219761,
+  5510663.489043751
+ ],
+ "llh": [
+  60.18255025368864,
+  24.82827403743777,
+  52.00464779138565
+ ],
+ "clock_bias_s": 2.2791170477227504e-08,
+ "prns_used": [
+  4,
+  5,
+  9,
+  11,
+  12,
+  18,
+  20,
+  25,
+  26,
+  29,
+  31
+ ],
+ "pdop": 1.4253738370668596,
+ "residual_rms_m": 3.358518862865728,
+ "wls": {
+  "llh": [
+   60.182567127182516,
+   24.82824877228816,
+   54.170385252684355
+  ],
+  "ecef": [
+   2885620.568140302,
+   1335070.7490628238,
+   5510666.302867058
+  ],
+  "clock_bias_s": 2.7146986288054574e-08,
+  "dop": {
+   "gdop": 1.565361375398481,
+   "pdop": 1.4253737610590547,
+   "hdop": 0.7457351659861045,
+   "vdop": 1.2147301844143463,
+   "tdop": 0.6470439528144815
+  },
+  "residual_rms_m": 3.743317004264805,
+  "weighted_residual_rms_m": 2.872959439389696,
+  "sigma_horizontal_m": 6.393227453773236,
+  "sigma_vertical_m": 8.944577757084655
+ },
+ "error_budget": {
+  "n_sats": 11,
+  "per_prn": [
+   {
+    "prn": 4,
+    "elevation_deg": 13.518497824976139,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 5,
+    "elevation_deg": 16.55213853219012,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 9,
+    "elevation_deg": 7.482218998164869,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 11,
+    "elevation_deg": 33.396386347621906,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 12,
+    "elevation_deg": 16.510627229390128,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 18,
+    "elevation_deg": 10.709788605636327,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 20,
+    "elevation_deg": 29.359715224578913,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 25,
+    "elevation_deg": 53.114116037310794,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 26,
+    "elevation_deg": 24.53037355229578,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 29,
+    "elevation_deg": 75.28970235938512,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   },
+   {
+    "prn": 31,
+    "elevation_deg": 41.02376778699881,
+    "components": {
+     "orbit": {
+      "sigma_m": 0.8,
+      "modelled": false
+     },
+     "satellite_clock": {
+      "sigma_m": 0.3,
+      "modelled": false
+     },
+     "ionosphere": {
+      "sigma_m": 4.0,
+      "modelled": false
+     },
+     "troposphere": {
+      "sigma_m": 0.2,
+      "modelled": false
+     },
+     "multipath": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "receiver_thermal": {
+      "sigma_m": 0.5,
+      "modelled": false
+     },
+     "sagnac": {
+      "sigma_m": 0.0,
+      "modelled": false
+     }
+    },
+    "total_m": 4.15571895103603
+   }
+  ],
+  "uere_rms_m": 4.15571895103603,
+  "uere_max_m": 4.15571895103603,
+  "note": "1-sigma range-equivalent, components assumed independent; nominal values are documentation-grade, not a calibration."
+ },
+ "error_m": 5.041138224865526,
+ "saved_at_utc": "2026-11-11T12:23:04+00:00",
+ "result_file": "20261111T121453590747/receiver_result.json",
+ "trace_rx_file": "20261111T121453590747/trace_rx.json",
+ "tracking_fix": {
+  "mode": "tracking",
+  "dll_mode": "coh",
+  "track_s": 3.0,
+  "ecef": [
+   2885620.32786462,
+   1335071.2682618487,
+   5510658.754198519
+  ],
+  "llh": [
+   60.182533438761936,
+   24.828259081769815,
+   47.6210266565904
+  ],
+  "clock_bias_s": 6.376291132240859e-10,
+  "prns_used": [
+   "G11",
+   "G12",
+   "G18",
+   "G20",
+   "G25",
+   "G26",
+   "G29",
+   "G31",
+   "G4",
+   "G5",
+   "G9"
+  ],
+  "pdop": 1.425727813366198,
+  "residual_rms_m": 0.72989541452817,
+  "per_sv": {
+   "G4": {
+    "measured_pr_m": 24342179.193767004,
+    "corrected_pr_m": 24342179.193767004,
+    "err_chips": -0.001859194500866579,
+    "err_chips_avg": 0.005439785265480168,
+    "chip_rms_hist": 0.0024105685452595334,
+    "fd_meas_hz": 368.2158248815062,
+    "carrier_phase_cycles": 1109.308646184745,
+    "phase_rms_cycles": 0.01617389540277103,
+    "phase_drift_cycps": -0.0037898916729948605,
+    "pll_off_hz": -0.7257885868267525,
+    "n_pll_skipped": 0,
+    "metric_db": 10.926796024938913,
+    "el_deg": 13.679048918375743,
+    "cn0_dbhz": 42.197486228164564
+   },
+   "G5": {
+    "measured_pr_m": 23937195.207756735,
+    "corrected_pr_m": 23937195.207756735,
+    "err_chips": 0.004891082047834061,
+    "err_chips_avg": 0.003371516984771006,
+    "chip_rms_hist": 0.0028729814795088295,
+    "fd_meas_hz": 3223.022804195016,
+    "carrier_phase_cycles": 9668.860615523825,
+    "phase_rms_cycles": 0.01661848997368904,
+    "phase_drift_cycps": -0.0007475215087258911,
+    "pll_off_hz": 0.9685831565147548,
+    "n_pll_skipped": 0,
+    "metric_db": 12.949750449325961,
+    "el_deg": 16.501820854962602,
+    "cn0_dbhz": 41.72135888651562
+   },
+   "G9": {
+    "measured_pr_m": 24912720.716095157,
+    "corrected_pr_m": 24912720.716095157,
+    "err_chips": 0.005566004994761897,
+    "err_chips_avg": 4.5815177145414054e-05,
+    "chip_rms_hist": 0.003619842617624586,
+    "fd_meas_hz": 1658.2426842539026,
+    "carrier_phase_cycles": 4977.077627744179,
+    "phase_rms_cycles": 0.01412429964210987,
+    "phase_drift_cycps": -0.016631798309149026,
+    "pll_off_hz": 0.2870886099959477,
+    "n_pll_skipped": 0,
+    "metric_db": 12.009462384847458,
+    "el_deg": 7.654507390089586,
+    "cn0_dbhz": 40.40608539978009
+   },
+   "G11": {
+    "measured_pr_m": 22532275.156077255,
+    "corrected_pr_m": 22532275.156077255,
+    "err_chips": -0.004811306702322327,
+    "err_chips_avg": -0.0013018800527788699,
+    "chip_rms_hist": 0.002275575527511758,
+    "fd_meas_hz": -2425.755541578127,
+    "carrier_phase_cycles": -7275.641567385364,
+    "phase_rms_cycles": 0.012628090473308777,
+    "phase_drift_cycps": 0.00046257242111165327,
+    "pll_off_hz": 0.03588721154408085,
+    "n_pll_skipped": 0,
+    "metric_db": 14.673827497482657,
+    "el_deg": 33.47592052964412,
+    "cn0_dbhz": 43.51674364930126
+   },
+   "G12": {
+    "measured_pr_m": 24037597.6016992,
+    "corrected_pr_m": 24037597.6016992,
+    "err_chips": -0.002158538765797857,
+    "err_chips_avg": 0.001197203018818982,
+    "chip_rms_hist": 0.0023512199133174866,
+    "fd_meas_hz": -3825.502707842359,
+    "carrier_phase_cycles": -11476.14498442991,
+    "phase_rms_cycles": 0.015275082160115439,
+    "phase_drift_cycps": 0.011639618352443225,
+    "pll_off_hz": 0.609145604744089,
+    "n_pll_skipped": 0,
+    "metric_db": 12.495515292506349,
+    "el_deg": 16.388481870114116,
+    "cn0_dbhz": 41.95516072489867
+   },
+   "G18": {
+    "measured_pr_m": 24731404.104049336,
+    "corrected_pr_m": 24731404.104049336,
+    "err_chips": -0.0019690466251631733,
+    "err_chips_avg": -0.0027569893572945148,
+    "chip_rms_hist": 0.005543553969906102,
+    "fd_meas_hz": 3919.3173957822737,
+    "carrier_phase_cycles": 11760.982603845841,
+    "phase_rms_cycles": 0.016445490387729057,
+    "phase_drift_cycps": -0.00027361516217659773,
+    "pll_off_hz": -0.23990384138194512,
+    "n_pll_skipped": 0,
+    "metric_db": 11.078357518583388,
+    "el_deg": 10.571860025844378,
+    "cn0_dbhz": 41.55795921257544
+   },
+   "G20": {
+    "measured_pr_m": 22947417.283171438,
+    "corrected_pr_m": 22947417.283171438,
+    "err_chips": -0.0015505752417084295,
+    "err_chips_avg": -0.001785014901543036,
+    "chip_rms_hist": 0.0027211521373101595,
+    "fd_meas_hz": 1253.5392754635768,
+    "carrier_phase_cycles": 3762.5125814884595,
+    "phase_rms_cycles": 0.01570498978139904,
+    "phase_drift_cycps": 0.0063417541293667315,
+    "pll_off_hz": -0.22852583623603268,
+    "n_pll_skipped": 0,
+    "metric_db": 15.862842608502788,
+    "el_deg": 29.39255318147186,
+    "cn0_dbhz": 43.86672866896621
+   },
+   "G25": {
+    "measured_pr_m": 21123412.878366433,
+    "corrected_pr_m": 21123412.878366433,
+    "err_chips": -0.003654409127193503,
+    "err_chips_avg": -0.003425661925575696,
+    "chip_rms_hist": 0.0029273687726348494,
+    "fd_meas_hz": -2484.458705021681,
+    "carrier_phase_cycles": -7452.650502627068,
+    "phase_rms_cycles": 0.011753053895906493,
+    "phase_drift_cycps": 0.0030402209322951948,
+    "pll_off_hz": 0.41510107424255666,
+    "n_pll_skipped": 0,
+    "metric_db": 15.478956409153808,
+    "el_deg": 52.94879214559873,
+    "cn0_dbhz": 45.186429837791366
+   },
+   "G26": {
+    "measured_pr_m": 23092172.907081645,
+    "corrected_pr_m": 23092172.907081645,
+    "err_chips": -0.0016150464180100244,
+    "err_chips_avg": -0.002368097717408091,
+    "chip_rms_hist": 0.0021667783713181696,
+    "fd_meas_hz": 3199.852218002306,
+    "carrier_phase_cycles": 9602.164215222518,
+    "phase_rms_cycles": 0.01234767075792479,
+    "phase_drift_cycps": -0.0041331652941826846,
+    "pll_off_hz": -0.34446625640915485,
+    "n_pll_skipped": 0,
+    "metric_db": 13.81560092914873,
+    "el_deg": 24.62490421976683,
+    "cn0_dbhz": 43.49582012454286
+   },
+   "G29": {
+    "measured_pr_m": 20342255.635119118,
+    "corrected_pr_m": 20342255.635119118,
+    "err_chips": -0.00219263161852723,
+    "err_chips_avg": 0.0016309469065163285,
+    "chip_rms_hist": 0.0028915292548015825,
+    "fd_meas_hz": 902.7389895157476,
+    "carrier_phase_cycles": 2711.134304018289,
+    "phase_rms_cycles": 0.011001863868744986,
+    "phase_drift_cycps": -0.001456249823135354,
+    "pll_off_hz": -0.16314785825923925,
+    "n_pll_skipped": 0,
+    "metric_db": 16.345043695090702,
+    "el_deg": 75.18685322876024,
+    "cn0_dbhz": 45.09432003909325
+   },
+   "G31": {
+    "measured_pr_m": 21881573.769296877,
+    "corrected_pr_m": 21881573.769296877,
+    "err_chips": 0.00919916529164766,
+    "err_chips_avg": 0.0016722489963285625,
+    "chip_rms_hist": 0.002429134725290755,
+    "fd_meas_hz": 218.22005835337623,
+    "carrier_phase_cycles": 656.319102928302,
+    "phase_rms_cycles": 0.01519576940921474,
+    "phase_drift_cycps": -0.0036056184581892323,
+    "pll_off_hz": 0.22062584460919937,
+    "n_pll_skipped": 0,
+    "metric_db": 15.010797657934043,
+    "el_deg": 41.07144805293651,
+    "cn0_dbhz": 44.836621376156316
+   }
+  },
+  "skipped": {},
+  "acquired": {
+   "G": [
+    4,
+    5,
+    9,
+    11,
+    12,
+    18,
+    20,
+    25,
+    26,
+    29,
+    31
+   ]
+  },
+  "error_m": 0.5469729480186974
+ },
+ "trace_dll_file": "20261111T121453590747/trace_dll.json"
+}

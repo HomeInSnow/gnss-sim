@@ -1,0 +1,24 @@
+{
+ "start_utc": "2023-09-28T23:20:00",
+ "lat": 60.182537,
+ "lon": 24.82826,
+ "alt": 47.248,
+ "duration_s": 200,
+ "sample_rate": 25000000,
+ "sample_format": "int16",
+ "systems": [
+  "G"
+ ],
+ "engine": "native",
+ "atmosphere": {
+  "ionosphere": "off",
+  "troposphere": "off"
+ },
+ "sv_clock": false,
+ "impairments": {
+  "enabled_flag": true,
+  "noise_power": 2808000000.0
+ },
+ "random_seed": 2281271,
+ "rinex_path": "D:\\workbuddy\\GNSSSignal\\gnss-sim\\data\\rinex\\BRDC_2023271_afzero.rnx"
+}

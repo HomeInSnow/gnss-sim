@@ -17,9 +17,23 @@ from backend.models import atmosphere
 from backend.synth import engine, signals
 
 
-def default_atmo_fn(rinex_path, approx_llh, t_gps_sow):
+def default_atmo_fn(rinex_path, approx_llh, t_gps_sow, *,
+                    ionosphere=None, troposphere=None):
+    """Build the receiver-side atmosphere model for a run.
+
+    ``ionosphere`` / ``troposphere`` are per-run injection-policy booleans
+    (from ``meta.config.atmosphere``): pass False to force that component to
+    zero, None to fall back to the generator default policy. A receiver must
+    only remove what the engine actually injected -- e.g. an
+    ``atmosphere: off`` run has NO delays in the IQ, so subtracting
+    Saastamoinen there biases pseudoranges ~-15 m at low elevation.
+    """
     lat_deg, lon_deg, h_m = approx_llh
     cfg = atmosphere.AtmosphereConfig.from_dict(engine._DEFAULT_ATMOSPHERE)
+    if ionosphere is False:
+        cfg.ionosphere = "off"
+    if troposphere is False:
+        cfg.troposphere = "off"
     try:
         hdr = dict(ephemeris.rinex_header_iono_utc(rinex_path) or {})
     except Exception:

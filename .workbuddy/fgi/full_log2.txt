@@ -1,0 +1,200 @@
+
+Welcome to:  FGI-GSRx software GNSS receiver
+by the Finnish Geospatial Research Institute
+
+                   -------------------------------
+
+gpsl1 Enabled
+
+Acquiring gpsl1 signals...
+*================================================================================================*
+|01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 |
+*================================================================================================*
+Found gpsl1 signals:
+*================================================================================================*
+|.. .. .. 04 05 .. .. .. 09 .. 11 12 .. .. .. .. .. 18 .. 20 .. .. .. .. 25 26 .. .. 29 .. 31 .. |
+*================================================================================================*
+11 gpsl1 signals acquired in  90.73 sec.
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_full at line 4 column 1
+
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_full at line 4 column 1
+
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_full at line 4 column 1
+
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_full at line 4 column 1
+
+   Tracking started at 12-Nov-2026 04:03:33
+Ms Processed: 1000 Ms Left: 1000
+Time processed: 59 Time left: 59
+   Bit sync for gpsl1 prn 11 found at 1520 with index 17
+   Bit sync for gpsl1 prn 20 found at 1520 with index 18
+   Bit sync for gpsl1 prn 25 found at 1520 with index 12
+   Bit sync for gpsl1 prn 26 found at 1520 with index 19
+   Bit sync for gpsl1 prn 29 found at 1520 with index 9
+   Bit sync for gpsl1 prn 31 found at 1520 with index 14
+   Bit sync for gpsl1 prn 4 found at 1540 with index 3
+   Bit sync for gpsl1 prn 5 found at 1540 with index 1
+   Bit sync for gpsl1 prn 12 found at 1540 with index 2
+   Bit sync for gpsl1 prn 18 found at 1540 with index 4
+   Bit sync for gpsl1 prn 9 found at 1600 with index 5
+Ms Processed: 2000 Ms Left: 0
+Time processed: 120 Time left: 0
+   Tracking is over (elapsed time 00:02:00)
+   Tracking started at 12-Nov-2026 04:05:34
+Ms Processed: 1000 Ms Left: 199000
+Time processed: 83 Time left: 16529
+   Bit sync for gpsl1 prn 4 found at 1500 with index 2
+   Bit sync for gpsl1 prn 5 found at 1500 with index 1
+   Bit sync for gpsl1 prn 9 found at 1500 with index 1
+   Bit sync for gpsl1 prn 12 found at 1500 with index 2
+   Bit sync for gpsl1 prn 18 found at 1500 with index 2
+   Bit sync for gpsl1 prn 11 found at 1520 with index 1
+   Bit sync for gpsl1 prn 20 found at 1520 with index 2
+   Bit sync for gpsl1 prn 25 found at 1520 with index 2
+   Bit sync for gpsl1 prn 26 found at 1520 with index 2
+   Bit sync for gpsl1 prn 29 found at 1520 with index 1
+   Bit sync for gpsl1 prn 31 found at 1520 with index 1
+Ms Processed: 2000 Ms Left: 198000
+Time processed: 166 Time left: 16462
+Ms Processed: 3000 Ms Left: 197000
+Time processed: 249 Time left: 16345
+Ms Processed: 4000 Ms Left: 196000
+Time processed: 331 Time left: 16223
+Ms Processed: 5000 Ms Left: 195000
+Time processed: 413 Time left: 16121
+Ms Processed: 6000 Ms Left: 194000
+Time processed: 496 Time left: 16032
+Ms Processed: 7000 Ms Left: 193000
+Time processed: 579 Time left: 15969
+Ms Processed: 8000 Ms Left: 192000
+Time processed: 664 Time left: 15931
+Ms Processed: 9000 Ms Left: 191000
+Time processed: 747 Time left: 15848
+Ms Processed: 10000 Ms Left: 190000
+Time processed: 830 Time left: 15770
+Ms Processed: 11000 Ms Left: 189000
+Time processed: 913 Time left: 15689
+Ms Processed: 12000 Ms Left: 188000
+Time processed: 996 Time left: 15605
+Ms Processed: 13000 Ms Left: 187000
+Time processed: 1079 Time left: 15518
+Ms Processed: 14000 Ms Left: 186000
+Time processed: 1164 Time left: 15459
+Ms Processed: 15000 Ms Left: 185000
+Time processed: 1248 Time left: 15393
+Ms Processed: 16000 Ms Left: 184000
+Time processed: 1333 Time left: 15334
+Ms Processed: 17000 Ms Left: 183000
+Time processed: 1419 Time left: 15271
+Ms Processed: 18000 Ms Left: 182000
+Time processed: 1503 Time left: 15192
+Ms Processed: 19000 Ms Left: 181000
+Time processed: 1586 Time left: 15112
+Ms Processed: 20000 Ms Left: 180000
+Time processed: 1671 Time left: 15042
+Ms Processed: 21000 Ms Left: 179000
+Time processed: 1756 Time left: 14966
+Ms Processed: 22000 Ms Left: 178000
+Time processed: 1840 Time left: 14891
+Ms Processed: 23000 Ms Left: 177000
+Time processed: 1925 Time left: 14814
+Ms Processed: 24000 Ms Left: 176000
+Time processed: 2010 Time left: 14740
+Ms Processed: 25000 Ms Left: 175000
+Time processed: 2096 Time left: 14670
+Ms Processed: 26000 Ms Left: 174000
+Time processed: 2181 Time left: 14595
+Ms Processed: 27000 Ms Left: 173000
+Time processed: 2266 Time left: 14517
+Ms Processed: 28000 Ms Left: 172000
+Time processed: 2351 Time left: 14439
+Ms Processed: 29000 Ms Left: 171000
+Time processed: 2436 Time left: 14362
+Ms Processed: 30000 Ms Left: 170000
+Time processed: 2521 Time left: 14288
+Ms Processed: 31000 Ms Left: 169000
+Time processed: 2605 Time left: 14201
+Ms Processed: 32000 Ms Left: 168000
+Time processed: 2690 Time left: 14122
+Ms Processed: 33000 Ms Left: 167000
+Time processed: 2774 Time left: 14040
+Ms Processed: 34000 Ms Left: 166000
+Time processed: 2857 Time left: 13946
+Ms Processed: 35000 Ms Left: 165000
+Time processed: 2942 Time left: 13869
+Ms Processed: 36000 Ms Left: 164000
+Time processed: 3026 Time left: 13787
+Ms Processed: 37000 Ms Left: 163000
+Time processed: 3109 Time left: 13695
+Ms Processed: 38000 Ms Left: 162000
+Time processed: 3191 Time left: 13605
+Ms Processed: 39000 Ms Left: 161000
+Time processed: 3273 Time left: 13513
+Ms Processed: 40000 Ms Left: 160000
+Time processed: 3357 Time left: 13428
+Ms Processed: 41000 Ms Left: 159000
+Time processed: 3440 Time left: 13339
+Ms Processed: 42000 Ms Left: 158000
+Time processed: 3523 Time left: 13253
+Ms Processed: 43000 Ms Left: 157000
+Time processed: 3605 Time left: 13163
+Ms Processed: 44000 Ms Left: 156000
+Time processed: 3688 Time left: 13075
+Ms Processed: 45000 Ms Left: 155000
+Time processed: 3770 Time left: 12986
+Ms Processed: 46000 Ms Left: 154000
+Time processed: 3854 Time left: 12902
+Ms Processed: 47000 Ms Left: 153000
+Time processed: 3937 Time left: 12817
+Ms Processed: 48000 Ms Left: 152000
+Time processed: 4020 Time left: 12730
+Ms Processed: 49000 Ms Left: 151000
+Time processed: 4104 Time left: 12646
+Ms Processed: 50000 Ms Left: 150000
+Time processed: 4187 Time left: 12561
+Ms Processed: 51000 Ms Left: 149000
+Time processed: 4270 Time left: 12475
+Ms Processed: 52000 Ms Left: 148000
+Time processed: 4354 Time left: 12393
+Ms Processed: 53000 Ms Left: 147000
+Time processed: 4438 Time left: 12310
+Ms Processed: 54000 Ms Left: 146000
+Time processed: 4522 Time left: 12227
+Ms Processed: 55000 Ms Left: 145000
+Time processed: 4606 Time left: 12143
+Ms Processed: 56000 Ms Left: 144000
+Time processed: 4689 Time left: 12057
+Ms Processed: 57000 Ms Left: 143000
+Time processed: 4773 Time left: 11974
+Ms Processed: 58000 Ms Left: 142000
+Time processed: 4856 Time left: 11889
+Ms Processed: 59000 Ms Left: 141000
+Time processed: 4932 Time left: 11787
+Ms Processed: 60000 Ms Left: 140000
+Time processed: 5008 Time left: 11685
+Ms Processed: 61000 Ms Left: 139000
+Time processed: 5084 Time left: 11585
+Ms Processed: 62000 Ms Left: 138000
+Time processed: 5160 Time left: 11485
+Ms Processed: 63000 Ms Left: 137000
+Time processed: 5235 Time left: 11385

@@ -1,0 +1,167 @@
+
+Welcome to:  FGI-GSRx software GNSS receiver
+by the Finnish Geospatial Research Institute
+
+                   -------------------------------
+
+gpsl1 Enabled
+
+Acquiring gpsl1 signals...
+*================================================================================================*
+|01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 |
+*================================================================================================*
+Found gpsl1 signals:
+*================================================================================================*
+|.. .. .. 04 05 .. .. .. 09 .. 11 12 .. .. .. .. .. 18 .. 20 .. .. .. .. 25 26 .. .. 29 .. 31 .. |
+*================================================================================================*
+11 gpsl1 signals acquired in  81.14 sec.
+   Tracking started at 11-Nov-2026 21:51:13
+Ms Processed: 1000 Ms Left: 59000
+Time processed: 64 Time left: 3759
+   Bit sync for gpsl1 prn 31 found at 1500 with index 14
+   Bit sync for gpsl1 prn 9 found at 1520 with index 12
+   Bit sync for gpsl1 prn 4 found at 1620 with index 3
+   Bit sync for gpsl1 prn 25 found at 1620 with index 12
+   Bit sync for gpsl1 prn 5 found at 1640 with index 1
+   Bit sync for gpsl1 prn 18 found at 1640 with index 4
+   Bit sync for gpsl1 prn 11 found at 1840 with index 17
+   Bit sync for gpsl1 prn 26 found at 1840 with index 19
+   Bit sync for gpsl1 prn 12 found at 1860 with index 2
+   Bit sync for gpsl1 prn 20 found at 1880 with index 18
+   Bit sync for gpsl1 prn 29 found at 1980 with index 9
+Ms Processed: 2000 Ms Left: 58000
+Time processed: 128 Time left: 3707
+Ms Processed: 3000 Ms Left: 57000
+Time processed: 192 Time left: 3649
+Ms Processed: 4000 Ms Left: 56000
+Time processed: 257 Time left: 3594
+Ms Processed: 5000 Ms Left: 55000
+Time processed: 322 Time left: 3540
+Ms Processed: 6000 Ms Left: 54000
+Time processed: 387 Time left: 3483
+Ms Processed: 7000 Ms Left: 53000
+Time processed: 453 Time left: 3427
+Ms Processed: 8000 Ms Left: 52000
+Time processed: 518 Time left: 3369
+Ms Processed: 9000 Ms Left: 51000
+Time processed: 585 Time left: 3316
+Ms Processed: 10000 Ms Left: 50000
+Time processed: 651 Time left: 3255
+Ms Processed: 11000 Ms Left: 49000
+Time processed: 717 Time left: 3193
+Ms Processed: 12000 Ms Left: 48000
+Time processed: 783 Time left: 3132
+Ms Processed: 13000 Ms Left: 47000
+Time processed: 849 Time left: 3068
+Ms Processed: 14000 Ms Left: 46000
+Time processed: 915 Time left: 3005
+Ms Processed: 15000 Ms Left: 45000
+Time processed: 980 Time left: 2940
+Ms Processed: 16000 Ms Left: 44000
+Time processed: 1046 Time left: 2876
+Ms Processed: 17000 Ms Left: 43000
+Time processed: 1112 Time left: 2814
+Ms Processed: 18000 Ms Left: 42000
+Time processed: 1179 Time left: 2752
+Ms Processed: 19000 Ms Left: 41000
+Time processed: 1248 Time left: 2692
+Ms Processed: 20000 Ms Left: 40000
+Time processed: 1315 Time left: 2629
+Ms Processed: 21000 Ms Left: 39000
+Time processed: 1381 Time left: 2565
+Ms Processed: 22000 Ms Left: 38000
+Time processed: 1448 Time left: 2501
+Ms Processed: 23000 Ms Left: 37000
+Time processed: 1515 Time left: 2437
+Ms Processed: 24000 Ms Left: 36000
+Time processed: 1582 Time left: 2373
+Ms Processed: 25000 Ms Left: 35000
+Time processed: 1650 Time left: 2309
+Ms Processed: 26000 Ms Left: 34000
+Time processed: 1717 Time left: 2245
+Ms Processed: 27000 Ms Left: 33000
+Time processed: 1785 Time left: 2181
+Ms Processed: 28000 Ms Left: 32000
+Time processed: 1852 Time left: 2116
+Ms Processed: 29000 Ms Left: 31000
+Time processed: 1927 Time left: 2060
+Ms Processed: 30000 Ms Left: 30000
+Time processed: 2006 Time left: 2006
+Ms Processed: 31000 Ms Left: 29000
+Time processed: 2083 Time left: 1948
+Ms Processed: 32000 Ms Left: 28000
+Time processed: 2160 Time left: 1890
+Ms Processed: 33000 Ms Left: 27000
+Time processed: 2238 Time left: 1831
+Ms Processed: 34000 Ms Left: 26000
+Time processed: 2316 Time left: 1771
+Ms Processed: 35000 Ms Left: 25000
+Time processed: 2394 Time left: 1710
+Ms Processed: 36000 Ms Left: 24000
+Time processed: 2473 Time left: 1648
+Ms Processed: 37000 Ms Left: 23000
+Time processed: 2551 Time left: 1586
+Ms Processed: 38000 Ms Left: 22000
+Time processed: 2630 Time left: 1522
+Ms Processed: 39000 Ms Left: 21000
+Time processed: 2707 Time left: 1458
+Ms Processed: 40000 Ms Left: 20000
+Time processed: 2786 Time left: 1393
+Ms Processed: 41000 Ms Left: 19000
+Time processed: 2862 Time left: 1326
+Ms Processed: 42000 Ms Left: 18000
+Time processed: 2938 Time left: 1259
+Ms Processed: 43000 Ms Left: 17000
+Time processed: 3015 Time left: 1192
+Ms Processed: 44000 Ms Left: 16000
+Time processed: 3092 Time left: 1124
+Ms Processed: 45000 Ms Left: 15000
+Time processed: 3169 Time left: 1056
+Ms Processed: 46000 Ms Left: 14000
+Time processed: 3246 Time left: 988
+Ms Processed: 47000 Ms Left: 13000
+Time processed: 3323 Time left: 919
+Ms Processed: 48000 Ms Left: 12000
+Time processed: 3400 Time left: 850
+Ms Processed: 49000 Ms Left: 11000
+Time processed: 3478 Time left: 781
+Ms Processed: 50000 Ms Left: 10000
+Time processed: 3555 Time left: 711
+Ms Processed: 51000 Ms Left: 9000
+Time processed: 3631 Time left: 641
+Ms Processed: 52000 Ms Left: 8000
+Time processed: 3710 Time left: 571
+Ms Processed: 53000 Ms Left: 7000
+Time processed: 3788 Time left: 500
+Ms Processed: 54000 Ms Left: 6000
+Time processed: 3865 Time left: 429
+Ms Processed: 55000 Ms Left: 5000
+Time processed: 3943 Time left: 358
+Ms Processed: 56000 Ms Left: 4000
+Time processed: 4020 Time left: 287
+Ms Processed: 57000 Ms Left: 3000
+Time processed: 4098 Time left: 216
+Ms Processed: 58000 Ms Left: 2000
+Time processed: 4177 Time left: 144
+Ms Processed: 59000 Ms Left: 1000
+Time processed: 4254 Time left: 72
+Ms Processed: 60000 Ms Left: 0
+Time processed: 4331 Time left: 0
+   Tracking is over (elapsed time 01:12:11)
+Could not find valid preambles for gpsl1 prn 4!
+Could not find valid preambles for gpsl1 prn 5!
+Could not find valid preambles for gpsl1 prn 9!
+Could not find valid preambles for gpsl1 prn 11!
+Could not find valid preambles for gpsl1 prn 12!
+Could not find valid preambles for gpsl1 prn 18!
+Could not find valid preambles for gpsl1 prn 20!
+Could not find valid preambles for gpsl1 prn 25!
+Could not find valid preambles for gpsl1 prn 26!
+Could not find valid preambles for gpsl1 prn 29!
+Could not find valid preambles for gpsl1 prn 31!
+error: element number 1 undefined in return list
+error: called from
+    doNavigation at line 45 column 2
+    gsrx at line 159 column 2
+    run_fgi at line 25 column 1
+    run at line 78 column 7

@@ -1,0 +1,42 @@
+[18:48:59] run 20261110T084902599874  4 SVs  fs=5000000.0  marker=(34.7466, 113.6254, 110.0)  gps_week=2439 sow0=532818.0
+[18:49:25]   G1: pass1 done +1149.3Hz (0 drop)
+[18:49:25]     G1 G-decode win t_a=21 sfs=[]
+[18:49:25]   G2: pass1 done -394.8Hz (0 drop)
+[18:49:25]     G2 G-decode win t_a=21 sfs=[]
+[18:49:28]   E5: pass1 done +1508.8Hz (46 drop)
+[18:49:29]   E4: pass1 done -1532.7Hz (0 drop)
+[18:49:29]     E5 E-chunk c0=0 W=60 seed=(1541.25ch,+1500.0Hz)
+[18:49:29]     E4 E-chunk c0=0 W=60 seed=(2888.95ch,-1530.0Hz)
+[18:49:44]     E5 E-chunk c0=30 W=60 seed=(1511.87ch,+1509.7Hz)
+[18:49:44]     E4 E-chunk c0=30 W=60 seed=(2918.66ch,-1531.2Hz)
+[18:49:58]   E5: nav OK complete_t=60.0s
+[18:49:58]   E4: nav OK complete_t=60.0s
+[18:50:21]   E5: pass2 OK err_med=+0.00008ch (81s)
+[18:50:21]   E4: pass2 OK err_med=-0.00706ch (82s)
+[18:50:29]     G1 G-decode win t_a=26 sfs=[3]
+[18:50:30]     G2 G-decode win t_a=26 sfs=[3]
+[18:51:25]     G1 G-decode win t_a=31 sfs=[3, 4]
+[18:51:25]     G2 G-decode win t_a=31 sfs=[3, 4]
+[18:52:20]     G1 G-decode win t_a=36 sfs=[3, 4]
+[18:52:20]     G2 G-decode win t_a=36 sfs=[3, 4]
+[18:53:16]     G1 G-decode win t_a=41 sfs=[3, 4, 5]
+[18:53:16]     G2 G-decode win t_a=41 sfs=[3, 4, 5]
+[18:54:11]     G2 G-decode win t_a=46 sfs=[1, 3, 4, 5]
+[18:54:12]     G1 G-decode win t_a=46 sfs=[1, 3, 4, 5]
+[18:55:07]   G2: nav OK complete_t=59.0s
+[18:55:07]   G1: nav OK complete_t=59.0s
+[18:56:14]   G2: pass2 OK err_med=-0.00063ch (434s)
+[18:56:15]   G1: pass2 OK err_med=+0.00005ch (435s)
+[18:56:15] workers done in 7.3 min
+[18:56:15] LS done: 1 epochs from t=60s
+Traceback (most recent call last):
+  File "d:\workbuddy\GNSSSignal\gnss-sim\.workbuddy\rx_realtime_300.py", line 690, in <module>
+    f"(G{summary['nsys']['G']}/E{summary['nsys']['E']})")
+    ^^^
+  File "d:\workbuddy\GNSSSignal\gnss-sim\.workbuddy\rx_realtime_300.py", line 620, in main
+    obs_rows.append({"k_sow": k, "date": d, "svs": s_d})
+    ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\workbuddy\GNSSSignal\gnss-sim\.workbuddy\rx_realtime_300.py", line 354, in rinex3_nav
+    "                                                        END OF HEADER",
+              ^^^^^^^^^^
+KeyError: 'prn'

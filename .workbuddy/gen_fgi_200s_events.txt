@@ -1,0 +1,404 @@
+data: {"progress": 1.31072e-05}
+
+data: {"progress": 0.0050200576}
+
+data: {"progress": 0.010027008}
+
+data: {"progress": 0.0150339584}
+
+data: {"progress": 0.0200409088}
+
+data: {"progress": 0.0250478592}
+
+data: {"progress": 0.0300548096}
+
+data: {"progress": 0.035061760000000004}
+
+data: {"progress": 0.0400687104}
+
+data: {"progress": 0.0450756608}
+
+data: {"progress": 0.0500826112}
+
+data: {"progress": 0.0550895616}
+
+data: {"progress": 0.060096512000000005}
+
+data: {"progress": 0.0651034624}
+
+data: {"progress": 0.07011041280000001}
+
+data: {"progress": 0.07511736320000001}
+
+data: {"progress": 0.0801243136}
+
+data: {"progress": 0.085131264}
+
+data: {"progress": 0.0901382144}
+
+data: {"progress": 0.0951451648}
+
+data: {"progress": 0.1001521152}
+
+data: {"progress": 0.1051590656}
+
+data: {"progress": 0.110166016}
+
+data: {"progress": 0.11517296640000001}
+
+data: {"progress": 0.12017991680000001}
+
+data: {"progress": 0.1251868672}
+
+data: {"progress": 0.1301938176}
+
+data: {"progress": 0.135200768}
+
+data: {"progress": 0.14020771840000001}
+
+data: {"progress": 0.1452146688}
+
+data: {"progress": 0.15022161920000002}
+
+data: {"progress": 0.1552285696}
+
+data: {"progress": 0.16023552}
+
+data: {"progress": 0.1652424704}
+
+data: {"progress": 0.1702494208}
+
+data: {"progress": 0.1752563712}
+
+data: {"progress": 0.1802633216}
+
+data: {"progress": 0.185270272}
+
+data: {"progress": 0.1902772224}
+
+data: {"progress": 0.19528417280000002}
+
+data: {"progress": 0.2002911232}
+
+data: {"progress": 0.20529807360000002}
+
+data: {"progress": 0.210305024}
+
+data: {"progress": 0.2153119744}
+
+data: {"progress": 0.2203189248}
+
+data: {"progress": 0.2253258752}
+
+data: {"progress": 0.2303328256}
+
+data: {"progress": 0.235339776}
+
+data: {"progress": 0.24034672640000002}
+
+data: {"progress": 0.2453536768}
+
+data: {"progress": 0.2503606272}
+
+data: {"progress": 0.2553675776}
+
+data: {"progress": 0.260374528}
+
+data: {"progress": 0.26538147840000004}
+
+data: {"progress": 0.2703884288}
+
+data: {"progress": 0.2753953792}
+
+data: {"progress": 0.2804023296}
+
+data: {"progress": 0.28540928}
+
+data: {"progress": 0.29041623040000003}
+
+data: {"progress": 0.2954231808}
+
+data: {"progress": 0.3004301312}
+
+data: {"progress": 0.3054370816}
+
+data: {"progress": 0.31044403200000004}
+
+data: {"progress": 0.3154509824}
+
+data: {"progress": 0.3204579328}
+
+data: {"progress": 0.3254648832}
+
+data: {"progress": 0.3304718336}
+
+data: {"progress": 0.33547878400000003}
+
+data: {"progress": 0.3404857344}
+
+data: {"progress": 0.3454926848}
+
+data: {"progress": 0.3504996352}
+
+data: {"progress": 0.35550658560000004}
+
+data: {"progress": 0.360513536}
+
+data: {"progress": 0.3655204864}
+
+data: {"progress": 0.3705274368}
+
+data: {"progress": 0.3755343872}
+
+data: {"progress": 0.38054133760000003}
+
+data: {"progress": 0.385548288}
+
+data: {"progress": 0.3905552384}
+
+data: {"progress": 0.3955621888}
+
+data: {"progress": 0.40056913920000004}
+
+data: {"progress": 0.4055760896}
+
+data: {"progress": 0.41058304}
+
+data: {"progress": 0.4155899904}
+
+data: {"progress": 0.42059694080000004}
+
+data: {"progress": 0.42560389120000003}
+
+data: {"progress": 0.4306108416}
+
+data: {"progress": 0.435617792}
+
+data: {"progress": 0.4406247424}
+
+data: {"progress": 0.44563169280000003}
+
+data: {"progress": 0.4506386432}
+
+data: {"progress": 0.4556455936}
+
+data: {"progress": 0.460652544}
+
+data: {"progress": 0.46565949440000004}
+
+data: {"progress": 0.47066644480000003}
+
+data: {"progress": 0.4756733952}
+
+data: {"progress": 0.4806803456}
+
+data: {"progress": 0.485687296}
+
+data: {"progress": 0.49069424640000003}
+
+data: {"progress": 0.4957011968}
+
+data: {"progress": 0.5007081472}
+
+data: {"progress": 0.5057150976}
+
+data: {"progress": 0.510722048}
+
+data: {"progress": 0.5157289984}
+
+data: {"progress": 0.5207359488000001}
+
+data: {"progress": 0.5257428992000001}
+
+data: {"progress": 0.5307498496}
+
+data: {"progress": 0.5357568}
+
+data: {"progress": 0.5407637504}
+
+data: {"progress": 0.5457707008}
+
+data: {"progress": 0.5507776512}
+
+data: {"progress": 0.5557846016}
+
+data: {"progress": 0.560791552}
+
+data: {"progress": 0.5657985024000001}
+
+data: {"progress": 0.5708054528000001}
+
+data: {"progress": 0.5758124032}
+
+data: {"progress": 0.5808193536}
+
+data: {"progress": 0.585826304}
+
+data: {"progress": 0.5908332544}
+
+data: {"progress": 0.5958402048}
+
+data: {"progress": 0.6008471552}
+
+data: {"progress": 0.6058541056}
+
+data: {"progress": 0.6108610560000001}
+
+data: {"progress": 0.6158680064000001}
+
+data: {"progress": 0.6208749568}
+
+data: {"progress": 0.6258819072}
+
+data: {"progress": 0.6308888576}
+
+data: {"progress": 0.635895808}
+
+data: {"progress": 0.6409027584}
+
+data: {"progress": 0.6459097088}
+
+data: {"progress": 0.6509166592}
+
+data: {"progress": 0.6559236096000001}
+
+data: {"progress": 0.6609305600000001}
+
+data: {"progress": 0.6659375104}
+
+data: {"progress": 0.6709444608}
+
+data: {"progress": 0.6759514112}
+
+data: {"progress": 0.6809583616}
+
+data: {"progress": 0.685965312}
+
+data: {"progress": 0.6909722624}
+
+data: {"progress": 0.6959792128000001}
+
+data: {"progress": 0.7009861632000001}
+
+data: {"progress": 0.7059931136}
+
+data: {"progress": 0.711000064}
+
+data: {"progress": 0.7160070144}
+
+data: {"progress": 0.7210139648}
+
+data: {"progress": 0.7260209152}
+
+data: {"progress": 0.7310278656}
+
+data: {"progress": 0.736034816}
+
+data: {"progress": 0.7410417664000001}
+
+data: {"progress": 0.7460487168000001}
+
+data: {"progress": 0.7510556672}
+
+data: {"progress": 0.7560626176}
+
+data: {"progress": 0.761069568}
+
+data: {"progress": 0.7660765184}
+
+data: {"progress": 0.7710834688}
+
+data: {"progress": 0.7760904192}
+
+data: {"progress": 0.7810973696}
+
+data: {"progress": 0.7861043200000001}
+
+data: {"progress": 0.7911112704000001}
+
+data: {"progress": 0.7961182208}
+
+data: {"progress": 0.8011251712}
+
+data: {"progress": 0.8061321216}
+
+data: {"progress": 0.811139072}
+
+data: {"progress": 0.8161460224}
+
+data: {"progress": 0.8211529728}
+
+data: {"progress": 0.8261599232}
+
+data: {"progress": 0.8311668736000001}
+
+data: {"progress": 0.8361738240000001}
+
+data: {"progress": 0.8411807744}
+
+data: {"progress": 0.8461877248}
+
+data: {"progress": 0.8511946752}
+
+data: {"progress": 0.8562016256}
+
+data: {"progress": 0.861208576}
+
+data: {"progress": 0.8662155264}
+
+data: {"progress": 0.8712224768}
+
+data: {"progress": 0.8762294272000001}
+
+data: {"progress": 0.8812363776000001}
+
+data: {"progress": 0.886243328}
+
+data: {"progress": 0.8912502784}
+
+data: {"progress": 0.8962572288}
+
+data: {"progress": 0.9012641792}
+
+data: {"progress": 0.9062711296}
+
+data: {"progress": 0.91127808}
+
+data: {"progress": 0.9162850304}
+
+data: {"progress": 0.9212919808000001}
+
+data: {"progress": 0.9262989312000001}
+
+data: {"progress": 0.9313058816}
+
+data: {"progress": 0.936312832}
+
+data: {"progress": 0.9413197824}
+
+data: {"progress": 0.9463267328}
+
+data: {"progress": 0.9513336832}
+
+data: {"progress": 0.9563406336}
+
+data: {"progress": 0.9613475840000001}
+
+data: {"progress": 0.9663545344000001}
+
+data: {"progress": 0.9713614848000001}
+
+data: {"progress": 0.9763684352}
+
+data: {"progress": 0.9813753856}
+
+data: {"progress": 0.986382336}
+
+data: {"progress": 0.9913892864}
+
+data: {"progress": 0.9963962368}
+
+data: {"progress": 1.0}
+
+data: {"done": {"outdir": "20261111T130055188685", "size_bytes": 20000000000, "inspect": [{"prn": 4, "expected_code_phase_chips": 202.00443917119992, "measured_code_phase_chips": 202.02204, "code_phase_err_chips": 0.0176008288000844, "expected_doppler_hz": 370.8923246328929, "measured_doppler_hz": 397.8632438640607, "doppler_err_hz": 26.970919231167784, "metric_db": 11.757634272012154}, {"prn": 5, "expected_code_phase_chips": 871.6079459431494, "measured_code_phase_chips": 871.596, "code_phase_err_chips": -0.01194594314938513, "expected_doppler_hz": 3223.410481472269, "measured_doppler_hz": 3212.6450416381685, "doppler_err_hz": -10.765439834100562, "metric_db": 11.475173501548511}, {"prn": 9, "expected_code_phase_chips": 105.41651408959297, "measured_code_phase_chips": 105.40992, "code_phase_err_chips": -0.006594089592965702, "expected_doppler_hz": 1660.0453107953615, "measured_doppler_hz": 1729.4395491525847, "doppler_err_hz": 69.39423835722323, "metric_db": 10.788502836867247}, {"prn": 11, "expected_code_phase_chips": 158.5245898382127, "measured_code_phase_chips": 158.52408, "code_phase_err_chips": -0.0005098382126789147, "expected_doppler_hz": -2424.2776661252037, "measured_doppler_hz": -2419.1644934756687, "doppler_err_hz": 5.113172649535045, "metric_db": 14.688588992295525}, {"prn": 12, "expected_code_phase_chips": 177.5200388716039, "measured_code_phase_chips": 177.51096, "code_phase_err_chips": -0.009078871603890093, "expected_doppler_hz": -3825.2104220170786, "measured_doppler_hz": -3844.560200989929, "doppler_err_hz": -19.349778972850345, "metric_db": 11.926105142782575}, {"prn": 18, "expected_code_phase_chips": 514.1121560316387, "measured_code_phase_chips": 514.11888, "code_phase_err_chips": 0.006723968361256993, "expected_doppler_hz": 3920.353553485586, "measured_doppler_hz": 3943.8122310322688, "doppler_err_hz": 23.458677546682793, "metric_db": 11.00072063307467}, {"prn": 20, "expected_code_phase_chips": 559.3047870580631, "measured_code_phase_chips": 559.29456, "code_phase_err_chips": -0.010227058063037475, "expected_doppler_hz": 1255.2886725756684, "measured_doppler_hz": 1218.3057646139732, "doppler_err_hz": -36.98290796169522, "metric_db": 14.701482065884566}, {"prn": 25, "expected_code_phase_chips": 465.89331605343614, "measured_code_phase_chips": 465.8742, "code_phase_err_chips": -0.019116053436164293, "expected_doppler_hz": -2483.4782857176497, "measured_doppler_hz": -2506.786899015106, "doppler_err_hz": -23.308613297456304, "metric_db": 15.632822059830609}, {"prn": 26, "expected_code_phase_chips": 34.07123681071971, "measured_code_phase_chips": 34.04544, "code_phase_err_chips": -0.025796810719725727, "expected_doppler_hz": 3201.147776951913, "measured_doppler_hz": 3193.9387879323476, "doppler_err_hz": -7.2089890195652515, "metric_db": 13.757811211379227}, {"prn": 29, "expected_code_phase_chips": 875.8666900709359, "measured_code_phase_chips": 875.85168, "code_phase_err_chips": -0.015010070935886688, "expected_doppler_hz": 904.6465774837468, "measured_doppler_hz": 910.211363444032, "doppler_err_hz": 5.564785960285235, "metric_db": 15.399364449297153}, {"prn": 31, "expected_code_phase_chips": 1012.2706490687706, "measured_code_phase_chips": 1012.23804, "code_phase_err_chips": -0.03260906877062553, "expected_doppler_hz": 219.87445886691265, "measured_doppler_hz": 226.9571282213601, "doppler_err_hz": 7.082669354447461, "metric_db": 14.263489488193262}], "svs": [{"sys": "G", "prn": 4, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": 0.24083917183954084, "carrier_doppler_hz": 370.8923246328929, "code_phase_chips": 202.01050737257174, "pseudorange_m": 24342388.732943356, "el_deg": 13.68, "az_deg": 342.71, "gain": 0.6488, "gain_db": -3.76, "fading_model": 0}, {"sys": "G", "prn": 5, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": 2.093123689267707, "carrier_doppler_hz": 3223.410481472269, "code_phase_chips": 871.6191083469603, "pseudorange_m": 23939034.128169212, "el_deg": 16.48, "az_deg": 114.3, "gain": 0.6853, "gain_db": -3.28, "fading_model": 0}, {"sys": "G", "prn": 9, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": 1.0779515005164684, "carrier_doppler_hz": 1660.0453107953615, "code_phase_chips": 105.42098190895922, "pseudorange_m": 24913667.870589696, "el_deg": 7.65, "az_deg": 10.34, "gain": 0.546, "gain_db": -5.26, "fading_model": 0}, {"sys": "G", "prn": 11, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": -1.5742062767046778, "carrier_doppler_hz": -2424.2776661252037, "code_phase_chips": 158.52724044924253, "pseudorange_m": 22530891.115468457, "el_deg": 33.49, "az_deg": 54.4, "gain": 0.8367, "gain_db": -1.55, "fading_model": 0}, {"sys": "G", "prn": 12, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": -2.4839028714396614, "carrier_doppler_hz": -3825.2104220170786, "code_phase_chips": 177.4999141238659, "pseudorange_m": 24035413.390293237, "el_deg": 16.41, "az_deg": 127.47, "gain": 0.6844, "gain_db": -3.29, "fading_model": 0}, {"sys": "G", "prn": 18, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": 2.545684125639991, "carrier_doppler_hz": 3920.353553485586, "code_phase_chips": 514.1108698162425, "pseudorange_m": 24733642.906290058, "el_deg": 10.55, "az_deg": 196.43, "gain": 0.6009, "gain_db": -4.42, "fading_model": 0}, {"sys": "G", "prn": 20, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": 0.8151225146595249, "carrier_doppler_hz": 1255.2886725756684, "code_phase_chips": 559.3100485643808, "pseudorange_m": 22948133.879596494, "el_deg": 29.38, "az_deg": 81.51, "gain": 0.8077, "gain_db": -1.86, "fading_model": 0}, {"sys": "G", "prn": 25, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": -1.6126482374789932, "carrier_doppler_hz": -2483.4782857176497, "code_phase_chips": 465.8678694128175, "pseudorange_m": 21121995.690180343, "el_deg": 52.97, "az_deg": 148.25, "gain": 0.9347, "gain_db": -0.59, "fading_model": 0}, {"sys": "G", "prn": 26, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": 2.0786673876311124, "carrier_doppler_hz": 3201.147776951913, "code_phase_chips": 34.060641981152, "pseudorange_m": 23094000.81397711, "el_deg": 24.6, "az_deg": 296.3, "gain": 0.7688, "gain_db": -2.28, "fading_model": 0}, {"sys": "G", "prn": 29, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": 0.5874328425219135, "carrier_doppler_hz": 904.6465774837468, "code_phase_chips": 875.872573073837, "pseudorange_m": 20342771.119603705, "el_deg": 75.16, "az_deg": 220.9, "gain": 0.9899, "gain_db": -0.09, "fading_model": 0}, {"sys": "G", "prn": 31, "band": "L1", "code_len": 1023, "chip_hz": 1023000.0, "if_hz": 0.0, "code_doppler_hz": 0.14277562264085236, "carrier_doppler_hz": 219.87445886691265, "code_phase_chips": 1012.2467372259707, "pseudorange_m": 21881698.166083533, "el_deg": 41.07, "az_deg": 285.36, "gain": 0.8816, "gain_db": -1.09, "fading_model": 0}], "fading": "off", "bands": [{"id": "L1", "centre_hz": 1575420000.0, "fs": 25000000.0, "file": "gpssim.bin", "systems": ["G"], "nsv_ref_scale": 1.0}], "systems": ["G"], "trace_sim_file": "20261111T130055188685/trace_sim.json", "ephemeris_mode": "broadcast", "warnings": []}}
+

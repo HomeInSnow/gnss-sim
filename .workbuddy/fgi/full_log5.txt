@@ -1,0 +1,48 @@
+
+Welcome to:  FGI-GSRx software GNSS receiver
+by the Finnish Geospatial Research Institute
+
+                   -------------------------------
+
+gpsl1 Enabled
+
+Acquiring gpsl1 signals...
+*================================================================================================*
+|01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 |
+*================================================================================================*
+Found gpsl1 signals:
+*================================================================================================*
+|.. .. .. 04 05 .. .. .. 09 .. 11 12 .. .. .. .. .. 18 .. 20 .. .. .. .. 25 26 .. .. 29 .. 31 .. |
+*================================================================================================*
+11 gpsl1 signals acquired in 109.91 sec.
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_full at line 4 column 1
+
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_full at line 4 column 1
+
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_full at line 4 column 1
+
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_full at line 4 column 1
+
+   Tracking started at 12-Nov-2026 09:30:42
+Ms Processed: 1000 Ms Left: 1000
+Time processed: 75 Time left: 75

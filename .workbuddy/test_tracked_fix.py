@@ -4,8 +4,10 @@
 先跑基线 receiver.fix_from_iq，再跑 l1_fix.fix_from_iq_l1_multi_tracked，
 打印两者的 error_m / pdop / err_chips / 会话抖动，用于 Task #14 验收。
 
-Usage: python test_tracked_fix.py [RUN] [track_s] [dll_bw] [dll_mode]
+Usage: python test_tracked_fix.py [RUN] [track_s] [dll_bw] [dll_mode] [min_metric_db]
 默认 RUN = 20261106T084558776704, dll_mode = coh（相干 E/L + Costas PLL；可传 el/nc 对照）
+min_metric_db 默认 15.0（与 /api/receiver 同）；低仰角多的场景可降到 12 左右，
+metric 分布 ~11-16 dB 时阈值 15 会随机淘汰边际星（噪声 realization 敏感）。
 """
 import sys, json, pathlib, datetime as dt
 import numpy as np
@@ -20,6 +22,7 @@ RUN = sys.argv[1] if len(sys.argv) > 1 else "20261106T084558776704"
 track_s = float(sys.argv[2]) if len(sys.argv) > 2 else 3.0
 dll_bw = float(sys.argv[3]) if len(sys.argv) > 3 else 0.5
 dll_mode = sys.argv[4] if len(sys.argv) > 4 else "coh"
+min_metric_db = float(sys.argv[5]) if len(sys.argv) > 5 else 15.0
 
 od = pathlib.Path("out") / RUN
 meta = json.loads((od / "meta.json").read_text())
@@ -43,7 +46,7 @@ tow = ((delta.days % 7) * 86400 + delta.seconds + delta.microseconds / 1e6
 marker = (float(cfg["lat"]), float(cfg["lon"]), float(cfg["alt"]))
 
 print(f"run={RUN}  systems={systems}  engine={engine}  track_s={track_s}"
-      f"  bw={dll_bw}  dll_mode={dll_mode}")
+      f"  bw={dll_bw}  dll_mode={dll_mode}  min_metric_db={min_metric_db}")
 
 # --- baseline: snapshot acquisition fix (the /api/receiver default path)
 base = receiver.fix_from_iq(
@@ -59,10 +62,21 @@ print(f"baseline : prns={len(base['prns_used'])}  error_m={be:.2f}  "
       f"resid_rms={base['residual_rms_m']:.2f}")
 
 # --- tracking fix (carrier-aided DLL sessions)
-afn = default_atmo_fn(rinex, marker, tow) if rinex else None
+# Mirror /api/receiver policy: remove only what the engine injected
+# (meta.config.atmosphere + sv_clock; older runs default to injected).
+_atm = cfg.get("atmosphere")
+_iono_on = _atm is None or str(_atm.get("ionosphere", "off")) != "off"
+_tropo_on = _atm is None or str(_atm.get("troposphere", "off")) != "off"
+_svc = bool(cfg.get("sv_clock", True))
+afn = default_atmo_fn(rinex, marker, tow, ionosphere=_iono_on,
+                      troposphere=_tropo_on) \
+    if (rinex and (_iono_on or _tropo_on)) else None
+print(f"policy: iono_on={_iono_on} tropo_on={_tropo_on} sv_clock={_svc} "
+      f"atmo_fn={'on' if afn else 'off'}")
 tr = fix_from_iq_l1_multi_tracked(
     od, meta, eph, tow, approx_llh=marker, marker_llh=marker,
-    atmo_fn=afn, track_s=track_s, dll_bw_hz=dll_bw, dll_mode=dll_mode)
+    atmo_fn=afn, sv_clock=_svc, track_s=track_s, dll_bw_hz=dll_bw,
+    dll_mode=dll_mode, min_metric_db=min_metric_db)
 if "error" in tr:
     print(f"tracked  ERROR: {tr['error']}  skipped={json.dumps(tr.get('skipped', {}))}")
     sys.exit(1)

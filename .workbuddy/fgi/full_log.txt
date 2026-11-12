@@ -1,0 +1,65 @@
+
+Welcome to:  FGI-GSRx software GNSS receiver
+by the Finnish Geospatial Research Institute
+
+                   -------------------------------
+
+gpsl1 Enabled
+
+Acquiring gpsl1 signals...
+*================================================================================================*
+|01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 |
+*================================================================================================*
+Found gpsl1 signals:
+*================================================================================================*
+|.. .. .. 04 05 .. .. .. 09 .. 11 12 .. .. .. .. .. 18 .. 20 .. .. .. .. 25 26 .. .. 29 .. 31 .. |
+*================================================================================================*
+11 gpsl1 signals acquired in  85.39 sec.
+   Tracking started at 11-Nov-2026 22:24:03
+Ms Processed: 1000 Ms Left: 199000
+Time processed: 128 Time left: 25563
+   Bit sync for gpsl1 prn 31 found at 1500 with index 14
+   Bit sync for gpsl1 prn 9 found at 1520 with index 12
+   Bit sync for gpsl1 prn 4 found at 1620 with index 3
+   Bit sync for gpsl1 prn 25 found at 1620 with index 12
+   Bit sync for gpsl1 prn 5 found at 1640 with index 1
+   Bit sync for gpsl1 prn 18 found at 1640 with index 4
+   Bit sync for gpsl1 prn 11 found at 1840 with index 17
+   Bit sync for gpsl1 prn 26 found at 1840 with index 19
+   Bit sync for gpsl1 prn 12 found at 1860 with index 2
+   Bit sync for gpsl1 prn 20 found at 1880 with index 18
+   Bit sync for gpsl1 prn 29 found at 1980 with index 9
+Ms Processed: 2000 Ms Left: 198000
+Time processed: 258 Time left: 25581
+Ms Processed: 3000 Ms Left: 197000
+Time processed: 390 Time left: 25603
+Ms Processed: 4000 Ms Left: 196000
+Time processed: 521 Time left: 25516
+Ms Processed: 5000 Ms Left: 195000
+Time processed: 652 Time left: 25442
+Ms Processed: 6000 Ms Left: 194000
+Time processed: 784 Time left: 25340
+Ms Processed: 7000 Ms Left: 193000
+Time processed: 919 Time left: 25347
+Ms Processed: 8000 Ms Left: 192000
+Time processed: 1064 Time left: 25540
+Ms Processed: 9000 Ms Left: 191000
+Time processed: 1211 Time left: 25705
+Ms Processed: 10000 Ms Left: 190000
+Time processed: 1358 Time left: 25801
+Ms Processed: 11000 Ms Left: 189000
+Time processed: 1505 Time left: 25854
+Ms Processed: 12000 Ms Left: 188000
+Time processed: 1652 Time left: 25876
+Ms Processed: 13000 Ms Left: 187000
+Time processed: 1794 Time left: 25800
+Ms Processed: 14000 Ms Left: 186000
+Time processed: 1940 Time left: 25772
+Ms Processed: 15000 Ms Left: 185000
+Time processed: 2088 Time left: 25749
+Ms Processed: 16000 Ms Left: 184000
+Time processed: 2233 Time left: 25677
+Ms Processed: 17000 Ms Left: 183000
+Time processed: 2378 Time left: 25593
+Ms Processed: 18000 Ms Left: 182000
+Time processed: 2506 Time left: 25336

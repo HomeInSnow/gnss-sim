@@ -1,0 +1,34 @@
+parse_rinex_multi: dropped 81 out-of-range PRN record(s) from D:\workbuddy\GNSSSignal\gnss-sim\data\rinex\BRDC_2026283.rnx (e.g. E51, E52, E53, E61, E62, E63)
+=== verify_sim_rx  run=20261110T020937303125  epochs=30 @ 1.0s  -> D:\workbuddy\GNSSSignal\gnss-sim\out\20261110T020937303125\verify_sim_rx.json
+
+[G] 10 SVs
+  code_trk_rms_ch      worst=0.015334 mean=0.0082507  thr=0.02    PASS
+  code_trk_max_ch      worst=0.083413 mean=0.042933  thr=0.15    PASS
+  pr_trk_rms_m         worst=4.4935 mean=2.4179  thr=8       PASS
+  pr_trk_max_m         worst=24.444 mean=12.582  thr=45      PASS
+  fd_trk_rms_hz        worst=0.56776 mean=0.25994  thr=2       PASS
+  code_snap_rms_ch     worst=0.073045 mean=0.061023  thr=0.177189 PASS
+  pr_snap_rms_m        worst=21.406 mean=17.883  thr=53.9256 PASS
+  fd_snap_max_hz       worst=104.82 mean=67.876  thr=220     PASS
+  phase_drift_cycps    worst=0.003248 mean=0.0018236  thr=0.5     PASS
+  el_max_deg           worst=0 mean=0  thr=1       PASS
+  strength_slope       worst=0.016429 mean=0.016429  thr=0.25    PASS
+  strength_r           worst=0.99703 mean=0.99703  thr=0.6     PASS
+  nav demod          10/10 decoded, 250 fields, mismatched=[]  PASS
+
+[E] 15 SVs
+  code_trk_rms_ch      worst=0.02018 mean=0.011965  thr=0.02    FAIL
+  code_trk_max_ch      worst=0.10861 mean=0.063185  thr=0.15    PASS
+  pr_trk_rms_m         worst=5.9139 mean=3.5062  thr=8       PASS
+  pr_trk_max_m         worst=31.827 mean=18.516  thr=45      PASS
+  fd_trk_rms_hz        worst=0.081257 mean=0.03833  thr=2       PASS
+  code_snap_rms_ch     worst=0.063603 mean=0.060331  thr=0.177189 PASS
+  pr_snap_rms_m        worst=18.639 mean=17.68  thr=53.9256 PASS
+  fd_snap_max_hz       worst=100.17 mean=37.581  thr=220     PASS
+  phase_drift_cycps    worst=0.025315 mean=0.0089026  thr=0.5     PASS
+  el_max_deg           worst=0 mean=0  thr=1       PASS
+  strength_slope       worst=0.036463 mean=0.036463  thr=0.25    PASS
+  strength_r           worst=0.7447 mean=0.7447  thr=0.6     PASS
+  nav demod          15/15 decoded, 360 fields, mismatched=[]  PASS
+
+VERDICT: FAIL
