@@ -1,0 +1,60 @@
+schema_version: 1
+request_id: pocketsdr_verify_20261113T223203
+created_at: 2026-11-13T22:32:03+08:00
+updated_at: 2026-11-13T22:55:00+08:00
+
+entry_type: expand_writing
+writing_mode: organize
+stage_chain: [1, 2, 3]   # organize 模式：S1/S2 由编排层自产（§2.5），S3 走 doc-converter
+
+output_docx_path: "D:\\workbuddy\\GNSSSignal\\gnss-sim\\output\\pocketsdr_verify_20261113T223203\\stage3\\PocketSDR深入分析与gnss-sim第三方互验报告.docx"
+output_docx_user_specified: false
+
+materials:
+  - "D:\\workbuddy\\GNSSSignal\\PocketSDR_深入分析_20261113.md"
+
+current_stage: completed
+
+stages:
+  stage_0:
+    status: completed
+    completed_at: 2026-11-13T22:32:03+08:00
+    decision: expand_writing/organize   # 资料+产出新文档；无外部数据信号；文体非论文/合同/法律公文
+  stage_1:
+    status: completed
+    started_at: 2026-11-13T22:32:03+08:00
+    completed_at: 2026-11-13T22:40:00+08:00
+    output_path: "stage1/organized_draft.md"
+    genre: business-report
+    expert_used: null
+    route_tag: organize_self_draft      # §2.5 编排层自产 organized_draft.md；短文判定=非短文（无关键词且 >2000 字）
+  stage_2:
+    status: completed
+    started_at: 2026-11-13T22:40:00+08:00
+    completed_at: 2026-11-13T22:44:00+08:00
+    route: html
+    html_sub: template                   # organize §2.5 自产 HTML（无 design-token，:root 自行声明）
+    output_path: "stage2/formatted-PocketSDR深入分析与gnss-sim第三方互验报告.html"
+    output_format: html
+    skills_invoked: ["html-review(review_html.py genre=business-report passed=100)"]
+    design_tokens_path: null             # organize 无 design-token，:root 自行声明
+    fallback: false
+    fallback_reason: null
+  stage_3:
+    status: completed
+    started_at: 2026-11-13T22:52:00+08:00
+    completed_at: 2026-11-13T22:55:00+08:00
+    executor: "doc-converter"
+    input_format: html
+    output_path: "D:\\workbuddy\\GNSSSignal\\gnss-sim\\output\\pocketsdr_verify_20261113T223203\\stage3\\PocketSDR深入分析与gnss-sim第三方互验报告.docx"
+    skill_used: ["html-to-doc"]
+    present_files_opened: true
+    fallback: false
+    fallback_reason: null
+    notes: "convert_doc.py success=true aigc_tag=true（快通道 --no-preflight --no-verify）；word/media 嵌入 image1/image2.png（base64 dataURI 路线，历史坑已规避）"
+
+consistency_check:
+  output_files_exist: pass        # organized_draft.md / formatted-*.html / 成品 docx 实际 stat 均存在非空
+  stage_chain_complete: pass      # stage_1/2/3 均 completed（organize：S1/S2 编排层自产）
+  last_checked_at: 2026-11-13T22:55:00+08:00
+  errors: []
