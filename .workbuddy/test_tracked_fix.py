@@ -126,3 +126,16 @@ if tr.get("skipped"):
     print("  skipped:", json.dumps(tr["skipped"]))
 verdict = "PASS" if te <= max(be, 10.0) else "FAIL"
 print(f"VERDICT: {verdict}  (tracked {te:.2f} m vs baseline {be:.2f} m)")
+
+# --- persist machine-readable result for report pipelines (whu FGI compare etc.)
+out_json = pathlib.Path(__file__).with_name(f"trk_{RUN}_{dll_mode}.json")
+out_json.write_text(json.dumps({
+    "run": RUN, "dll_mode": dll_mode, "track_s": track_s, "dll_bw": dll_bw,
+    "min_metric_db": min_metric_db, "marker": marker,
+    "baseline": {k: base.get(k) for k in ("ecef", "pdop", "residual_rms_m")}
+    | {"error_m": be, "prns_used": list(base["prns_used"])},
+    "tracked": {k: tr.get(k) for k in ("ecef", "pdop", "residual_rms_m")}
+    | {"error_m": te, "prns_used": list(tr["prns_used"]), "per_sv": tr["per_sv"],
+       "skipped": tr.get("skipped", {})},
+}, indent=2, default=float))
+print(f"result json -> {out_json}")
