@@ -232,7 +232,11 @@ ol.steps li {
         <li><a href="#section-4-3">（三）改正前后对照与归因闭环</a></li>
       </ol>
     </li>
-    <li><a href="#section-5">五、C/N₀ 结果对比</a></li>
+    <li><a href="#section-5">五、C/N₀ 结果对比</a>
+      <ol>
+        <li><a href="#section-5-1">（一）−3.2 dB 差距的定量归因定案（报告发布后专项）</a></li>
+      </ol>
+    </li>
     <li><a href="#section-6">六、结论</a></li>
     <li><a href="#section-7">附录　复现命令与产物清单</a></li>
   </ol>
@@ -243,12 +247,13 @@ ol.steps li {
 
 <h1 id="section-1">一、概述与研究范围</h1>
 <p class="body-p">本报告在上一版对比分析（whu60 场景，run 20261112T090748645439）两组实证归因的基础上，落地实施两项治本改正——卫星钟差注入策略改正（sv_clock=true，配合星历 af 与 TGD 双清零）与 int16 线性区回归（全局衰减 −12 dB、噪声跟随信号缩放），并在改正后场景（whu60b，run 20261113T033315803665）上重新运行 gnss-sim 内置跟踪解与 FGI-GSRx 2.1.3 全量管线。</p>
-<table class="abstract-card">
+<table class="abstract-card executive-summary">
   <tbody><tr><td>
     <p class="card-lead">核心结论</p>
     <p class="card-p">1. FGI 水平 RMSE 由 2.772 m 降至 0.630 m、3D RMSE 由 2.869 m 降至 1.784 m；改正后 FGI 平均误差（−0.06，−0.58，−1.63）m 与上一版三源分解预测的跟踪层残差（约 0，−1.13，−1.60）m 逐轴同向同量级，归因闭环成立。</p>
     <p class="card-p">2. int16 饱和率由 38.54 % 降至 0.056 %，FGI C/N₀ 总均值回升 +0.39 dB，与裁剪项 −0.46 dB 的实证归因定量吻合；C/N₀ 名义标定 44.86 dB-Hz 保持不变。</p>
     <p class="card-p">3. 内置跟踪解 3D 误差 0.593 m（12 星全留），会话均值伪距残差 0.000 84 码片（约 0.25 m），仍为全场最优指标。</p>
+    <p class="card-p">4. C/N₀ 总均值与名义注入的 −3.2 dB 差距完成定量归因定案：CDMA 物理泄漏（≈−1.0~−1.3 dB，与码族无关）+ FGI 估计器实现 artifact（≈−1.85 dB）+ 公式固有散布（±0.25 dB）；第三方独立接收机 PocketSDR 逐星均值 42.0 dB-Hz 提供结构独立佐证（详见第五章）。</p>
   </td></tr></tbody>
 </table>
 <p class="body-p">本报告遵循既定范围铁律：仅对比「gnss-sim 内置跟踪解」与「FGI-GSRx 2.1.3 全量处理」两台软件接收机，且仅使用武大 IGS 下载星历驱动的改正后场景 run；旧 run 仅作改正前后对照基线，其余场景与跟踪模式一概不进入统计与汇总。全部数字可追溯至工程内脚本实测输出（见附录产物清单）。</p>
@@ -348,16 +353,43 @@ ol.steps li {
     <tr><td>G26</td><td>42.08</td><td>0.50</td><td>G18</td><td>37.81</td><td>0.35</td></tr>
   </tbody>
 </table>
-<p class="body-p">run 总均值 41.676 dB-Hz，逐星与仰角单调。三点判读：其一，总均值 41.29 → 41.676（+0.39 dB）与裁剪项 −0.46 dB 的实证归因定量吻合（差 0.07 dB 在估计器散布内）；剩余与名义值 44.86 的 −3.2 dB 构成不变，即 CDMA 星间互扰 −1.25 dB 与 FGI 估计器自身偏置 −1.8 dB（论文同一估计器读数 44.85 同含后者），不属于本轮两项改正的目标域。其二，高仰角星 G29/G25 达 45.5/45.2 dB-Hz、已越过名义值——线性区中滑窗方差估计器受非目标星互扰抬升、散布增大（σ 由 0.6 增至 1.1），whu60 时代的窄散布实为饱和裁剪压扁所致。其三，引擎注入名义值解析验证不变：measured_snr_db(−18.33) + 带宽换算 74.0 − 10·log10(12) = 44.86 dB-Hz，与论文 44.85 吻合，噪声跟随信号缩放后标定依旧正确。</p>
+<p class="body-p">run 总均值 41.676 dB-Hz，逐星与仰角单调。三点判读：其一，总均值 41.29 → 41.676（+0.39 dB）与裁剪项 −0.46 dB 的实证归因定量吻合（差 0.07 dB 在估计器散布内）；剩余与名义值 44.86 的 −3.2 dB 差距，报告发布后经四步对照实验完成定量归因定案（见本章第（一）节）：拆分为 CDMA 物理泄漏 ≈−1.0~−1.3 dB（两估计器共有、与码族无关）与 FGI 估计器实现 artifact ≈−1.85 dB（论文同一估计器读数 44.85 同含后者），不属于本轮两项改正的目标域。其二，高仰角星 G29/G25 达 45.5/45.2 dB-Hz、已越过名义值——线性区中滑窗方差估计器受非目标星互扰抬升、散布增大（σ 由 0.6 增至 1.1），whu60 时代的窄散布实为饱和裁剪压扁所致。其三，引擎注入名义值解析验证不变：measured_snr_db(−18.33) + 带宽换算 74.0 − 10·log10(12) = 44.86 dB-Hz，与论文 44.85 吻合，噪声跟随信号缩放后标定依旧正确。</p>
 <p class="figure-p"><img src="D:/workbuddy/GNSSSignal/gnss-sim/out/fgi/cmp_whu60b_cn0.png" alt="改正后 FGI 逐星 C/N0 与名义注入/论文均值参考线" width="560"></p>
 <p class="caption-p">图 3　改正后场景 FGI 逐星 C/N₀（总均值 41.68 dB-Hz）</p>
 <p class="callout-p">&nbsp;&nbsp;公平性说明：论文表 18 的 44.85 dB-Hz 本身是 FGI 同一估计器在 Skydel 信号上的读数，估计器系统偏置在论文侧同样存在；本轮线性区改正后，可归因引擎信号的裁剪项已基本兑现消除，剩余与名义值的差为 CDMA 固有与两侧同有的估计器偏置。</p>
+
+<h2 id="section-5-1">（一）−3.2 dB 差距的定量归因定案（报告发布后专项）</h2>
+<p class="body-p">针对 FGI 总均值 41.676 与引擎名义注入 44.86 的 −3.184 dB 差距，报告发布后以四步对照实验完成归因定案，拆分如下表。</p>
+<table class="data">
+  <caption>表 6　−3.2 dB 差距的定量分解</caption>
+  <thead><tr><th>成分</th><th>量级</th><th>性质</th><th>关键依据</th></tr></thead>
+  <tbody>
+    <tr><td>CDMA 星间互扰／码相位泄漏</td><td>≈−1.0~−1.3 dB</td><td>物理，两估计器共有，与码族无关</td><td>真值 IQ 双估计器一致；真 Gold 码 vs 理想随机码读数仅差 0~0.3 dB</td></tr>
+    <tr><td>FGI CN0fromSNR 估计器 artifact</td><td>≈−1.85 dB</td><td>实现缺陷（比特翻转×自泄漏方差污染）</td><td>逐星 nlStd 定量吻合 12/12 + 受控合成实验</td></tr>
+    <tr><td>公式固有散布</td><td>±0.25 dB</td><td>估计器固有</td><td>solo 单星对照组</td></tr>
+  </tbody>
+</table>
+<p class="body-p">证据一（真值 IQ 双估计器）：以内置跟踪解的载体多普勒为种子，对真值 IQ 前 5 s 重测：内置功率差分式真值估计器均值 43.31 dB-Hz、1 ms 相干的 FGI 复刻估计器 43.59 dB-Hz，而合成 NOM 理论均值 44.59 dB-Hz——两个结构独立的估计器一致地读低约 1.0~1.3 dB（差 −1.28/−1.0，含量化贡献；两者仅差 0.29 dB），说明这部分亏损与具体估计器实现无关，源于非目标星 1/N 扩谱泄漏进入估计器噪声窗的物理机理。矩阵实验进一步表明真 Gold 码（官方 kG2Taps 抽头）与理想随机码读数仅差 0~0.3 dB，可排除「Gold 码族特殊互扰」因素。</p>
+<p class="body-p">证据二（FGI −1.85 dB 额外偏置根因）：whu60b 的 FGI 实际运行于 trackingMode='20msTracking'（state 实锤 blockSize=500000、PDIcode=0.02），20 ms 相干块恰为一个 50 bps 导航比特宽度。目标星 −2 chip 噪声指的自相关泄漏本为常数（方差式估计器减均值即可免疫），但比特翻转将其随机化为零均值波动、计入 noiseVariance，形成每星 −20·log10(σ_nl/thermal_min) 的偏置。定量检验：state 逐星 nlStd（2.10~4.08×10⁶，2.8 dB 散布）经公式预测的偏置，与「FGI 本体 − 1 ms 复刻」实测差在 12/12 星吻合（差 ≤0.7 dB），代表星如表 7。</p>
+<table class="data">
+  <caption>表 7　逐星 nlStd 预测偏置与实测差对照（代表星，dB）</caption>
+  <thead><tr><th>卫星</th><th>预测偏置</th><th>实测差</th><th>卫星</th><th>预测偏置</th><th>实测差</th></tr></thead>
+  <tbody>
+    <tr><td>G28</td><td>−5.77</td><td>−5.07</td><td>G18</td><td>−3.77</td><td>−3.49</td></tr>
+    <tr><td>G4</td><td>−4.06</td><td>−3.88</td><td>G5</td><td>−2.90</td><td>−2.97</td></tr>
+  </tbody>
+</table>
+<p class="body-p">证据三（受控合成实验）：同一信号下关闭比特翻转，FGI 偏置仅 −0.05 dB（公式标定正确）；开启后 −3.73 dB，且 var(nl) 仅在高泄漏星爆增；solo 单星组（无星间互扰）偏置 ±0.23 dB，公式固有偏置可忽略。据此，高仰角星 G29 读数 45.5 dB-Hz 越过名义值正是该方差式波动的散布所致，非物理增益（与上文判读其二互证）。</p>
+<p class="body-p">证据四（第三方独立基准）：第三方独立接收机 PocketSDR v0.22（pocket_trk，功率差分式 C/N₀，结构上不受比特翻转×方差污染机理影响，经本地编译与端到端验证）回放同一 gpssim.bin：12/12 星锁定，逐星均值 42.0 dB-Hz（区间 38.9~45.9），较 FGI 总均值 41.676 高约 0.3 dB、量级一致。三基准排布——内置真值估计器 43.31 / PocketSDR 42.0 / FGI 41.676——呈现结构独立性递进，支持归因结论：−3.2 dB 亏损的主体是 FGI 估计器实现 artifact 与 CDMA 固有物理，并非仿真信号质量缺陷。</p>
+<p class="figure-p"><img src="D:/workbuddy/GNSSSignal/gnss-sim/out/fgi/cmp_whu60b_cn0_waterfall.png" alt="FGI C/N0 −3.2 dB 差距瀑布分解" width="560"></p>
+<p class="caption-p">图 4　−3.2 dB 差距瀑布分解（名义 44.86 → CDMA 泄漏 −1.2 → FGI artifact −1.85 → FGI 实测 41.676，残差 −0.13 落于 ±0.25 公式固有散布内）</p>
 
 <h1 id="section-6">六、结论</h1>
 <p class="body-p">1. 两项改正按预期兑现：sv_clock=true 配合 af/TGD 双清零星历，消除了 FGI 改正链与注入策略错配产生的约 2.2 m 恒定水平偏置（水平 RMSE 2.772 → 0.630 m）；全局衰减 −12 dB 与 snr_db 噪声跟随使 int16 饱和率从 38.54 % 降至 0.056 %，消除裁剪失真风险且保持 C/N₀ 名义标定不变。</p>
 <p class="body-p">2. 归因体系完成闭环验证：改正后 FGI 剩余误差与上一版三源分解的跟踪层预测逐轴对齐（E/U 精确、N 同量级），C/N₀ 回升量与裁剪项实证值吻合，反证了上一版「非引擎信号质量缺陷」的定性判断。</p>
 <p class="body-p">3. 横向能力结论保持：内置跟踪解在改正后场景仍为全场最优（3D 0.593 m、会话均值伪距残差 0.000 84 码片约 0.25 m），优于 FGI 全量（3D RMSE 1.784 m）与论文口径（3D RMSE 2.430 m，后者含大气与干扰）。</p>
-<p class="body-p">后续可选：内置解 6×10 s 滑窗补充 std 口径统计；FGI rawP 逐星常数偏置（跟踪层残差）的码间互扰机理专项分析。</p>
+<p class="body-p">4. C/N₀ −3.2 dB 亏损经四步对照实验完成定量归因（见第五章）：主体为 CDMA 物理泄漏（≈−1.0~−1.3 dB，与码族无关）与 FGI 估计器实现 artifact（≈−1.85 dB，20 ms 相干块比特翻转将目标星自相关泄漏随机化计入噪声方差），公式固有散布 ±0.25 dB；第三方独立接收机 PocketSDR 逐星均值 42.0 dB-Hz（结构上不受该 artifact 影响）提供独立佐证。亏损非仿真信号质量缺陷，属估计器侧问题，与本报告对 FGI 定位误差的「非引擎缺陷」定性一致。</p>
+<p class="body-p">后续可选：内置解 6×10 s 滑窗补充 std 口径统计；FGI rawP 逐星常数偏置（跟踪层残差）的码间互扰机理专项分析（注：第五章已定量分离 C/N₀ 侧 MAI 与 FGI artifact，rawP 定位残差的码间互扰归因仍可独立展开）。</p>
 
 <h1 id="section-7">附录　复现命令与产物清单</h1>
 <p class="body-p">复现命令（bash，仓库根目录）：</p>
