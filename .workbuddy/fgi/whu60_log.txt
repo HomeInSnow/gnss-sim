@@ -1,0 +1,204 @@
+
+Welcome to:  FGI-GSRx software GNSS receiver
+by the Finnish Geospatial Research Institute
+
+                   -------------------------------
+
+gpsl1 Enabled
+
+Acquiring gpsl1 signals...
+*================================================================================================*
+|01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 |
+*================================================================================================*
+Found gpsl1 signals:
+*================================================================================================*
+|.. .. .. 04 05 .. .. .. 09 .. 11 12 .. .. .. .. .. 18 .. 20 .. .. .. .. 25 26 .. 28 29 .. 31 .. |
+*================================================================================================*
+12 gpsl1 signals acquired in  84.57 sec.
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_whu60 at line 4 column 1
+
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_whu60 at line 4 column 1
+
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_whu60 at line 4 column 1
+
+warning: struct: converting a classdef object into a struct overrides the access restrictions defined for properties. All properties are returned, including private and protected ones.
+warning: called from
+    gsrx at line 86 column 5
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_whu60 at line 4 column 1
+
+   Tracking started at 12-Nov-2026 17:12:22
+Ms Processed: 1000 Ms Left: 1000
+Time processed: 63 Time left: 63
+   Bit sync for gpsl1 prn 11 found at 1520 with index 17
+   Bit sync for gpsl1 prn 20 found at 1520 with index 18
+   Bit sync for gpsl1 prn 25 found at 1520 with index 12
+   Bit sync for gpsl1 prn 26 found at 1520 with index 19
+   Bit sync for gpsl1 prn 28 found at 1520 with index 14
+   Bit sync for gpsl1 prn 29 found at 1520 with index 9
+   Bit sync for gpsl1 prn 31 found at 1520 with index 14
+   Bit sync for gpsl1 prn 4 found at 1540 with index 3
+   Bit sync for gpsl1 prn 5 found at 1540 with index 1
+   Bit sync for gpsl1 prn 12 found at 1540 with index 2
+   Bit sync for gpsl1 prn 18 found at 1540 with index 4
+   Bit sync for gpsl1 prn 9 found at 1760 with index 5
+Ms Processed: 2000 Ms Left: 0
+Time processed: 128 Time left: 0
+   Tracking is over (elapsed time 00:02:08)
+   Tracking started at 12-Nov-2026 17:14:31
+Ms Processed: 1000 Ms Left: 59000
+Time processed: 79 Time left: 4657
+   Bit sync for gpsl1 prn 4 found at 1500 with index 1
+   Bit sync for gpsl1 prn 5 found at 1500 with index 2
+   Bit sync for gpsl1 prn 9 found at 1500 with index 1
+   Bit sync for gpsl1 prn 12 found at 1500 with index 2
+   Bit sync for gpsl1 prn 18 found at 1500 with index 2
+   Bit sync for gpsl1 prn 11 found at 1520 with index 1
+   Bit sync for gpsl1 prn 20 found at 1520 with index 2
+   Bit sync for gpsl1 prn 25 found at 1520 with index 2
+   Bit sync for gpsl1 prn 26 found at 1520 with index 2
+   Bit sync for gpsl1 prn 28 found at 1520 with index 1
+   Bit sync for gpsl1 prn 29 found at 1520 with index 2
+   Bit sync for gpsl1 prn 31 found at 1520 with index 2
+Ms Processed: 2000 Ms Left: 58000
+Time processed: 157 Time left: 4539
+Ms Processed: 3000 Ms Left: 57000
+Time processed: 234 Time left: 4449
+Ms Processed: 4000 Ms Left: 56000
+Time processed: 312 Time left: 4369
+Ms Processed: 5000 Ms Left: 55000
+Time processed: 390 Time left: 4289
+Ms Processed: 6000 Ms Left: 54000
+Time processed: 467 Time left: 4203
+Ms Processed: 7000 Ms Left: 53000
+Time processed: 546 Time left: 4135
+Ms Processed: 8000 Ms Left: 52000
+Time processed: 626 Time left: 4066
+Ms Processed: 9000 Ms Left: 51000
+Time processed: 705 Time left: 3993
+Ms Processed: 10000 Ms Left: 50000
+Time processed: 784 Time left: 3919
+Ms Processed: 11000 Ms Left: 49000
+Time processed: 863 Time left: 3843
+Ms Processed: 12000 Ms Left: 48000
+Time processed: 942 Time left: 3767
+Ms Processed: 13000 Ms Left: 47000
+Time processed: 1021 Time left: 3691
+Ms Processed: 14000 Ms Left: 46000
+Time processed: 1100 Time left: 3614
+Ms Processed: 15000 Ms Left: 45000
+Time processed: 1179 Time left: 3537
+Ms Processed: 16000 Ms Left: 44000
+Time processed: 1258 Time left: 3460
+Ms Processed: 17000 Ms Left: 43000
+Time processed: 1337 Time left: 3383
+Ms Processed: 18000 Ms Left: 42000
+Time processed: 1416 Time left: 3304
+Ms Processed: 19000 Ms Left: 41000
+Time processed: 1495 Time left: 3226
+Ms Processed: 20000 Ms Left: 40000
+Time processed: 1574 Time left: 3147
+Ms Processed: 21000 Ms Left: 39000
+Time processed: 1652 Time left: 3069
+Ms Processed: 22000 Ms Left: 38000
+Time processed: 1730 Time left: 2989
+Ms Processed: 23000 Ms Left: 37000
+Time processed: 1809 Time left: 2910
+Ms Processed: 24000 Ms Left: 36000
+Time processed: 1888 Time left: 2832
+Ms Processed: 25000 Ms Left: 35000
+Time processed: 1966 Time left: 2753
+Ms Processed: 26000 Ms Left: 34000
+Time processed: 2046 Time left: 2676
+Ms Processed: 27000 Ms Left: 33000
+Time processed: 2125 Time left: 2598
+Ms Processed: 28000 Ms Left: 32000
+Time processed: 2205 Time left: 2520
+Ms Processed: 29000 Ms Left: 31000
+Time processed: 2284 Time left: 2442
+Ms Processed: 30000 Ms Left: 30000
+Time processed: 2363 Time left: 2363
+Ms Processed: 31000 Ms Left: 29000
+Time processed: 2441 Time left: 2283
+Ms Processed: 32000 Ms Left: 28000
+Time processed: 2518 Time left: 2204
+Ms Processed: 33000 Ms Left: 27000
+Time processed: 2597 Time left: 2124
+Ms Processed: 34000 Ms Left: 26000
+Time processed: 2676 Time left: 2046
+Ms Processed: 35000 Ms Left: 25000
+Time processed: 2755 Time left: 1968
+Ms Processed: 36000 Ms Left: 24000
+Time processed: 2832 Time left: 1888
+Ms Processed: 37000 Ms Left: 23000
+Time processed: 2911 Time left: 1810
+Ms Processed: 38000 Ms Left: 22000
+Time processed: 2990 Time left: 1731
+Ms Processed: 39000 Ms Left: 21000
+Time processed: 3067 Time left: 1652
+Ms Processed: 40000 Ms Left: 20000
+Time processed: 3146 Time left: 1573
+Ms Processed: 41000 Ms Left: 19000
+Time processed: 3223 Time left: 1493
+Ms Processed: 42000 Ms Left: 18000
+Time processed: 3301 Time left: 1415
+Ms Processed: 43000 Ms Left: 17000
+Time processed: 3379 Time left: 1336
+Ms Processed: 44000 Ms Left: 16000
+Time processed: 3457 Time left: 1257
+Ms Processed: 45000 Ms Left: 15000
+Time processed: 3535 Time left: 1178
+Ms Processed: 46000 Ms Left: 14000
+Time processed: 3612 Time left: 1099
+Ms Processed: 47000 Ms Left: 13000
+Time processed: 3690 Time left: 1021
+Ms Processed: 48000 Ms Left: 12000
+Time processed: 3768 Time left: 942
+Ms Processed: 49000 Ms Left: 11000
+Time processed: 3846 Time left: 863
+Ms Processed: 50000 Ms Left: 10000
+Time processed: 3924 Time left: 785
+Ms Processed: 51000 Ms Left: 9000
+Time processed: 4002 Time left: 706
+Ms Processed: 52000 Ms Left: 8000
+Time processed: 4079 Time left: 628
+Ms Processed: 53000 Ms Left: 7000
+Time processed: 4158 Time left: 549
+Ms Processed: 54000 Ms Left: 6000
+Time processed: 4236 Time left: 471
+Ms Processed: 55000 Ms Left: 5000
+Time processed: 4313 Time left: 392
+Ms Processed: 56000 Ms Left: 4000
+Time processed: 4392 Time left: 314
+Ms Processed: 57000 Ms Left: 3000
+Time processed: 4470 Time left: 235
+Ms Processed: 58000 Ms Left: 2000
+Time processed: 4548 Time left: 157
+Ms Processed: 59000 Ms Left: 1000
+Time processed: 4626 Time left: 78
+Not able to read the specified number of samples from file, exiting!
+error: value on right hand side of assignment is undefined
+error: called from
+    getDataForCorrelation at line 62 column 1
+    GNSSCorrelation at line 38 column 2
+    doTracking at line 72 column 17
+    gsrx at line 115 column 9
+    run_fgi at line 29 column 1
+    run at line 78 column 7
+    run_fgi_whu60 at line 4 column 1
