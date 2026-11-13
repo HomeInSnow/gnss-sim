@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="docx-page-size" content="A4">
+<title>改正后场景（whu60b）内置跟踪解与 FGI-GSRx 全量处理对比分析报告</title>
+<style>
+:root {
+  --fs-h1: 16pt;
+  --fs-h2: 14pt;
+  --fs-h3: 12pt;
+  --fs-body: 12pt;
+  --fs-caption: 12pt;
+  --ff-body: "SimSun", "宋体", "Microsoft YaHei", serif;
+  --ff-heading: "SimHei", "黑体", "Microsoft YaHei", sans-serif;
+  --ff-mono: Consolas, "Courier New", monospace;
+  --lh-body: 1.6;
+  --fw-bold: 700;
+  --fw-normal: 400;
+  --color-primary: #1565C0;
+  --color-text: #212121;
+  --color-muted: #616161;
+  --color-border: #C8D1DC;
+  --color-bg-head: #EEF4FB;
+  --color-callout-bg: #EEF4FB;
+  --color-cover-accent: #0D47A1;
+  --fs-cover-title: 28pt;
+  --fs-cover-sub: 14pt;
+  --spacing-paragraph: 0.6em;
+  --spacing-section: 1.4em;
+  --page-content-width: 15.6cm;
+}
+@page {
+  margin: 2.54cm 2.6cm 2.54cm 3.17cm;
+  @bottom-center { content: counter(page); }
+}
+@page cover {
+  @bottom-center { content: none; }
+}
+section[role="cover"] { page: cover; }
+body {
+  max-width: var(--page-content-width);
+  margin-left: auto;
+  margin-right: auto;
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  color: var(--color-text);
+}
+p.body-p {
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  text-align: justify;
+  text-indent: 2em;
+  margin-bottom: var(--spacing-paragraph);
+  color: var(--color-text);
+}
+h1 {
+  font-family: var(--ff-heading);
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  text-align: left;
+  color: var(--color-primary);
+  margin-top: var(--spacing-section);
+  margin-bottom: var(--spacing-paragraph);
+}
+h2 {
+  font-family: var(--ff-heading);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  text-align: left;
+  color: var(--color-text);
+  margin-top: var(--spacing-paragraph);
+  margin-bottom: var(--spacing-paragraph);
+}
+.cover-title {
+  font-family: var(--ff-heading);
+  font-size: var(--fs-cover-title);
+  font-weight: var(--fw-bold);
+  text-align: center;
+  color: var(--color-cover-accent);
+  margin-top: 6em;
+  margin-bottom: var(--spacing-section);
+}
+.cover-sub {
+  font-family: var(--ff-body);
+  font-size: var(--fs-cover-sub);
+  font-weight: var(--fw-normal);
+  text-align: center;
+  color: var(--color-muted);
+  margin-bottom: var(--spacing-paragraph);
+}
+.cover-meta {
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-normal);
+  text-align: center;
+  color: var(--color-muted);
+}
+.toc-title {
+  font-family: var(--ff-heading);
+  font-size: var(--fs-h1);
+  font-weight: var(--fw-bold);
+  text-align: center;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-section);
+}
+.toc-list, .toc-list ol, .toc-list ul { list-style: none; }
+.toc-list li {
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  text-align: left;
+  margin-bottom: var(--spacing-paragraph);
+}
+.toc-list a { color: var(--color-text); text-decoration: none; }
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: var(--spacing-paragraph);
+}
+table.data caption {
+  font-family: var(--ff-body);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-bold);
+  color: var(--color-muted);
+  text-align: center;
+  margin-bottom: var(--spacing-paragraph);
+}
+table.data th {
+  font-family: var(--ff-heading);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  text-align: center;
+  background-color: var(--color-bg-head);
+  border: 1px solid var(--color-border);
+  padding: 4px 6px;
+}
+table.data td {
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-normal);
+  text-align: center;
+  border: 1px solid var(--color-border);
+  padding: 4px 6px;
+  color: var(--color-text);
+}
+table.abstract-card { width: 100%; border-collapse: collapse; margin-bottom: var(--spacing-paragraph); }
+table.abstract-card td {
+  background-color: var(--color-bg-head);
+  border: 1px solid var(--color-border);
+  padding: 8px 10px;
+}
+.card-lead {
+  font-family: var(--ff-heading);
+  font-size: var(--fs-body);
+  font-weight: var(--fw-bold);
+  text-align: left;
+  text-indent: 0;
+  color: var(--color-primary);
+}
+.card-p {
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  text-align: justify;
+  text-indent: 2em;
+  color: var(--color-text);
+}
+.callout-p {
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  text-align: justify;
+  text-indent: 0;
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-callout-bg);
+  padding: 8px 10px;
+  color: var(--color-text);
+}
+.figure-p { text-align: center; margin-top: var(--spacing-paragraph); }
+.caption-p {
+  font-family: var(--ff-body);
+  font-size: var(--fs-caption);
+  font-weight: var(--fw-normal);
+  text-align: center;
+  text-indent: 0;
+  color: var(--color-muted);
+  margin-bottom: var(--spacing-section);
+}
+ol.steps { margin-bottom: var(--spacing-paragraph); }
+ol.steps li {
+  font-family: var(--ff-mono);
+  font-size: var(--fs-body);
+  text-align: left;
+  margin-bottom: var(--spacing-paragraph);
+}
+.doc-end {
+  font-family: var(--ff-body);
+  font-size: var(--fs-body);
+  text-align: center;
+  text-indent: 0;
+  color: var(--color-muted);
+  margin-top: var(--spacing-section);
+}
+</style>
+</head>
+<body>
+
+<section role="cover">
+  <p class="cover-title">改正后场景内置跟踪解与 FGI-GSRx 全量处理对比分析报告</p>
+  <p class="cover-sub">武大星历改正版（sv_clock 注入 + int16 线性区）· 论文 6.2 节场景复现</p>
+  <p class="cover-meta">信号 run：20261113T033315803665（Tampere 60 s @ 25 Msps int16）</p>
+  <p class="cover-meta">gnss-sim 仿真验证工程 · 2026 年 11 月 13 日</p>
+</section>
+
+<section role="cover">
+<nav class="doc-toc" aria-label="文档目录">
+  <p class="toc-title">目录</p>
+  <ol class="toc-list">
+    <li><a href="#section-1">一、概述与研究范围</a></li>
+    <li><a href="#section-2">二、场景与两项治本改正</a>
+      <ol>
+        <li><a href="#section-2-1">（一）信号场景与生成配置</a></li>
+        <li><a href="#section-2-2">（二）两项治本改正的实施</a></li>
+        <li><a href="#section-2-3">（三）新场景验收</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-3">三、两台接收机的处理管线</a></li>
+    <li><a href="#section-4">四、定位对比结果</a>
+      <ol>
+        <li><a href="#section-4-1">（一）内置跟踪解</a></li>
+        <li><a href="#section-4-2">（二）FGI-GSRx 全量</a></li>
+        <li><a href="#section-4-3">（三）改正前后对照与归因闭环</a></li>
+      </ol>
+    </li>
+    <li><a href="#section-5">五、C/N₀ 结果对比</a></li>
+    <li><a href="#section-6">六、结论</a></li>
+    <li><a href="#section-7">附录　复现命令与产物清单</a></li>
+  </ol>
+</nav>
+</section>
+
+<section role="body" data-page-restart="1">
+
+<h1 id="section-1">一、概述与研究范围</h1>
+<p class="body-p">本报告在上一版对比分析（whu60 场景，run 20261112T090748645439）两组实证归因的基础上，落地实施两项治本改正——卫星钟差注入策略改正（sv_clock=true，配合星历 af 与 TGD 双清零）与 int16 线性区回归（全局衰减 −12 dB、噪声跟随信号缩放），并在改正后场景（whu60b，run 20261113T033315803665）上重新运行 gnss-sim 内置跟踪解与 FGI-GSRx 2.1.3 全量管线。</p>
+<table class="abstract-card">
+  <tbody><tr><td>
+    <p class="card-lead">核心结论</p>
+    <p class="card-p">1. FGI 水平 RMSE 由 2.772 m 降至 0.630 m、3D RMSE 由 2.869 m 降至 1.784 m；改正后 FGI 平均误差（−0.06，−0.58，−1.63）m 与上一版三源分解预测的跟踪层残差（约 0，−1.13，−1.60）m 逐轴同向同量级，归因闭环成立。</p>
+    <p class="card-p">2. int16 饱和率由 38.54 % 降至 0.056 %，FGI C/N₀ 总均值回升 +0.39 dB，与裁剪项 −0.46 dB 的实证归因定量吻合；C/N₀ 名义标定 44.86 dB-Hz 保持不变。</p>
+    <p class="card-p">3. 内置跟踪解 3D 误差 0.593 m（12 星全留），会话均值伪距残差 0.000 84 码片（约 0.25 m），仍为全场最优指标。</p>
+  </td></tr></tbody>
+</table>
+<p class="body-p">本报告遵循既定范围铁律：仅对比「gnss-sim 内置跟踪解」与「FGI-GSRx 2.1.3 全量处理」两台软件接收机，且仅使用武大 IGS 下载星历驱动的改正后场景 run；旧 run 仅作改正前后对照基线，其余场景与跟踪模式一概不进入统计与汇总。全部数字可追溯至工程内脚本实测输出（见附录产物清单）。</p>
+
+<h1 id="section-2">二、场景与两项治本改正</h1>
+<h2 id="section-2-1">（一）信号场景与生成配置</h2>
+<table class="data">
+  <caption>表 1　改正后场景信号配置（两侧同一 IQ 文件）</caption>
+  <thead><tr><th>项目</th><th>配置</th></tr></thead>
+  <tbody>
+    <tr><td>仿真场景</td><td>复刻论文 6.2 节 Skydel 场景</td></tr>
+    <tr><td>接收点</td><td>Tampere 60.182537°N，24.82826°E，47.248 m</td></tr>
+    <tr><td>信号时刻</td><td>UTC 2023-09-28 23:20:00（GPS sow=429618，闰秒 18 s）</td></tr>
+    <tr><td>采样格式</td><td>25 Msps，int16 复基带，60 s（gpssim.bin 约 6 000 000 000 字节）</td></tr>
+    <tr><td>星座</td><td>GPS 12 星（PRN 4, 5, 9, 11, 12, 18, 20, 25, 26, 28, 29, 31）</td></tr>
+    <tr><td>生成引擎</td><td>gnss-sim native C++20 引擎，run ID 20261113T033315803665，随机种子 2281271（与 whu60 相同）</td></tr>
+    <tr><td>星历</td><td>BRDC_2023271_whu_afzero2.rnx（武大 IGS BRDC2710.23P；af0/af1/af2 与 TGD 双清零）</td></tr>
+    <tr><td>注入策略</td><td>大气关闭；sv_clock=true（真值伪距含 −C·Δt_clk）</td></tr>
+    <tr><td>幅度标定</td><td>全局 pnorm=0.2513（−12.0 dB，SIM_NSV_REF=190），meta 记录 nsv_ref_scale=0.2513</td></tr>
+    <tr><td>噪声标定</td><td>snr_db=−18.33 模式自动标定（noise_power=1.773×10⁸），measured_snr_db=−18.33</td></tr>
+  </tbody>
+</table>
+<p class="body-p">两台接收机处理逐字节相同的 IQ 文件，星历来源同一，保证对比公平。</p>
+
+<h2 id="section-2-2">（二）两项治本改正的实施</h2>
+<p class="body-p">上一版报告的两组实证归因指向同一结论：FGI 的米级误差与 C/N₀ 亏损并非引擎信号质量缺陷，而是「FGI 改正链与注入策略错配」（水平 −2 m）与「int16 饱和裁剪」（C/N₀ −0.46 dB）两项可修复的系统性问题。本轮据此实施两项改正。</p>
+<table class="data">
+  <caption>表 2　两项治本改正</caption>
+  <thead><tr><th>改正</th><th>做法</th><th>消除对象</th></tr></thead>
+  <tbody>
+    <tr><td>钟差注入策略改正</td><td>星历改用 afzero2（af 清零 25 086 条记录、TGD 清零 450 条 GPS 记录，解析验证 12 颗在轨星两字段全零）；生成请求改 sv_clock=true</td><td>相对论伪改正与 TGD 伪改正合计约 2.2 m：真值伪距含 −C·Δt_clk（af=0 时仅剩相对论项），与 FGI mulSatpos 无条件 relcorr 精确对消；电文 T_GD=0 使 FGI TGD 改正量为零，与引擎侧（本未注入）双侧一致</td></tr>
+    <tr><td>回 int16 线性区</td><td>服务环境变量 SIM_NSV_REF=190（每星幅度 √(12/190)=0.2513，即 −12.0 dB）；噪声改 snr_db 模式跟随信号功率缩放</td><td>38.5 % 饱和失真风险；噪声/信号比恒定，C/N₀ 名义值 44.86 dB-Hz 不变</td></tr>
+  </tbody>
+</table>
+
+<h2 id="section-2-3">（三）新场景验收</h2>
+<p class="body-p">生成侧验收全部通过：sv_clock=true 与无大气策略按请求落盘；measured_snr_db=−18.33、noise_power=1.773×10⁸，恰为旧值 2.808×10⁹ 乘以缩放功率比 0.0632，证实噪声随信号同步缩放；nsv_ref_scale=0.2513。IQ 抽样（8 MB，文件三分之一处）实测每维 σ_I=9 488、σ_Q=9 481 LSB（理论预期约 9.4 k），饱和率 I 0.056 %、Q 0.053 %，较 whu60 的 σ≈37 471、38.54 % 彻底改善。</p>
+<p class="body-p">真值伪距新旧差证实钟差项注入量级：逐星 −1.6 至 +10.9 m、均值 +2.95 m，高偏心率星（G31 +10.9 m、G12 +9.7 m）最大，符合相对论钟差项 F·e·√A·sinE 的轨道分布特征。</p>
+
+<h1 id="section-3">三、两台接收机的处理管线</h1>
+<p class="body-p"><strong>内置跟踪解</strong>：gnss-sim 自带软件接收机，与在线接口 tracking:true 同一代码路径。FFT 并行码相位搜索捕获后，SVTracker 以相干 E/L 判别器加 Costas PLL（dll_mode=coh 默认）载波辅助 DLL 作 10 s 连续跟踪会话（DLL 带宽 0.5 Hz），逐星伪距会话平均后单次最小二乘定位；大气与卫星钟改正策略自动读取场景 meta（电离层/对流层关、sv_clock=true）。准入阈值 min_metric_db=10 使 12 星全留，与 FGI 侧对齐。</p>
+<p class="body-p"><strong>FGI-GSRx 2.1.3</strong>：芬兰地理信息中心开源软件接收机，Octave 10.3 全脚本运行完整管线：捕获、跟踪（DLL/PLL 与 CN0fromSNR）、导航电文解码、mulSatpos 卫星钟改正、含 Sagnac 改正的 LSE 定位，输出率约 1 Hz，26 个有效解。参数文件与 whu60 唯一差异为输入 IQ 路径与输出文件名；电离层/对流层改正保持关闭（场景无大气注入）。</p>
+
+<h1 id="section-4">四、定位对比结果</h1>
+<h2 id="section-4-1">（一）内置跟踪解</h2>
+<table class="data">
+  <caption>表 3　定位精度对比（改正后场景 whu60b）</caption>
+  <thead><tr><th>指标</th><th>内置跟踪解（单次解）</th><th>FGI-GSRx（26 解统计）</th><th>论文表 19（892 解/900 s）</th></tr></thead>
+  <tbody>
+    <tr><td>平均误差 E/N/U (m)</td><td>−0.23 / −0.23 / −0.50</td><td>−0.056 / −0.575 / −1.628</td><td>−0.255 / −0.077 / −0.636</td></tr>
+    <tr><td>误差标准差 E/N/U (m)</td><td>（单次解，见会话抖动）</td><td>0.198 / 0.164 / 0.376</td><td>0.693 / 1.008 / 1.984</td></tr>
+    <tr><td>水平误差 (m)</td><td>0.323</td><td>0.630（RMSE）</td><td>1.252</td></tr>
+    <tr><td>垂直误差 (m)</td><td>0.497</td><td>1.669（RMSE）</td><td>2.082</td></tr>
+    <tr><td>3D 误差 (m)</td><td>0.593</td><td>1.784（RMSE）</td><td>2.430</td></tr>
+    <tr><td>参与星数 / PDOP</td><td>12 / 1.40</td><td>12</td><td>11–12 / 1.45</td></tr>
+  </tbody>
+</table>
+<p class="body-p">内置跟踪解会话内质量指标：逐星码相位残差 err_chips 方根 0.003 66 码片（最大 0.007 24）；最小二乘实际消费的会话均值伪距残差方根 0.000 84 码片（约 0.25 m，最大 0.001 52）；去趋势锚定相位抖动 G 侧均值 0.025 5 周（折合 19.03 cm/周），PLL 比特滑移 coast 计数 0。快照捕获基线 3D 6.46 m，仅作前端参考。</p>
+
+<h2 id="section-4-2">（二）FGI-GSRx 全量</h2>
+<p class="body-p">FGI 全量 26 个有效解：mean ENU =（−0.056，−0.575，−1.628）m，std ENU =（0.198，0.164，0.376）m，水平 RMSE 0.630 m、垂直 1.669 m、3D 1.784 m，全程 12 星参与。其随机散布（std）除垂向外优于论文口径，符合本场景无大气无干扰的条件。</p>
+<p class="figure-p"><img src="D:/workbuddy/GNSSSignal/gnss-sim/out/fgi/cmp_whu60b_enu_ts.png" alt="改正后 FGI ENU 误差时序与内置跟踪解参考线" width="560"></p>
+<p class="caption-p">图 1　改正后 FGI 26 个有效解 ENU 误差时序（内置跟踪解与论文均值作参考线）</p>
+<p class="body-p">图 1 可见：改正后 FGI 三轴围绕（−0.06，−0.58，−1.63）平直波动，E 向偏置与内置参考线（−0.23 m）及论文均值（−0.26 m）同一水平；垂直 −1.63 m 为 FGI 跟踪层残留（见第三节三源分解预测 −1.60 m）。误差量级较 whu60 的（−1.93，−1.97，+0.55）整体收缩一个台阶。</p>
+<p class="figure-p"><img src="D:/workbuddy/GNSSSignal/gnss-sim/out/fgi/cmp_whu60b_errbar.png" alt="改正后内置、FGI 与论文误差指标条形对比" width="560"></p>
+<p class="caption-p">图 2　改正后内置跟踪解、FGI 全量与论文的误差指标条形对比</p>
+<p class="body-p">图 2 显示：内置 0.32 m 水平误差对 FGI 0.63 m，同一量级；垂直方向内置 0.50 m 显著优于 FGI 1.67 m；3D 为 0.59 对 1.78 m。三者均优于含大气与干扰的论文口径。</p>
+
+<h2 id="section-4-3">（三）改正前后对照与归因闭环</h2>
+<table class="data">
+  <caption>表 4　改正前后对照（同种子、同轨道，仅改正项差异）</caption>
+  <thead><tr><th>指标</th><th>whu60（改正前）</th><th>whu60b（改正后）</th><th>预测/判据</th></tr></thead>
+  <tbody>
+    <tr><td>FGI mean E (m)</td><td>−1.929</td><td>−0.06</td><td>约 0（①②伪改正消除后跟踪层残差近零）</td></tr>
+    <tr><td>FGI mean N (m)</td><td>−1.974</td><td>−0.58</td><td>约 −1.13（跟踪层预测）</td></tr>
+    <tr><td>FGI mean U (m)</td><td>+0.553</td><td>−1.63</td><td>约 −1.60（跟踪层预测）</td></tr>
+    <tr><td>FGI 水平 RMSE (m)</td><td>2.772</td><td>0.630</td><td>显著下降</td></tr>
+    <tr><td>FGI 3D RMSE (m)</td><td>2.869</td><td>1.784</td><td>显著下降</td></tr>
+    <tr><td>FGI C/N₀ 总均值 (dB-Hz)</td><td>41.29</td><td>41.676</td><td>回升 +0.39 dB ≈ 裁剪项 −0.46 dB 兑现</td></tr>
+    <tr><td>int16 饱和率</td><td>38.54 %</td><td>0.056 %</td><td>小于 0.1 %</td></tr>
+    <tr><td>内置跟踪解 3D (m)</td><td>0.82</td><td>0.593</td><td>略优（线性区收益）</td></tr>
+  </tbody>
+</table>
+<p class="body-p">判定：FGI 恒定水平偏置由 2.772 m 降至 0.630 m（RMSE），3D RMSE 2.869 → 1.784 m。改正后 mean ENU 与上一版三源分解预测的跟踪层残差（约 0，−1.13，−1.60）m 逐轴同向同量级——E 与 U 几乎精确命中（−0.06 对 0、−1.63 对 −1.60），N 同号同量级（−0.58 对 −1.13）。这证实约 2.2 m 的①②伪钟差改正已被两项改正消除，FGI 剩余误差即其自身跟踪层码相位偏置，上一版归因闭环成立。</p>
+
+<h1 id="section-5">五、C/N₀ 结果对比</h1>
+<p class="body-p">FGI CN0fromSNR（E+L 功率和的 5 s 滑窗方差式估计器，mean_cn0 非零样本口径，每星 2 949 个历元样本）逐星读数如下：</p>
+<table class="data">
+  <caption>表 5　改正后 FGI 逐星 C/N₀（n=2 949/星）</caption>
+  <thead><tr><th>卫星</th><th>均值 (dB-Hz)</th><th>σ</th><th>卫星</th><th>均值 (dB-Hz)</th><th>σ</th></tr></thead>
+  <tbody>
+    <tr><td>G29</td><td>45.46</td><td>1.12</td><td>G12</td><td>41.34</td><td>0.78</td></tr>
+    <tr><td>G25</td><td>45.22</td><td>0.94</td><td>G09</td><td>40.58</td><td>0.49</td></tr>
+    <tr><td>G11</td><td>44.45</td><td>0.57</td><td>G05</td><td>39.87</td><td>0.61</td></tr>
+    <tr><td>G20</td><td>43.06</td><td>0.63</td><td>G28</td><td>39.14</td><td>0.67</td></tr>
+    <tr><td>G31</td><td>43.04</td><td>0.72</td><td>G04</td><td>38.07</td><td>0.79</td></tr>
+    <tr><td>G26</td><td>42.08</td><td>0.50</td><td>G18</td><td>37.81</td><td>0.35</td></tr>
+  </tbody>
+</table>
+<p class="body-p">run 总均值 41.676 dB-Hz，逐星与仰角单调。三点判读：其一，总均值 41.29 → 41.676（+0.39 dB）与裁剪项 −0.46 dB 的实证归因定量吻合（差 0.07 dB 在估计器散布内）；剩余与名义值 44.86 的 −3.2 dB 构成不变，即 CDMA 星间互扰 −1.25 dB 与 FGI 估计器自身偏置 −1.8 dB（论文同一估计器读数 44.85 同含后者），不属于本轮两项改正的目标域。其二，高仰角星 G29/G25 达 45.5/45.2 dB-Hz、已越过名义值——线性区中滑窗方差估计器受非目标星互扰抬升、散布增大（σ 由 0.6 增至 1.1），whu60 时代的窄散布实为饱和裁剪压扁所致。其三，引擎注入名义值解析验证不变：measured_snr_db(−18.33) + 带宽换算 74.0 − 10·log10(12) = 44.86 dB-Hz，与论文 44.85 吻合，噪声跟随信号缩放后标定依旧正确。</p>
+<p class="figure-p"><img src="D:/workbuddy/GNSSSignal/gnss-sim/out/fgi/cmp_whu60b_cn0.png" alt="改正后 FGI 逐星 C/N0 与名义注入/论文均值参考线" width="560"></p>
+<p class="caption-p">图 3　改正后场景 FGI 逐星 C/N₀（总均值 41.68 dB-Hz）</p>
+<p class="callout-p">&nbsp;&nbsp;公平性说明：论文表 18 的 44.85 dB-Hz 本身是 FGI 同一估计器在 Skydel 信号上的读数，估计器系统偏置在论文侧同样存在；本轮线性区改正后，可归因引擎信号的裁剪项已基本兑现消除，剩余与名义值的差为 CDMA 固有与两侧同有的估计器偏置。</p>
+
+<h1 id="section-6">六、结论</h1>
+<p class="body-p">1. 两项改正按预期兑现：sv_clock=true 配合 af/TGD 双清零星历，消除了 FGI 改正链与注入策略错配产生的约 2.2 m 恒定水平偏置（水平 RMSE 2.772 → 0.630 m）；全局衰减 −12 dB 与 snr_db 噪声跟随使 int16 饱和率从 38.54 % 降至 0.056 %，消除裁剪失真风险且保持 C/N₀ 名义标定不变。</p>
+<p class="body-p">2. 归因体系完成闭环验证：改正后 FGI 剩余误差与上一版三源分解的跟踪层预测逐轴对齐（E/U 精确、N 同量级），C/N₀ 回升量与裁剪项实证值吻合，反证了上一版「非引擎信号质量缺陷」的定性判断。</p>
+<p class="body-p">3. 横向能力结论保持：内置跟踪解在改正后场景仍为全场最优（3D 0.593 m、会话均值伪距残差 0.000 84 码片约 0.25 m），优于 FGI 全量（3D RMSE 1.784 m）与论文口径（3D RMSE 2.430 m，后者含大气与干扰）。</p>
+<p class="body-p">后续可选：内置解 6×10 s 滑窗补充 std 口径统计；FGI rawP 逐星常数偏置（跟踪层残差）的码间互扰机理专项分析。</p>
+
+<h1 id="section-7">附录　复现命令与产物清单</h1>
+<p class="body-p">复现命令（bash，仓库根目录）：</p>
+<ol class="steps">
+  <li>.venv/Scripts/python.exe .workbuddy/make_afzero4_whu.py（afzero2 星历）</li>
+  <li>起服务（ALLOW_TX=0 SIM_NSV_REF=190）后 curl --noproxy "*" -X POST http://127.0.0.1:8080/api/generate --data @.workbuddy/gen_whu_afz2_60s.json</li>
+  <li>.venv/Scripts/python.exe .workbuddy/test_tracked_fix.py 20261113T033315803665 10 0.5 coh 10</li>
+  <li>FGI 全量（cwd=.workbuddy/fgi，约 80 分钟）：octave-cli run_fgi_whu60b.m；octave-cli post_fgi_whu60b.m</li>
+  <li>.venv/Scripts/python.exe .workbuddy/fgi_stats.py whu60b；.venv/Scripts/python.exe .workbuddy/plot_builtin_vs_fgi_whu60b.py</li>
+</ol>
+<p class="body-p">主要产物：out/20261113T033315803665/（IQ 与 meta）、out/fgi/fgi_whu60b_nav.csv、out/fgi/fgi_whu60b_cn0.csv、out/fgi/fgi_whu60b_stats.json、out/fgi/cmp_whu60b_*.png、.workbuddy/trk_20261113T033315803665_coh.json、data/rinex/BRDC_2023271_whu_afzero2.rnx。</p>
+<p class="doc-end">—— 报告完 ——</p>
+
+</section>
+</body>
+</html>
