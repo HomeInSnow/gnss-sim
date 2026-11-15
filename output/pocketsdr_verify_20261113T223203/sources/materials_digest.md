@@ -78,3 +78,13 @@
 - 图 1 A/B 垂直误差对比：数值取自上表 A/B 四组（stage2/intermediate/fig_ab_vertical.png）。
 - 图 2 逐星 C/N₀ 对照：数值取自上表逐星 12 值 + FGI 均值 41.676 + PocketSDR 均值 42.0（stage2/intermediate/fig_cn0.png）。
 - 两图均为资料数据的可视化呈现，无新增数值。
+
+## 第十二章补充素材（2026-11-15 三态实验，本会话实测产物）
+
+- 源：`output/pvt_config_exp_20261115/results.md` 与 analyze.py 实测输出（本会话生成，commit 17fe09e）：
+  - 三态表全部数字（N/E/U/水平/3D/FIX/LOCK/URV）：baseline −1.457/+0.095/−11.314/1.460/11.41；both_off −0.004/−0.094/+0.199/0.094/0.22；satclk_off +3.159/+2.414/+2.370/3.975/4.65（末 10 历元均值，41 历元，6 条 FIX 行）。
+  - 真值 60.182537/24.82826/47.248（meta.json）；场景设置 atmosphere off/sv_clock true（meta.json config 实测）。
+  - 相对论振幅：BRDC_2023271_whu_afzero2.rnx 解析 11 星，mean 0.45 m、max 1.02 m（PRN25 e=0.0112）；公式 2√μ·F·e·√A，F=4.442807633e-10。
+  - 复现性：重跑 U=−11.314 vs 旧记录 −11.45；椭高均值 47.447（末 FIX 历元 47.284）vs 旧 47.306。
+  - 实现依据：pntpos.c L311 残差式、ephemeris.c satposs dts 索引 L826/L847（磁盘源码本会话复读）。
+- 图 3 三态 3D 条形对比：数值取自上表 3D 列（stage2/intermediate/fig_pvt3.png），无新增数值。

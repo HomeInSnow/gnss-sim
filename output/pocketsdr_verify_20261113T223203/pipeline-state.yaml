@@ -58,3 +58,14 @@ consistency_check:
   stage_chain_complete: pass      # stage_1/2/3 均 completed（organize：S1/S2 编排层自产）
   last_checked_at: 2026-11-13T22:55:00+08:00
   errors: []
+
+revision_20261115:
+  triggered_by: "用户批准：将 PVT 配置三态实验并入本报告"
+  change: >
+    新增第十二章「PVT 配置-场景匹配三态实验（报告发布后专项）」；执行摘要补「核心结论五」；
+    目录补 section-14 条目；附录补三态实验产物条目；新增图 3（fig_pvt3.png，base64 内联）。
+  number_source: output/pvt_config_exp_20261115/results.md（materials_digest.md 已登记出处）
+  gate: "review_html.py --genre business-report → score 100, issues 0"
+  convert: "convert_doc.py --no-preflight --no-verify success=true aigc_tag=true"
+  docx_verify: "word/media 嵌入 image1/2/3.png（3 张）；10 关键词全命中；125865 bytes"
+  completed_at: 2026-11-15T11:15:00+08:00

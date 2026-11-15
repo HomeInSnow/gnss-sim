@@ -13,6 +13,7 @@
 - 端到端互验通过：gnss-sim 仿真信号经本地编译的 PocketSDR 实现 12/12 星捕获锁定、12/12 跟踪、9 星 FIX，水平误差 1.66 m；逐星 C/N0 均值 42.0 dB-Hz 与 FGI-GSRx 的 41.676 dB-Hz 量级一致，佐证任务⑨对 C/N0 偏差的归因结论。
 - 垂直误差 −11.45 m 根因已由判决性 A/B 编译实验定案：sdr_pvt.c 硬编码 Klobuchar+Saastamoinen 大气改正，而场景 atmosphere off（引擎未注入任何大气延迟），错扣的仰角相关延迟被最小二乘映射到垂直方向；归因对流层假扣约 −8.5 m、电离层假扣约 −2.7 m，双关闭后垂直收敛到 +0.06 m。
 - 用法启示：PocketSDR 用于仿真互验时，必须按场景大气开关自备 IONOOPT_OFF/TROPOPT_OFF 编译版，否则会把 RTKLIB 内置大气模型误差误算到仿真器/接收机头上。
+- 配置-场景匹配三态实验（2026-11-15 补充）把该铁律双向定量闭合：场景匹配版（大气关+钟差留）3D 误差 **0.22 m**（N −0.00/E −0.09/U +0.20）；基线（错扣大气）3D **11.41 m**；「错关钟差」对照版 3D **4.65 m**（N +3.16/E +2.41/U +2.37）——卫星钟差改正必须保留，错关会把 afzero2 星历下的纯相对论偏心率项（实测 11 星振幅 mean 0.45 m、max 1.02 m/星）全量留在伪距上，经 9 星最小二乘几何放大成米级固定方向偏差；三变体锁定 12/12、FIX 9/12 完全一致，证明纯属 PVT 层系统偏差。
 
 ## 一、项目概览与定位
 
@@ -169,6 +170,28 @@ PocketSDR 是当前开源生态中覆盖面最全、工程化最完整的 GNSS S
 
 用法启示：PocketSDR 的 PVT 正确性完全依赖"场景大气 ↔ 接收机大气模型"匹配——用于仿真互验时，若 atmosphere off 须自备 IONOOPT_OFF/TROPOPT_OFF 编译版（或改 sdr_pvt.c 暴露命令行开关），否则会把 RTKLIB 内置大气模型误差误算到仿真器/接收机头上。这与任务⑨对 FGI/内置接收机的大气政策铁律是同一件事的第三方印证。
 
+## 十二、PVT 配置-场景匹配三态实验（报告发布后专项）
+
+第十章判定"大气该关"之后，进一步按场景 `meta.json` 实测设置（atmosphere ionosphere/troposphere=off、sv_clock=true）做三态对照，把"该关的关、该留的留"双向定量闭合。钟差侧与大气侧是镜像关系：引擎 sv_clock=true 注入了真值钟差，afzero2 星历把 af0/af1/af2 清零后，接收机 dts＝纯相对论偏心率项——**广播参数与注入真值一致，改正必须保留**；错关即把该项全量留在伪距上。
+
+实验设置：同一 `gpssim.bin`（12 星 CS16/25 Msps/60 s）、同一回放命令行（`-fo 1575.42 -tscale 1 -ti 10`），三个编译变体只差在 `update_sol()`：baseline＝pocket_trk_local.exe（作者原版）；场景匹配版＝pvt_both_off.exe（IONOOPT_OFF+TROPOPT_OFF，钟差保留）；错关钟差版＝pvt_satclk_off.exe（双 OFF 基础上，pntpos 前对每条 `obs[i].P[0] -= CLIGHT*dts[i*2]` 抵消内部钟差改正——dts 用与 pntpos 完全相同的 `satposs(teph=obs[0].time, EPHOPT_BRDC)` 重算，符号以 pntpos.c L311 残差式 `P-(r+dtr-CLIGHT*dts[i*2]+dion+dtrp)` 定案：内部是 +C·dts 进残差，抵消须预减）。elmin=15° 与 RAIM-FDE 三变体保持一致。
+
+结果（`$POS` 末 10 历元均值对真值 60.182537°N/24.82826°E/椭高 47.248 m）：
+
+| 变体 | 大气改正 | 钟差改正 | N (m) | E (m) | U (m) | 水平 (m) | 3D (m) | FIX/星 | LOCK |
+|---|---|---|---|---|---|---|---|---|---|
+| 基线（作者原版） | 开（错扣） | 开 | −1.457 | +0.095 | −11.314 | 1.460 | 11.41 | 9/12 | 12/12 |
+| 场景匹配版 | 关 | 留 | −0.004 | −0.094 | +0.199 | 0.094 | **0.22** | 9/12 | 12/12 |
+| 错关钟差对照 | 关 | 关 | +3.159 | +2.414 | +2.370 | 3.975 | 4.65 | 9/12 | 12/12 |
+
+![图3 三态 3D 误差对比（数据源：上表）](D:/workbuddy/GNSSSignal/gnss-sim/output/pocketsdr_verify_20261113T223203/stage2/intermediate/fig_pvt3.png)
+
+定量佐证：从场景 BRDC（BRDC_2023271_whu_afzero2.rnx，af 三系数实测全零）解析 11 颗星的 e 与 √A，相对论项振幅 `2·√μ·F·e·√A`（F=4.442807633e-10 s/m^0.5）为 mean **0.45 m**、max **1.02 m**（PRN25，e=0.0112）。该 per-star 确定性偏置（cosE 逐星异号、公共钟差参数无法吸收）经 9 星 LS 几何放大后呈 3D≈4.7 m 固定方向偏差，量级吻合。三变体 LOCK 12/12、FIX 9/12、使用星数 9 完全一致——错关钟差不影响捕获/跟踪/RAIM，是纯观测量层偏置。
+
+复现性：基线重跑 U=−11.31 m 与第十章单历元记录 −11.45 m 一致；场景匹配版重跑椭高均值 47.447 m（末 FIX 历元 47.284）与双 OFF 记录 47.306 m 一致。
+
+结论（配置-场景匹配铁律，PVT 层完整版）："只改正引擎实际注入的东西"在 PVT 层同样成立且两向均已验证——大气**该关**（11.41→0.22 m）、卫星钟差**该留**（错关致 3D 4.65 m）、elmin/RAIM 保持（非精度因素）。至此 gnss-sim 注入策略铁律在 FGI-GSRx（大气政策）、内置接收机（atmo_fn/sv_clock 门控）与第三方 PocketSDR（prcopt 配置）三个独立实现上全部闭环。
+
 ## 附录：复现命令与产物
 
 - 正式回放产物：`PocketSDR/local_build/pocket_trk_local.exe`（硬件无关静态版，7.7 MB）。
@@ -183,3 +206,4 @@ pocket_acq_new.exe -sig L1CA -prn <prn列表> -fmt CS16 -f 25 -tint 20 -toff 500
 
 - A/B 验证三变体：`pvt_both_off.exe` / `pvt_iono_off.exe` / `pvt_tropo_off.exe`。
 - 冒烟日志：/tmp/pk_ok.txt（基线状态行）、/tmp/bo.txt、/tmp/to.txt、/tmp/io.txt（A/B 三组）、/tmp/pk_ok_nmea.txt（174 行 NMEA）。
+- 三态实验（第十二章）：变体源/二进制 `PocketSDR/local_build/sdr_pvt_satclk_off.c/.exe`；实验产物 `output/pvt_config_exp_20261115/`（bl2/bo2/sco 三套 log+nmea+stdout、analyze.py 真值统计脚本、results.md 实验存档）。相对论振幅解析要点：该 whu 合并 BRDC 数据行续行为 RINEX2 式布局（第 3 行 [cuc, e, cus, sqrtA]，√A 在第 4 字段）。
