@@ -1,0 +1,29 @@
+request_id: pocketsdr_usage_manual_20261116
+title: PocketSDR 使用手册（gnss-sim 互验场景版）
+pipeline: organize（P0 expand_writing，材料驱动，编排层自产 stage1/stage2）
+created: 2026-11-16T16:30:00+08:00
+
+stages:
+  stage_0_intent:
+    mode: organize
+    signals: 材料驱动（本会话实测记录+报告+README 取证）；无外部调研；business-report 文体
+  stage_1_draft:
+    output: stage1/organized_draft.md
+    status: completed
+    notes: 唯一 H1、章节 H2；数字全部登记 sources/materials_digest.md（含两处勘误：pocket_web 非 pocket_shell、python/ 模块组非单文件 pocketsdr.py）
+  stage_2_html:
+    output: stage2/formatted-PocketSDR使用手册.html
+    generator: stage2/intermediate/gen_html.py（复用互验报告模板 CSS 骨架）
+    gate: "review_html.py --genre business-report → score 100, issues 0"
+    status: completed
+  stage_3_docx:
+    output: stage3/PocketSDR使用手册（gnss-sim互验场景版）.docx
+    convert: convert_doc.py --no-preflight --no-verify success=true aigc_tag=true
+    verify: 16,983 bytes；14 关键词全 HIT；tables 11；无图（命令手册）
+    status: completed
+
+consistency_check:
+  output_files_exist: pass
+  stage_chain_complete: pass
+  last_checked_at: 2026-11-16T16:40:00+08:00
+  errors: []
