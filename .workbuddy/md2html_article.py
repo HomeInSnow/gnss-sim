@@ -150,18 +150,25 @@ a{color:#4a90d9;text-decoration:none}
 
 
 def main():
-    with open(MD, encoding="utf-8") as f:
-        md = f.read()
-    body = md_to_html(md)
-    html = ("<!DOCTYPE html><html><head><meta charset='utf-8'>"
-            f"<style>{CSS}</style></head><body>\n{body}\n</body></html>")
-    with open(OUT, "w", encoding="utf-8") as f:
-        f.write(html)
-    nimg = html.count("data:image/")
-    print(f"OK {OUT} bytes={os.path.getsize(OUT)} images={nimg}")
-    if nimg != 13:
-        print("WARN: expected 13 inlined images", file=sys.stderr)
-        sys.exit(1)
+    # 用法: python md2html_article.py [article.md ...]；缺省为单篇原稿。
+    # 图片数自检值 = 该 md 中 ![alt](img/...) 引用行数（自动，无需手改）。
+    names = sys.argv[1:] or ["article_l1ca.md"]
+    for name in names:
+        md_path = os.path.join(ART, name)
+        out_path = os.path.join(ART, name.replace(".md", ".inlined.html"))
+        with open(md_path, encoding="utf-8") as f:
+            md = f.read()
+        expected = len(re.findall(r"^!\[[^\]]*\]\([^)]+\)\s*$", md, re.MULTILINE))
+        body = md_to_html(md)
+        html = ("<!DOCTYPE html><html><head><meta charset='utf-8'>"
+                f"<style>{CSS}</style></head><body>\n{body}\n</body></html>")
+        with open(out_path, "w", encoding="utf-8") as f:
+            f.write(html)
+        nimg = html.count("data:image/")
+        print(f"OK {out_path} bytes={os.path.getsize(out_path)} images={nimg}")
+        if nimg != expected:
+            print(f"WARN: expected {expected} inlined images", file=sys.stderr)
+            sys.exit(1)
 
 
 if __name__ == "__main__":
