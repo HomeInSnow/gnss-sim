@@ -159,8 +159,8 @@ def main():
         f.write(html)
     nimg = html.count("data:image/")
     print(f"OK {OUT} bytes={os.path.getsize(OUT)} images={nimg}")
-    if nimg != 12:
-        print("WARN: expected 12 inlined images", file=sys.stderr)
+    if nimg != 13:
+        print("WARN: expected 13 inlined images", file=sys.stderr)
         sys.exit(1)
 
 
