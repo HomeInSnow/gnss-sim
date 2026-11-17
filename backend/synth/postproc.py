@@ -86,6 +86,43 @@ class _Writer:
                 pass
 
 
+class _InplaceWriter:
+    """Streams each in-order pipeline chunk back over its own samples via an
+    r+ memmap — no temp copy, so peak disk stays at 1x the file. Only valid
+    for element-wise impairment configs (see apply_impairments guard):
+    a chunk must never re-read samples an earlier chunk has already
+    rewritten. Unlike _Writer there is nothing to roll back on abort; a
+    crashed in-place pass leaves the file half-processed and the IQ must be
+    regenerated."""
+
+    def __init__(self, path: pathlib.Path, quant: int):
+        self.quant = quant
+        self.mm = np.memmap(path, dtype=_DTYPE[quant], mode="r+")
+        self.fs = _FULL_SCALE[quant]
+        self.pos = 0
+
+    def write(self, x: np.ndarray) -> None:
+        inter = np.empty(2 * x.size, dtype=_DTYPE[self.quant])
+        inter[0::2] = np.clip(np.round(x.real), -self.fs, self.fs)
+        inter[1::2] = np.clip(np.round(x.imag), -self.fs, self.fs)
+        self.mm[self.pos:self.pos + inter.size] = inter
+        self.pos += inter.size
+
+    def close(self) -> None:
+        try:
+            self.mm.flush()
+        finally:
+            del self.mm
+
+    def abort(self) -> None:
+        try:
+            self.mm.flush()
+        except OSError:
+            pass
+        finally:
+            del self.mm
+
+
 # --- multipath ---------------------------------------------------------------
 
 def _mp_chunk(raw, a, b, fs, taps):
@@ -224,11 +261,22 @@ class _Pipe:
 
 
 def apply_impairments(path: pathlib.Path, fs: float, quant: int,
-                      cfg: imp.ImpairmentConfig, band_idx: int = 0) -> dict | None:
+                      cfg: imp.ImpairmentConfig, band_idx: int = 0,
+                      inplace: bool = False) -> dict | None:
     """Impair the band file in place. Report keys match
-    ``impairments.apply``."""
+    ``impairments.apply``.
+
+    ``inplace=True`` writes the final pass back over the file itself
+    (r+ memmap, no ``.tmp`` copy) so peak disk stays at 1x — required for
+    multi-GB bands on tight volumes. Restricted to element-wise configs
+    (sample_rate_ppm must be 0: its resampling window reads beyond the
+    chunk being rewritten); the stats passes run before any write-back.
+    A crash mid-write-back leaves the file half-processed (regenerate)."""
     if not cfg.enabled:
         return None
+    if inplace and cfg.sample_rate_ppm:
+        raise ValueError("in-place impairments require sample_rate_ppm == 0 "
+                         "(resampling reads future chunks)")
     raw = _open(path, quant)
     n = raw.size // 2
     st = {"ph_s1": 0.0, "ph_s2": 0.0, "n_clipped": 0,
@@ -277,7 +325,7 @@ def apply_impairments(path: pathlib.Path, fs: float, quant: int,
         pipe.run("pre_quant", sink3)
         st["peak_pre_quant"] = acc3["pk"]
 
-    w = _Writer(path, quant)
+    w = _InplaceWriter(path, quant) if inplace else _Writer(path, quant)
     try:
         pipe.run("out", w.write)
     except BaseException:
