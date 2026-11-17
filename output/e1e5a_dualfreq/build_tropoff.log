@@ -1,0 +1,6 @@
+== diff lines (expect 1) ==
+1c1
+< 1145:    opt.tropopt = TROPOPT_SAAS;  // keep same shape as single-freq baseline
+---
+> 1145:    opt.tropopt = TROPOPT_OFF;  // diag: engine troposphere=off
+BUILD OK: -rwxr-xr-x 1 Lenovo 197121 7972983 Nov 17 21:53 pocket_trk_iflc_tropoff.exe

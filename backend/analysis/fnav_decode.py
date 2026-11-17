@@ -43,8 +43,10 @@ _field = unpack_field
 
 
 def deinterleave_8x61(sym: Sequence[int] | np.ndarray) -> list[int]:
-    """Block deinterleaver: 8 rows x 61 cols transpose."""
-    return deinterleave_block(sym, rows=61, cols=8)
+    """Block deinterleaver matching PocketSDR ``decode_gal_syms(syms, 61, 8)``:
+    receiver loop ``c[8*i+j] = s[61*j+i]`` => ``c = s.reshape(8, 61).T``.
+    Keep in sync with ``fnav_encode.interleave_8x61`` (its exact inverse)."""
+    return deinterleave_block(sym, rows=8, cols=61)
 
 
 def viterbi_free_decode(coded: Sequence[int] | np.ndarray) -> list[int]:

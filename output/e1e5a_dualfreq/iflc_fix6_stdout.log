@@ -1,0 +1,8 @@
+Usage: pocket_trk [-sig sig -prn prn[,...] [-rfch ch[,...]] ...]
+       [-fmt {INT8|INT8X2|RAW8|RAW16|RAW32|CS8|CS16}] [-f freq]
+       [-fo freq[,...]] [-IQ {1|2}[,...]] [-bits {2|3}[,...]
+       [-toff toff] [-ti tint] [-p bus,[,port] [-c conf_file]
+       [-driver name] [-gain gain] [-bw bw] [-gpio val] [-EXT_CLOCK]
+       [-NO_SYNC] [-fd dopp] [-log path] [-nmea path] [-rtcm path]
+       [-raw path] ... [-opt file] [-arch nch] [-geom file]
+       [-sens name[,...]] [file]

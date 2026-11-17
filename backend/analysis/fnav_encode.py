@@ -96,19 +96,28 @@ def conv_encode(data: list[int]) -> list[int]:
 
 
 def interleave_8x61(sym: list[int]) -> list[int]:
-    """Blok serpiştirici (Galileo OS SIS ICD Bölüm 4.2.3):
-    ICD: 61 satır x 8 sütun, sütun sütun yazılır, satır satır okunur.
-    Cebirsel olarak reshape(8, 61).T.reshape(488) ile k' = 8*(k mod 61) + floor(k/61)
-    permütasyonu birebir aynıdır (satır-sütun transpozu).
+    """Block interleaver over the 488 FEC symbols of one F/NAV page.
+
+    Direction pinned against PocketSDR ``src/sdr_nav.c``
+    ``decode_gal_syms(buff+12, ncol=61, nrow=8)``, whose receiver loop is
+    ``c[8*i+j] = s[61*j+i]`` (i < 61, j < 8).  Inverting that relation, the
+    *transmitted* stream must be ``s = c.reshape(61, 8).T.reshape(488)``.
+    (Note: this is the opposite reshape direction from what an earlier
+    revision of this module assumed from the ICD prose; the decoder's actual
+    indexing is what matters.  The old code and ``fnav_decode`` were paired
+    inverses of each other, so the internal round-trip self-test passed in
+    both directions and could not catch the mismatch.)
     """
     assert len(sym) == L.CODED_SYMS
-    a = np.asarray(sym).reshape(8, 61)
+    a = np.asarray(sym).reshape(61, 8)
     return a.T.reshape(L.CODED_SYMS).tolist()
 
 
 def deinterleave_8x61(sym: list[int]) -> list[int]:
-    """Ters blok serpiştirici: 61 satır x 8 sütun okuma/yazma permütasyonunun tersi."""
-    a = np.asarray(sym).reshape(61, 8)
+    """Exact inverse of :func:`interleave_8x61` (receiver-side permutation):
+    ``c = s.reshape(8, 61).T.reshape(488)``."""
+    assert len(sym) == L.CODED_SYMS
+    a = np.asarray(sym).reshape(8, 61)
     return a.T.reshape(L.CODED_SYMS).tolist()
 
 
@@ -276,12 +285,33 @@ def nav_stream(eph: dict, prn: int, week: int, tow0_sow: float,
     npages = int(math.ceil((math.ceil(duration_s) + 30) / 10.0))
     tow0 = int(round(tow0_sow))
     tow0 -= tow0 % 10
+    # Arrival-time page schedule.  Page p is *received* at
+    #   t_rx(p) = 10*p - off_true + tau_eff,
+    # where off_true = run_sow - tow0 (the stream origin sits that far
+    # behind the run start, tx_chips_offset = (sow-t0)*rate - tau_chips - eff
+    # in the engine) and tau_eff = tau + SV-clock offset (~0.09 s).  Proof:
+    # the 2026-11-17 60 s run (run sow 429618, tow0 429610, tau_eff 0.092)
+    # decoded pages with tow fields 429630/40/50/60 at t = 12.09/22.09/32.09/
+    # 42.09 -- exactly 10p - 8 + 0.092 for p = 2..5.
+    # PocketSDR's decode_E5AI refuses its first frame sync before
+    # ``lock >= len_sec_code*512 + 250`` (10.49 s), so every page arriving
+    # earlier is lost -- the 512-symbol buffer only holds the last ~10.24 s.
+    # Pick the first page that must be decodable with margin over that gate:
+    # 11.7 = 10.49 gate + 0.2 safety + 1.0 _NAV_LEAD_S (the engine passes
+    # sow-1.0 as tow0_sow), so t_rx(p_a) >= 10.49 + 0.2 always.
+    # type(p) = 1,2,3,4 from p_a on, so the completing type-4 arrives at
+    # t_rx(p_a+3) <= 50.7 s -- inside any 60 s run.  (RTKLIB
+    # decode_gal_fnav_eph collects types in slots keyed by type-1 and only
+    # *tries* the reconstruction when a type-4 arrives; a fixed (p+3)%4
+    # schedule ignored the -off_true+tau shift and delivered arrivals in
+    # order 2,3,4,1, stranding type-1 (the p=1 page lost at the gate) and
+    # producing $EPH=0 -- measured on run 20261117T111329081970.)
+    off = float(tow0_sow) - float(tow0)
+    p_a = max(2, int(math.ceil((11.7 + off) / 10.0)))
     syms: list[int] = []
     for p in range(npages):
         tow = (tow0 + 10 * p) % 604800
-        # Page type follows GST (page count since the week start), so a
-        # stream started later continues the same schedule.
-        wtype = _CYCLE[(tow // 10) % len(_CYCLE)]
+        wtype = _CYCLE[(p - p_a) % len(_CYCLE)]
         syms.extend(build_page(wtype, eph, prn, tow, week))
     bits = np.asarray(syms, dtype=np.int8)
     arr = np.where(bits > 0, np.int8(-1), np.int8(1))    # bit=0->+1, bit=1->-1
