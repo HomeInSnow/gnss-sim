@@ -6,6 +6,8 @@
   收 {"type":"rcv_stat"|"ch_stat"|"pvt_sol","str":...} /
      {"type":"sat_stat","sats":[{sat,az,el,pvt,obs,eph,svh,fcn}]} /
      {"type":"log","lines":[...]} / {"type":"ack","cmd":...,"ok":bool,...}
+  二进制帧（psd/corr/corr_hist）经 core/binframe.py 解码后以
+     {"type":"bin","frm":"psd"|"corr"|"corr_hist",...} 发出
 """
 from __future__ import annotations
 
@@ -97,7 +99,11 @@ class WsLink(QThread):
                     return
                 continue
             if not isinstance(raw, str):
-                continue                             # 二进制 topic（本期不消费）
+                from .binframe import decode_frame
+                d = decode_frame(bytes(raw))
+                if d is not None:
+                    self.msg.emit(d)
+                continue
             try:
                 frame = json.loads(raw)
             except json.JSONDecodeError:

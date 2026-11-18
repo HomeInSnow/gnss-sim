@@ -56,10 +56,34 @@
 - **引擎假死/端口占用** → 随机端口 + 启动态看门狗（rcv_stat 心跳）+ 一键重启按钮。
 - **WS 库打包**：websockets 纯 Python，collect_submodules 即可。
 - **引擎不在仓库版本管理内**（PocketSDR 在 gnss-sim 仓库外）：打包从 `PocketSDR/local_build/` 收集，路径写配置项，缺失时设置页红字提示 + 重新编译指引（配方 .workbuddy/build_iflc_tropoff.sh 同族）。
-- 本期不做：硬件采集（Soapy 路数）、二进制 topic 高级图谱（PSD/相关峰）、阵列。留二期。
+- 本期不做：硬件采集（Soapy 路数）、阵列。二进制 topic 高级图谱后已落地（见第 8 节）。
 
 ## 7. 交付物
 
 - `pocket_desktop/` 包（新目录，与 desktop/ 平级）；`pocket_desktop.spec` + `pyi_entry_pocket.py`；
 - `dist/pocket-desktop/`（双击即用）；`output/pocket_desktop/` 截图与打包说明；
 - git 本地 commit（不 push）。
+
+## 8. 高级图谱扩展（二期已兑现，2026-11-18）
+
+左侧 rail 第 3 页「高级」（`ui/pages/advanced.py`），数据源为引擎原生二进制
+topic（`src/sdr_web.c` send_psd/send_corr/send_corr_hist 实证；字段语义与官方
+`html/js/ws.js decodeFrame` + `corr.js`/`rfch.js` 画图逐一对表）：
+
+| 图 | topic | 订阅参数 | 语义 |
+|---|---|---|---|
+| 频谱 PSD | `psd` | rfch / nfft(64-4096) / tave(0.1-50ms) | x=fo±fs/2 MHz（IQ=1 取上边带），y=dB，fo 处虚线 |
+| 相关峰 | `corr` | ch / width(0.2-20μs) | x=coff+pos/fs (ms)；量=IQ/I/Q/AveI/AveIQ（I/Q 按 prompt 符号归一）；主相关器大点、附加扫查相关器连线小点 |
+| IP-QP 星座 | `corr_hist`+`corr` | ch / tspan(0.1-10s) | prompt I/Q 历史散点 + 当前 prompt 大点 |
+| IP/QP 历史 | `corr_hist` | 同上 | x=time+(i-n+1)·T 双线，载波环跟踪质量 |
+| 通道信息 KPI | `ch_stat`(opt=1) | min_lock=2.0 | CH/RF CH/SAT/SIG/PRN/C/N0/COFF/DOP/#NAV + 帧头 state/lock/fd/n/npos + psd fo/fs/nfft |
+
+实现要点：
+- `core/binframe.py` 解码三类帧（帧头 struct 解包 + numpy frombuffer，零拷贝）；
+  `wslink.py` 把二进制帧解成 `{"type":"bin","frm":"psd"|"corr"|"corr_hist",...}` 统一分发。
+- CH 选择：CH 号非连续（引擎按占用编号，如 4,5,9,…），页面自动锁定首个在用通道；
+  用户手动选定（`_ch_manual`）后不再自动切换。
+- 订阅生命周期：`on_show` 订阅 4 topic，`on_hide` 退订（`goto()` 先 hide 旧页再
+  show 新页，避免 corr 的 sel_ch 占用泄漏与 ch_stat 参数互相覆盖）。
+- 验收：CLI 探针三类帧到达 + 字段合理；GUI 驱动 ADV-DRIVE-OK（G04 C/N0 41.8、
+  相关峰主相关器落峰、IP 位翻转方波清晰）；exe 重打包 selftest PASS。

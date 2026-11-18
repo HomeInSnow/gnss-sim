@@ -10,13 +10,15 @@ from ..core.engine_mgr import EngineMgr, VARIANTS
 from ..core.session import Session
 from ..core.wslink import WsLink
 from . import theme
+from .pages.advanced import AdvancedPage
 from .pages.console import ConsolePage
 from .pages.logpage import LogPage
 from .pages.monitor import MonitorPage
 from .pages.solution import SolutionPage
 
 PAGES = [("console", "控制台", "▶"), ("monitor", "监控", "◎"),
-         ("solution", "定位", "⌖"), ("log", "日志", "☰")]
+         ("advanced", "高级", "∿"), ("solution", "定位", "⌖"),
+         ("log", "日志", "☰")]
 
 
 class MainWindow(QMainWindow):
@@ -68,10 +70,12 @@ class MainWindow(QMainWindow):
         self.stack = QStackedWidget()
         self.page_console = ConsolePage(self)
         self.page_monitor = MonitorPage(self)
+        self.page_advanced = AdvancedPage(self)
         self.page_solution = SolutionPage(self)
         self.page_log = LogPage(self)
         self._by_key = {"console": self.page_console,
                         "monitor": self.page_monitor,
+                        "advanced": self.page_advanced,
                         "solution": self.page_solution,
                         "log": self.page_log}
         for p in self._by_key.values():
@@ -116,6 +120,10 @@ class MainWindow(QMainWindow):
     def goto(self, key: str):
         for k, b in self._rail_btns.items():
             b.setChecked(k == key)
+        cur = self.stack.currentWidget()
+        if cur is not None and cur is not self._by_key[key] \
+                and hasattr(cur, "on_hide"):
+            cur.on_hide()                      # 先退订旧页，再进新页
         self.stack.setCurrentWidget(self._by_key[key])
         if hasattr(self._by_key[key], "on_show"):
             self._by_key[key].on_show()
@@ -196,6 +204,9 @@ class MainWindow(QMainWindow):
             self.foot_r.setText(m.get("str", "")[:120])
         elif t == "ch_stat":
             self.page_monitor.update_ch_stat(m.get("str", ""))
+            self.page_advanced.update_ch_stat_opt(m.get("str", ""))
+        elif t == "bin":
+            self.page_advanced.on_bin(m)
         elif t == "sat_stat":
             self.page_monitor.update_sat_stat(m.get("sats", []))
         elif t == "pvt_sol":
