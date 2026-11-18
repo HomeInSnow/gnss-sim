@@ -1251,7 +1251,9 @@ def run_receiver(body: dict):
     res = receiver.fix_from_iq(
         outdir / "gpssim.bin", meta["sample_format"], meta["sample_rate"],
         eph, _gps_tow(start), marker_llh=body.get("marker"),
-        systems=systems)
+        systems=systems,
+        **({"min_metric_db": float(body["min_metric_db"])}
+           if body.get("min_metric_db") is not None else {}))
     # Persist the fix next to the IQ so it survives the request and can be
     # re-inspected later. The HTTP response stays authoritative: a failed
     # write only downgrades result_file, and an error payload never clobbers

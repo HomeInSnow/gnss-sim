@@ -575,7 +575,8 @@ def _fix_from_iq_glo_l2of(iq_path, sample_format, sample_rate, eph_by_prn,
 
 def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
                 approx_time_gps, marker_llh=None, decode_nav=False,
-                *, band: str = "L1", systems=None) -> dict:
+                *, band: str = "L1", systems=None,
+                min_metric_db: float = 9.0) -> dict:
     """``band`` selects the signal family. ``"L1"`` is the GPS L1 C/A path
     (all params as before). ``"L2"`` runs the GPS L2C path: CM acquisition
     via :mod:`backend.analysis.band_acquire`, CNAV ephemeris decode via
@@ -752,7 +753,13 @@ def fix_from_iq(iq_path, sample_format, sample_rate, eph_by_prn,
     acq = {}
     for prn in scan:
         r = inspector.acquire(iq, sample_rate, prn)
-        if r["metric_db"] > 9:
+        # Acquisition quality gate: the scan covers every PRN in the
+        # broadcast file, not just the ones present in the IQ, so noise
+        # peaks can slip in at the floor. The default 9 dB keeps noisy
+        # scenarios intact (real SVs there measure ~12-14 dB); noiseless
+        # runs put real SVs at 19-22 dB and noise peaks ~9 dB - raise
+        # min_metric_db (verify page min_db field) for those.
+        if r["metric_db"] > min_metric_db:
             acq[prn] = r
 
     # Atmosphere the native plan injected into the code phase

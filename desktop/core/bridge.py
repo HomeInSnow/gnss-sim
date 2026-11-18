@@ -128,6 +128,10 @@ def receiver(outdir: str, marker: dict | None = None, trace: bool = True,
     body: dict = {"outdir": outdir, "trace": bool(trace)}
     if marker:
         body["marker"] = marker
+    # Quality gate for the acquisition scan (both snapshot and tracking
+    # paths honour it; spurious noise peaks must not enter the LS solve).
+    if min_metric_db is not None:
+        body["min_metric_db"] = float(min_metric_db)
     if tracking:
         body["tracking"] = True
         body["dll_mode"] = dll_mode

@@ -279,15 +279,16 @@ class VerifyPage(QWidget):
         t = self.session.current()
         marker = {"lat": t.lat, "lon": t.lon, "alt": t.alt}
         kw: dict = {"trace": self.cb_trace.isChecked()}
+        # 捕获质量门限（快照解与跟踪解都生效，空=内核默认 9 dB）
+        md = self.ed_mindb.text().strip()
+        if md:
+            kw["min_metric_db"] = float(md)
         if self.cb_track.isChecked():
             kw["tracking"] = True
             kw["dll_mode"] = ("coh", "el", "nc")[self.cb_dll.currentIndex()]
             ts = self.ed_tracks.text().strip()
             if ts:
                 kw["track_s"] = float(ts)
-            md = self.ed_mindb.text().strip()
-            if md:
-                kw["min_metric_db"] = float(md)
         self.btn_run.setEnabled(False)
         self.status_lbl.setText("验证中…（大场景可能较久）")
         self.session.bus.set_status(f"Verify Fix：{outdir}")
