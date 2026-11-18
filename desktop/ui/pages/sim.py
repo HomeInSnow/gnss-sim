@@ -14,7 +14,8 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
                                QHeaderView, QFileDialog, QAbstractItemView)
 
 from .. import theme
-from ..widgets import Card, form_row, ChipGroup, StatCard, Skyplot, fmt_bytes
+from ..widgets import (Card, form_row, ChipGroup, StatCard, Skyplot,
+                       fmt_bytes, MapWidget)
 from ...core.model import (SimTask, SYSTEMS, BANDS, IMP_PRESETS,
                            MDL_PRESETS)
 
@@ -86,6 +87,7 @@ class SimPage(QWidget):
     def _build_config_col(self):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
+        self._cfg_scroll = scroll
         holder = QWidget()
         col = QVBoxLayout(holder)
         col.setContentsMargins(0, 0, 4, 0)
@@ -353,7 +355,7 @@ class SimPage(QWidget):
         return c
 
     def _card_pos(self) -> Card:
-        c = Card("接收机位置", "Location · 地图选点 M3")
+        c = Card("接收机位置", "Location · 单击地图选点")
         self.ed_lat = self._line("60.182537")
         self.ed_lon = self._line("24.82826")
         self.ed_alt = self._line("47.248")
@@ -364,8 +366,29 @@ class SimPage(QWidget):
         g.addWidget(self.ed_lon, 0, 3)
         g.addWidget(QLabel("高程 m"), 1, 0)
         g.addWidget(self.ed_alt, 1, 1)
+        g.addWidget(QLabel("轨迹"), 1, 2)
+        self.lbl_route = QLabel("静态点")
+        self.lbl_route.setObjectName("DimTxt")
+        g.addWidget(self.lbl_route, 1, 3)
         c.body.addLayout(g)
+        self.map = MapWidget()
+        c.body.addWidget(self.map, 1)
+
+        def _map_click(lat, lon):
+            self.ed_lat.setText(f"{lat:.6f}")
+            self.ed_lon.setText(f"{lon:.6f}")
+            self._sync_map_from_fields()
+            self.session.bus.log(f"地图选点：{lat:.5f}, {lon:.5f}", "info")
+        self.map.clicked.connect(_map_click)
+        for ed in (self.ed_lat, self.ed_lon):
+            ed.editingFinished.connect(self._sync_map_from_fields)
         return c
+
+    def _sync_map_from_fields(self):
+        try:
+            self.map.set_pos(float(self.ed_lat.text()), float(self.ed_lon.text()))
+        except ValueError:
+            pass
 
     def _card_scenario(self) -> Card:
         c = Card("场景库", "与 Web 互通")
@@ -521,6 +544,9 @@ class SimPage(QWidget):
         self.ed_lat.setText(repr(t.lat))
         self.ed_lon.setText(repr(t.lon))
         self.ed_alt.setText(repr(t.alt))
+        self.map.set_pos(t.lat, t.lon)
+        self.lbl_route.setText(
+            f"轨迹 {len(t.route)} 点" if t.route else "静态点")
         self.ed_scn.setText(t.name)
         self._loading = False
         # 联动启用态

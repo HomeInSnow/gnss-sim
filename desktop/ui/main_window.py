@@ -86,14 +86,23 @@ class MainWindow(QMainWindow):
         openbtn.setObjectName("Link")
         openbtn.setCursor(Qt.PointingHandCursor)
         openbtn.clicked.connect(self._open_outdir)
+        setbtn = QPushButton("设置")
+        setbtn.setObjectName("Link")
+        setbtn.setCursor(Qt.PointingHandCursor)
+        setbtn.clicked.connect(self._open_settings)
         ver = QLabel("v0.9-desktop")
         ver.setObjectName("DimTxt")
         lay.addWidget(self.engine_dot)
         lay.addWidget(self.engine_lbl)
         lay.addSpacing(14)
         lay.addWidget(openbtn)
+        lay.addWidget(setbtn)
         lay.addWidget(ver)
         return bar
+
+    def _open_settings(self):
+        from .settings import SettingsDialog
+        SettingsDialog(self).exec()
 
     def _open_outdir(self):
         try:

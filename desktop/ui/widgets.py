@@ -224,3 +224,98 @@ def fmt_bytes(n: int | float) -> str:
             return f"{x:.1f} {u}" if u != "B" else f"{int(x)} B"
         x /= 1024.0
     return f"{x:.1f} PB"
+
+
+# ── 离线世界地图选点 ───────────────────────────────────────────────
+class MapWidget(QWidget):
+    """Natural Earth 110m land 等距柱状投影自绘；单击选点。"""
+    clicked = Signal(float, float)          # lat, lon
+
+    def __init__(self, parent=None, height: int = 210):
+        super().__init__(parent)
+        self.setMinimumHeight(height)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setCursor(Qt.CrossCursor)
+        self._rings: list[list[tuple[float, float]]] = []   # [(lon,lat)...]
+        self._pos: tuple[float, float] | None = None         # (lat,lon)
+        self._load()
+
+    def _load(self):
+        import json
+        import pathlib
+        p = pathlib.Path(__file__).resolve().parents[1] / "assets" / "world_land.geojson"
+        if not p.exists():
+            return
+        try:
+            gj = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        for feat in gj.get("features", []):
+            g = feat.get("geometry") or {}
+            polygs = ([] if g.get("type") == "Polygon"
+                      else [g.get("coordinates", [])] if g.get("type")
+                      == "MultiPolygon" else [])
+            if g.get("type") == "Polygon":
+                polygs = [g.get("coordinates", [])]
+            for rings in polygs:
+                for ring in rings:
+                    if len(ring) >= 3:
+                        self._rings.append([(lo, la) for lo, la in ring])
+
+    def set_pos(self, lat: float, lon: float):
+        self._pos = (float(lat), float(lon))
+        self.update()
+
+    def mousePressEvent(self, ev):           # noqa: N802
+        if ev.button() == Qt.LeftButton and self.width() > 0:
+            lon = ev.position().x() / self.width() * 360.0 - 180.0
+            lat = 90.0 - ev.position().y() / self.height() * 180.0
+            self._pos = (lat, lon)
+            self.clicked.emit(lat, lon)
+            self.update()
+
+    def paintEvent(self, _ev):               # noqa: N802
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing, False)
+        w, h = self.width(), self.height()
+        p.fillRect(0, 0, w, h, QColor("#0b1526"))
+
+        def xy(lon, lat):
+            return (lon + 180.0) / 360.0 * w, (90.0 - lat) / 180.0 * h
+
+        # 经纬网
+        p.setPen(QPen(QColor("#16233f"), 1))
+        for gl in range(-150, 180, 30):
+            x, _ = xy(gl, 0)
+            p.drawLine(QPointF(x, 0), QPointF(x, h))
+        for ga in range(-60, 90, 30):
+            _, y = xy(0, ga)
+            p.drawLine(QPointF(0, y), QPointF(w, y))
+        # 陆地
+        p.setPen(QPen(QColor("#2a5a6e"), 0.8))
+        p.setBrush(QBrush(QColor("#17435a")))
+        for ring in self._rings:
+            poly = []
+            prev = None
+            for lon, lat in ring:
+                # 跨 ±180° 的环拆开画（110m 数据里南极洲等个别环出现）
+                x, y = xy(lon, lat)
+                if prev is not None and abs(lon - prev) > 180:
+                    poly = []
+                poly.append(QPointF(x, y))
+                prev = lon
+            if len(poly) >= 3:
+                p.drawPolygon(poly)
+        # 位置标记
+        if self._pos:
+            lat, lon = self._pos
+            x, y = xy(lon, lat)
+            p.setBrush(Qt.NoBrush)
+            p.setPen(QPen(QColor(theme.ACC), 1.6))
+            p.drawEllipse(QPointF(x, y), 6, 6)
+            p.drawLine(QPointF(x - 10, y), QPointF(x + 10, y))
+            p.drawLine(QPointF(x, y - 10), QPointF(x, y + 10))
+            p.setPen(QPen(QColor(theme.TXT)))
+            p.setFont(QFont(theme.FONT_MONO, 7))
+            p.drawText(QPointF(min(x + 9, w - 110), max(y - 8, 10)),
+                       f"{lat:.4f}, {lon:.4f}")
