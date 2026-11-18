@@ -34,3 +34,5 @@ docs/
 .workbuddy/pdf_thesis/
 .workbuddy/aalto_search.json
 PocketSDR/
+dist/
+.workbuddy/pyi_build/
