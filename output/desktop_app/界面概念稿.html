@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>gnss-sim 桌面版 · 界面概念稿 v1</title>
+<style>
+:root{
+  --bg:#0a0f1e; --panel:#101a30; --panel2:#141f3a; --line:#22304f; --line2:#1a2540;
+  --txt:#dbe6f7; --mut:#7d90b5; --dim:#55648a;
+  --acc:#4cc2ff; --acc2:#39e6b4; --warn:#ffb454; --bad:#ff6b81;
+  --mono:'Consolas','JetBrains Mono',monospace; --sans:'Segoe UI','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#05070f;font-family:var(--sans);color:var(--txt);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:18px}
+.wm{width:1420px;max-width:98vw;height:880px;background:var(--bg);border:1px solid #2b3a5e;border-radius:14px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.65),0 0 0 1px rgba(76,194,255,.07) inset}
+/* ── 标题栏 ── */
+.titlebar{height:42px;display:flex;align-items:center;gap:14px;padding:0 14px;background:linear-gradient(180deg,#111c36,#0c1428);border-bottom:1px solid var(--line2);flex:none}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;letter-spacing:.4px}
+.logo svg{filter:drop-shadow(0 0 6px rgba(76,194,255,.8))}
+.logo b{color:var(--acc)} .logo span{color:var(--mut);font-weight:500;font-size:12px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:12px;color:var(--mut)}
+.chip-ok{display:flex;align-items:center;gap:6px}.dot{width:8px;height:8px;border-radius:50%;background:var(--acc2);box-shadow:0 0 8px var(--acc2)}
+.wbtns{display:flex;gap:10px;margin-left:12px}.wbtns i{width:12px;height:12px;border-radius:3px;background:#2a3a60;display:block}
+/* ── 主体 ── */
+.main{flex:1;display:flex;min-height:0}
+.rail{width:76px;flex:none;background:#0b1226;border-right:1px solid var(--line2);display:flex;flex-direction:column;align-items:center;padding-top:10px;gap:4px}
+.rbtn{width:60px;padding:9px 0 6px;border:0;background:none;color:var(--dim);border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-size:10.5px;font-family:var(--sans)}
+.rbtn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.6}
+.rbtn.on{color:var(--acc);background:rgba(76,194,255,.09);box-shadow:inset 0 0 0 1px rgba(76,194,255,.25)}
+.rbtn:hover{color:var(--txt)}
+.tasks{width:212px;flex:none;border-right:1px solid var(--line2);background:#0c142a;padding:12px 10px;display:flex;flex-direction:column;gap:8px}
+.tasks h5{font-size:11px;color:var(--dim);letter-spacing:2px;font-weight:600;padding:0 4px 4px}
+.task{padding:9px 10px;border:1px solid var(--line2);border-radius:9px;background:var(--panel);cursor:pointer}
+.task.on{border-color:rgba(76,194,255,.5);background:rgba(76,194,255,.07)}
+.task .tn{font-size:12.5px;font-weight:600}.task .td{font-size:10.5px;color:var(--mut);margin-top:3px;font-family:var(--mono)}
+.task .st{float:right;width:7px;height:7px;border-radius:50%;background:var(--acc2)}
+.task .st.q{background:var(--warn)}
+.newtask{margin-top:auto;border:1px dashed #2c4067;background:none;color:var(--acc);border-radius:9px;padding:8px;cursor:pointer;font-size:12px}
+/* 页面容器 */
+.pages{flex:1;min-width:0;display:flex;flex-direction:column}
+.page{flex:1;display:none;min-height:0}
+.page.on{display:flex;flex-direction:column}
+.scroll{overflow-y:auto;padding:14px;flex:1;min-height:0}
+/* 滚动条 */
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#22304f;border-radius:5px}
+/* ── 卡片与表单 ── */
+.cols{display:flex;gap:14px;flex:1;min-height:0}
+.col{min-width:0;display:flex;flex-direction:column;gap:12px}
+.col.cfg{width:450px;flex:none;overflow-y:auto;padding-right:4px}
+.card{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:12px 14px}
+.card h4{font-size:12.5px;font-weight:600;color:var(--acc);letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.card h4 .tag{margin-left:auto;font-size:10px;color:var(--dim);font-weight:400;letter-spacing:0}
+.frow{display:flex;align-items:center;gap:10px;margin:7px 0}
+.frow label{width:118px;flex:none;font-size:12px;color:var(--mut)}
+.frow label.d{padding-left:14px;width:132px}
+input[type=text],input[type=number],input[type=datetime-local],select{background:#0b1226;border:1px solid var(--line);border-radius:7px;color:var(--txt);padding:6px 9px;font-size:12px;font-family:var(--mono);flex:1;min-width:0;outline:none}
+input:focus,select:focus{border-color:var(--acc)}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);background-position:calc(100% - 14px) 55%,calc(100% - 9px) 55%;background-size:5px 5px;background-repeat:no-repeat}
+.btn-file{border:1px solid var(--line);background:var(--panel2);color:var(--mut);border-radius:7px;padding:6px 10px;font-size:11px;cursor:pointer;flex:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap;flex:1}
+.chip{border:1px solid var(--line);background:#0b1226;color:var(--dim);font-size:11px;padding:4px 11px;border-radius:20px;cursor:pointer;font-family:var(--mono)}
+.chip.on{color:#06111f;background:var(--acc);border-color:var(--acc);font-weight:700;box-shadow:0 0 10px rgba(76,194,255,.45)}
+.chip.on.g2{background:var(--acc2);border-color:var(--acc2)}
+.mini{font-size:10.5px;color:var(--dim)}
+.ck{width:14px;height:14px;accent-color:var(--acc)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+/* ── 预览区 ── */
+.preview{flex:1;display:flex;flex-direction:column;gap:12px;min-width:0}
+.skybox{display:flex;gap:12px}
+canvas{display:block}
+.cvs-card{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;flex:none}
+.cvs-card h5{font-size:11px;color:var(--mut);font-weight:600;letter-spacing:1.5px;margin-bottom:6px}
+table{width:100%;border-collapse:collapse;font-size:11.5px;font-family:var(--mono)}
+th{color:var(--dim);font-weight:500;text-align:left;padding:5px 8px;border-bottom:1px solid var(--line);font-size:10.5px;letter-spacing:1px}
+td{padding:5px 8px;border-bottom:1px solid var(--line2);color:var(--txt)}
+tr:hover td{background:rgba(76,194,255,.05)}
+td.ok{color:var(--acc2)} td.num{color:var(--mut)}
+.tbl-card{background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:10px 12px;flex:1;overflow-y:auto;min-height:0}
+/* ── 底部动作条 ── */
+.actionbar{flex:none;height:66px;border-top:1px solid var(--line2);background:linear-gradient(180deg,#0c1428,#0a1122);display:flex;align-items:center;gap:12px;padding:0 16px}
+.btn{border:none;border-radius:9px;padding:11px 22px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--sans)}
+.btn-primary{background:linear-gradient(135deg,#2f9dff,#25e0b3);color:#04121f;box-shadow:0 4px 18px rgba(47,157,255,.4)}
+.btn-ghost{background:var(--panel2);color:var(--acc);border:1px solid rgba(76,194,255,.35)}
+.prog{flex:1;display:flex;flex-direction:column;gap:5px}
+.prog .bar{height:6px;background:#0b1226;border-radius:3px;overflow:hidden}
+.prog .bar i{display:block;height:100%;width:46%;background:linear-gradient(90deg,var(--acc),var(--acc2));border-radius:3px;box-shadow:0 0 12px rgba(76,194,255,.6)}
+.prog .txt{font-size:10.5px;color:var(--mut);font-family:var(--mono);display:flex;justify-content:space-between}
+.hint{font-size:11px;color:var(--dim);font-family:var(--mono)}
+/* ── 验证页 ── */
+.kpis{display:flex;gap:12px}
+.kpi{flex:1;background:var(--panel);border:1px solid var(--line2);border-radius:12px;padding:14px 16px}
+.kpi .k{font-size:11px;color:var(--mut);letter-spacing:1px}
+.kpi .v{font-size:26px;font-family:var(--mono);font-weight:700;color:var(--acc2);margin-top:4px;text-shadow:0 0 18px rgba(57,230,180,.35)}
+.kpi .s{font-size:10.5px;color:var(--dim);font-family:var(--mono);margin-top:2px}
+.kpi.blue .v{color:var(--acc);text-shadow:0 0 18px rgba(76,194,255,.35)}
+/* 日志 */
+.logline{display:flex;gap:10px;font-family:var(--mono);font-size:11.5px;padding:5px 8px;border-bottom:1px solid var(--line2)}
+.logline .t{color:var(--dim);flex:none}.logline .tg{flex:none;padding:0 7px;border-radius:4px;font-size:10px;line-height:17px;height:17px}
+.tg.gen{background:rgba(76,194,255,.15);color:var(--acc)}.tg.ver{background:rgba(57,230,180,.13);color:var(--acc2)}.tg.sys{background:rgba(125,144,181,.15);color:var(--mut)}.tg.warn{background:rgba(255,180,84,.14);color:var(--warn)}
+/* 历史 */
+.badge{font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(57,230,180,.12);color:var(--acc2)}
+.badge.r{background:rgba(255,107,129,.12);color:var(--bad)}
+.link{color:var(--acc);cursor:pointer;font-size:11px}
+.annot{position:fixed;top:8px;right:16px;font-size:11px;color:var(--dim);font-family:var(--mono);letter-spacing:1px}
+.grid-iq{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start}
+.statusfoot{flex:none;height:26px;border-top:1px solid var(--line2);display:flex;align-items:center;padding:0 14px;gap:18px;font-size:10.5px;color:var(--dim);font-family:var(--mono);background:#0a1122}
+</style>
+</head>
+<body>
+<div class="annot">概念稿 v1 · 界面数据为占位演示 · 2026-11-18</div>
+<div class="wm">
+  <!-- 标题栏 -->
+  <div class="titlebar">
+    <div class="logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4cc2ff" stroke-width="1.7"><circle cx="12" cy="12" r="2.2" fill="#4cc2ff" stroke="none"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/><circle cx="12" cy="12" r="7" stroke="#39e6b4" stroke-dasharray="3 3"/></svg>
+      <b>gnss-sim</b><span>IF Sampling Studio · v2.0-desktop</span>
+    </div>
+    <div class="tb-right">
+      <span class="chip-ok"><span class="dot"></span>native 引擎已加载 · libgnsssynth.dll</span>
+      <span>输出目录 <u style="color:var(--acc);text-decoration:none">D:\...\out</u></span>
+      <span>⚙</span>
+      <div class="wbtns"><i></i><i></i><i style="background:#5b2b38"></i></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- 页面导航 -->
+    <div class="rail">
+      <button class="rbtn on" data-pg="sim"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="17" cy="7" r="1.4" fill="currentColor"/></svg>仿真</button>
+      <button class="rbtn" data-pg="ver"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>验证</button>
+      <button class="rbtn" data-pg="iq"><svg viewBox="0 0 24 24"><path d="M3 12h4l3-7 4 14 3-7h4"/></svg>图谱</button>
+      <button class="rbtn" data-pg="traj"><svg viewBox="0 0 24 24"><path d="M4 20C8 6 16 18 20 4"/><circle cx="4" cy="20" r="1.6" fill="currentColor"/><circle cx="20" cy="4" r="1.6" fill="currentColor"/></svg>轨迹</button>
+      <button class="rbtn" data-pg="log"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>日志</button>
+      <button class="rbtn" data-pg="hist"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16"/></svg>历史</button>
+    </div>
+
+    <!-- 任务列表 -->
+    <div class="tasks">
+      <h5>仿真任务</h5>
+      <div class="task on"><span class="st"></span><div class="tn">Tampere L1CA · 60s</div><div class="td">25 Msps · int16 · 12★</div></div>
+      <div class="task"><span class="st q"></span><div class="tn">WHU 双频 E1+E5a</div><div class="td">20 Msps · int16 · 11★</div></div>
+      <div class="task"><span class="st" style="background:#55648a"></span><div class="tn">郑州 G+C+E · 25★</div><div class="td">20 Msps · int8</div></div>
+      <button class="newtask">＋ 新建任务</button>
+    </div>
+
+    <div class="pages">
+      <!-- ═══════ 仿真页 ═══════ -->
+      <div class="page on" id="pg-sim">
+        <div class="cols" style="padding:14px 14px 0">
+          <!-- 配置列 -->
+          <div class="col cfg scroll">
+            <div class="card">
+              <h4>定时与输出 <span class="tag">Simulation</span></h4>
+              <div class="frow"><label>Start UTC</label><input type="text" value="2023-09-28  23:20:00"></div>
+              <div class="frow"><label>时长 Duration</label><input type="text" value="60 s"><span class="mini">体积 ≈ 6.00 GB（25 Msps·int16）</span></div>
+              <div class="frow"><label>采样率</label><select><option>25 Msps</option><option>auto</option><option>5 Msps</option><option>20 Msps</option><option>61.44 Msps</option></select></div>
+              <div class="frow"><label>量化</label><select><option>int16</option><option>int8</option><option>int12</option></select></div>
+            </div>
+            <div class="card">
+              <h4>星历与场景 <span class="tag">Ephemeris / Scenario</span></h4>
+              <div class="frow"><label>RINEX</label><input type="text" value="data\rinex\BRDC_2023271_whu_afzero2.rnx"><button class="btn-file">…</button></div>
+              <div class="frow"><label>星历模式</label><select><option>Broadcast（realigned）</option><option>Precise（SP3 拟合）</option></select></div>
+              <div class="frow"><label>SP3 路径</label><input type="text" value="(自动下载)"><button class="btn-file">载入</button><button class="btn-file">对比 Broadcast</button></div>
+              <div class="frow"><label>场景库</label><select><option>加载已保存…</option></select><button class="btn-file">保存</button></div>
+            </div>
+            <div class="card">
+              <h4>星座与频段 <span class="tag">Signal engine · native</span></h4>
+              <div class="frow"><label>星座</label><div class="chips"><span class="chip on">GPS</span><span class="chip">GLO</span><span class="chip on g2">GAL</span><span class="chip">BDS</span><span class="chip">QZS</span><span class="chip">SBAS</span><span class="chip">NAVIC</span></div></div>
+              <div class="frow"><label>频段</label><div class="chips"><span class="chip on">L1 · 1575.42</span><span class="chip">L2 · 1227.60</span><span class="chip">L5 · 1176.45</span></div></div>
+              <div class="frow"><label>OSNMA</label><span class="mini">关</span><span class="chip" style="margin-left:6px">NMA status: 2</span><span class="chip">keys</span></div>
+            </div>
+            <div class="card">
+              <h4>传播模型 <span class="tag">Propagation（只注入即只验证）</span></h4>
+              <div class="frow"><label>Preset</label><select><option>Custom</option><option>Open sky</option><option>Urban canyon</option><option>Foliage / weak</option></select></div>
+              <div class="frow"><label>电离层</label><select><option>off</option><option>klobuchar</option></select></div>
+              <div class="frow"><label>对流层</label><select><option>off</option><option>saastamoinen</option></select></div>
+              <div class="frow"><label>接收机钟</label><select><option>off</option><option>poly</option></select></div>
+              <div class="frow"><label class="d">bias / drift / rate</label><input type="text" value="0 · 0 · 0 s/s²" class="mini"></div>
+              <div class="frow"><label class="d">sawtooth amp/period</label><input type="text" value="0 s · 0 s" class="mini"></div>
+              <div class="frow"><label>多径</label><select><option>off</option><option>specular</option></select></div>
+              <div class="frow"><label class="d">#1 delay/amp/phase</label><input type="text" value="0 m · 0 · 3.14 rad" class="mini"></div>
+              <div class="frow"><label class="d">#2 delay/amp/phase</label><input type="text" value="0 m · 0 · 3.14 rad" class="mini"></div>
+              <div class="frow"><label><input type="checkbox" class="ck"> 同步作用于 IQ</label><span class="mini">默认仅影响预览真值</span></div>
+            </div>
+            <div class="card">
+              <h4>RF 损伤 <span class="tag">Impairments · 确定性种子</span></h4>
+              <div class="frow"><label>Preset</label><select><option>Custom</option><option>Bench cable（近理想）</option><option>Field SDR+天线</option><option>Urban 恶化+多径</option></select></div>
+              <div class="frow"><label><input type="checkbox" class="ck"> 启用损伤</label></div>
+              <div class="grid2">
+                <div class="frow"><label>Seed</label><input type="text" value="0"></div>
+                <div class="frow"><label>载波频偏 Hz</label><input type="text" value="0"></div>
+                <div class="frow"><label>采样率误差 ppm</label><input type="text" value="0"></div>
+                <div class="frow"><label>相噪 RMS °</label><input type="text" value="0"></div>
+                <div class="frow"><label>IQ 幅度 dB</label><input type="text" value="0"></div>
+                <div class="frow"><label>IQ 相位 °</label><input type="text" value="0"></div>
+                <div class="frow"><label>DC I / Q</label><input type="text" value="0 / 0"></div>
+                <div class="frow"><label>目标 SNR dB</label><input type="text" value="—"></div>
+                <div class="frow"><label>Clip 比例</label><input type="text" value="0"></div>
+                <div class="frow"><label>量化器 bits</label><input type="text" value="0"></div>
+              </div>
+            </div>
+            <div class="card">
+              <h4>信道衰落 <span class="tag">LMS channel</span></h4>
+              <div class="frow"><label>模型</label><div class="chips"><span class="chip on">off</span><span class="chip">seeded</span><span class="chip">keyed · ChaCha20</span></div></div>
+              <div class="frow"><label>环境</label><select><option>suburban</option><option>open</option><option>rural</option><option>urban</option></select></div>
+              <div class="frow"><label>速度 m/s</label><input type="text" value="auto (route)"><span class="mini">0=静止</span></div>
+            </div>
+            <div class="card">
+              <h4>参考位置 <span class="tag">Reference Position</span></h4>
+              <div class="frow"><label>纬度 / 经度</label><input type="text" value="60.182537 N · 24.828260 E"></div>
+              <div class="frow"><label>椭高 alt</label><input type="text" value="47.248 m"></div>
+              <canvas id="minimap" width="410" height="150" style="width:100%;border-radius:8px;margin-top:6px;border:1px solid var(--line2)"></canvas>
+              <div class="mini" style="margin-top:4px">离线世界轮廓底图 · 单击放置 marker · 滚轮缩放</div>
+            </div>
+          </div>
+
+          <!-- 预览列 -->
+          <div class="col preview">
+            <div class="skybox">
+              <div class="cvs-card" style="width:340px">
+                <h5>SKYPLOT · 23:20:00 UTC</h5>
+                <canvas id="sky" width="316" height="316"></canvas>
+              </div>
+              <div class="cvs-card" style="flex:1">
+                <h5>GDOP / PDOP · 几何质量</h5>
+                <div style="display:flex;gap:10px;margin-top:8px">
+                  <div class="kpi blue" style="padding:10px"><div class="k">GDOP</div><div class="v" style="font-size:22px">1.54</div></div>
+                  <div class="kpi blue" style="padding:10px"><div class="k">PDOP</div><div class="v" style="font-size:22px">1.40</div></div>
+                  <div class="kpi" style="padding:10px"><div class="k">可见星</div><div class="v" style="font-size:22px">12</div><div class="s">el &gt; 5°</div></div>
+                </div>
+                <canvas id="elbars" width="420" height="196" style="width:100%;margin-top:10px"></canvas>
+                <div class="mini">仰角分布（按 PRN）· 高仰角星座占优，构型良好</div>
+              </div>
+            </div>
+            <div class="tbl-card">
+              <h5 style="font-size:11px;color:var(--mut);letter-spacing:1.5px;margin-bottom:6px">可见卫星 · PREVIEW GEOMETRY</h5>
+              <table id="sattable"></table>
+            </div>
+          </div>
+        </div>
+        <!-- 动作条 -->
+        <div class="actionbar">
+          <button class="btn btn-ghost">Preview geometry</button>
+          <button class="btn btn-primary">⚡ Generate</button>
+          <button class="btn btn-ghost">Verify Fix</button>
+          <div class="prog">
+            <div class="bar"><i></i></div>
+            <div class="txt"><span>生成中 · 12★ · block 690/1500 · ETA 9 s · 可取消</span><span>2.76 GB / 6.00 GB</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ 验证页 ═══════ -->
+      <div class="page" id="pg-ver">
+        <div class="scroll" style="display:flex;flex-direction:column;gap:12px">
+          <div class="kpis">
+            <div class="kpi"><div class="k">3D 位置误差</div><div class="v">3.80 m</div><div class="s">vs 场景真值 marker</div></div>
+            <div class="kpi blue"><div class="k">水平 / 垂直</div><div class="v" style="font-size:20px">0.9 / 3.7 m</div><div class="s">dN −0.69 · dE −0.57 · dU +3.69</div></div>
+            <div class="kpi blue"><div class="k">PDOP · 参与星</div><div class="v" style="font-size:20px">1.4 · 12/12</div><div class="s">clock bias 1.35e-8 s</div></div>
+            <div class="kpi"><div class="k">伪距残差 RMS</div><div class="v">2.91 m</div><div class="s">修正策略：按 meta.json 实际注入项</div></div>
+          </div>
+          <div class="cvs-card">
+            <h5>FIX：60.182531°N 24.828250°E · EXP/MEAS 逐星对照（码相位 ≤0.09 ch · 多普勒 ≤25 Hz）</h5>
+            <table id="meastable"></table>
+          </div>
+          <div class="cvs-card">
+            <h5>误差时间序列 · 快照/跟踪解（dN dE dU）</h5>
+            <canvas id="errcvs" width="1240" height="170" style="width:100%"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ 图谱页 ═══════ -->
+      <div class="page" id="pg-iq">
+        <div class="scroll">
+          <div class="grid-iq">
+            <div class="cvs-card"><h5>捕获度量曲面 · PRN 4（码相位 × 多普勒）</h5><canvas id="acq" width="600" height="210" style="width:100%"></canvas></div>
+            <div class="cvs-card"><h5>波形 Scrubber · t = 12.440 s</h5><canvas id="wave" width="600" height="210" style="width:100%"></canvas><input type="range" style="width:100%;accent-color:var(--acc)" value="20"></div>
+            <div class="cvs-card"><h5>IQ 星座图 · PRN 4（Costas ±180°）</h5><canvas id="cons" width="286" height="286" style="width:100%;max-width:286px;margin:0 auto"></canvas></div>
+            <div class="cvs-card"><h5>频谱 · L1 带内 25 MHz（C/N₀ 读数悬停）</h5><canvas id="spec" width="600" height="286" style="width:100%"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ 轨迹页 ═══════ -->
+      <div class="page" id="pg-traj">
+        <div class="cols" style="padding:14px">
+          <div class="col" style="width:420px;flex:none">
+            <div class="card"><h4>航点 <span class="tag">Trajectory Builder</span></h4>
+              <table id="wp"></table>
+              <div class="frow" style="margin-top:10px"><label>距离步长 m</label><input type="text" value="10"><label style="width:70px">速度 m/s</label><input type="text" value="5"></div>
+              <div class="frow"><label>Offsets N/E/U m</label><input type="text" value="0 · 0 · 0"></div>
+              <div class="frow"><button class="btn btn-ghost" style="padding:8px 16px">应用到当前任务</button><button class="btn-file">另存轨迹…</button></div>
+            </div>
+          </div>
+          <div class="col preview"><div class="cvs-card" style="flex:1"><h5>轨迹平面视图 · 拖拽航点 · 双击插入</h5><canvas id="trajcvs" width="880" height="560" style="width:100%"></canvas></div></div>
+        </div>
+      </div>
+
+      <!-- ═══════ 日志页 ═══════ -->
+      <div class="page" id="pg-log"><div class="scroll"><div class="card" style="height:100%" id="logbox"></div></div></div>
+
+      <!-- ═══════ 历史页 ═══════ -->
+      <div class="page" id="pg-hist">
+        <div class="scroll"><div class="cvs-card"><h5>out\ 运行记录（含 meta.json provenance）</h5>
+          <table id="hist"></table>
+        </div></div>
+      </div>
+      <div class="statusfoot">
+        <span>最近运行 out\20261117T150257152117 · gpssim.bin 6,000,000,000 B</span>
+        <span>磁盘 D: 剩余 12.4 GB</span><span style="margin-left:auto">引擎线程 8/20 · PyInstaller onedir</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── 占位演示数据（TRUTH：真实数值来自 2026-11-17 Tampere run，此处仅概念演示） ── */
+const PRNS=[4,5,9,11,12,18,20,25,26,28,29,31];
+const SAT=[ /*prn az el pr km dopp hz*/
+ [4,129,26,22832,-2520],[5,308,42,21845,1830],[9,172,63,20902,-610],[11,33,19,24118,3420],
+ [12,257,55,21232,-1890],[18,204,33,22440,980],[20,76,71,20455,-3110],[25,341,48,21566,2510],
+ [26,145,11,25210,-4180],[28,64,29,23118,1660],[29,192,57,21017,-720],[31,280,37,22103,3010]];
+/* ── 导航 ── */
+document.querySelectorAll('.rbtn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.rbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('pg-'+b.dataset.pg).classList.add('on');});
+/* ── Skyplot ── */
+const sk=document.getElementById('sky').getContext('2d');
+sk.translate(158,158);
+sk.strokeStyle='#22304f';sk.fillStyle='#7d90b5';sk.font='10px Consolas';
+[0,30,60].forEach(el=>{const r=158*(90-el)/90;sk.beginPath();sk.arc(0,0,r,0,7);sk.stroke();sk.fillText(el+'°',4,-r-3);});
+sk.beginPath();sk.moveTo(-158,0);sk.lineTo(158,0);sk.moveTo(0,-158);sk.lineTo(0,158);sk.globalAlpha=.5;sk.stroke();sk.globalAlpha=1;
+sk.fillStyle='#55648a';['N','E','S','W'].forEach((t,i)=>{const a=i*Math.PI/2;sk.fillText(t,Math.sin(a)*150-4,-Math.cos(a)*150+3);});
+SAT.forEach(([p,az,el])=>{const r=158*(90-el)/90,a=az*Math.PI/180;const x=Math.sin(a)*r,y=-Math.cos(a)*r;
+ const c=el<15?'#ffb454':'#4cc2ff';sk.fillStyle=c;sk.beginPath();sk.arc(x,y,5,0,7);sk.fill();
+ sk.shadowColor=c;sk.shadowBlur=9;sk.fill();sk.shadowBlur=0;
+ sk.fillStyle='#dbe6f7';sk.font='bold 10px Consolas';sk.fillText('G'+p,x+8,y-6);});
+/* ── 仰角条 ── */
+const eb=document.getElementById('elbars').getContext('2d');
+SAT.forEach(([p,az,el],i)=>{const x=8+i*35;eb.fillStyle=el<15?'rgba(255,180,84,.8)':'rgba(76,194,255,.75)';
+ eb.fillRect(x,196-el*2.4,22,el*2.4);eb.fillStyle='#7d90b5';eb.font='9px Consolas';eb.fillText(p,x+5,208);});
+/* ── 可见星表 ── */
+document.getElementById('sattable').innerHTML=
+ '<tr><th>PRN</th><th>Az°</th><th>El°</th><th>伪距 km</th><th>多普勒 Hz</th><th>C/N₀ dB-Hz</th><th>信号</th></tr>'+
+ SAT.map(([p,az,el,pr,dp])=>`<tr><td class="ok">G${p}</td><td class="num">${az.toFixed(1)}</td><td class="num">${el.toFixed(1)}</td><td class="num">${pr}</td><td class="num">${dp>0?'+':''}${dp}</td><td class="num">${(40+el/6).toFixed(1)}</td><td>L1 C/A</td></tr>`).join('');
+/* ── EXP/MEAS ── */
+document.getElementById('meastable').innerHTML=
+ '<tr><th>PRN</th><th>EXP 码相位 ch</th><th>MEAS ch</th><th>Δch</th><th>EXP 多普勒 Hz</th><th>MEAS Hz</th><th>ΔHz</th><th>Used</th></tr>'+
+ SAT.map(([p],i)=>{const dc=((i*37)%18)/200, dh=((i*13)%50)-25;
+ return `<tr><td class="ok">G${p}</td><td class="num">${(i*7.31%1023).toFixed(4)}</td><td class="num">${((i*7.31%1023)+dc).toFixed(4)}</td><td class="ok">${dc.toFixed(4)}</td><td class="num">${SAT[i][4]}</td><td class="num">${SAT[i][4]+dh}</td><td class="ok">${dh>=0?'+':''}${dh}</td><td>✓</td></tr>`}).join('');
+/* ── 误差曲线 ── */
+const ec=document.getElementById('errcvs');const eg=ec.getContext('2d');
+function trace(g,n,col,amp,off){g.beginPath();g.strokeStyle=col;g.lineWidth=1.4;let s=0;
+ for(let i=0;i<n;i++){s+=(Math.random()-.5)*.6;s*=.93;const y=85+off+s*amp+Math.sin(i/3)*amp*.25;g.lineTo(10+i*(1220/n),y);}g.stroke();}
+eg.strokeStyle='#22304f';eg.beginPath();eg.moveTo(10,85);eg.lineTo(1230,85);eg.stroke();eg.setLineDash([3,4]);eg.beginPath();eg.moveTo(10,85);eg.lineTo(1230,85);eg.stroke();eg.setLineDash([]);
+trace(eg,60,'#4cc2ff',26,0);trace(eg,60,'#39e6b4',22,14);trace(eg,60,'#ffb454',40,-30);
+eg.font='10px Consolas';eg.fillStyle='#4cc2ff';eg.fillText('dN ±1 m',1150,80);eg.fillStyle='#39e6b4';eg.fillText('dE',1150,106);eg.fillStyle='#ffb454';eg.fillText('dU ±4 m',1150,44);
+/* ── 捕获曲面 ── */
+const acq=document.getElementById('acq').getContext('2d');
+for(let x=0;x<60;x++)for(let y=0;y<21;y++){const d=Math.hypot(x-30,y-10);const v=Math.max(0,1-d/9)+Math.random()*.16;
+ acq.fillStyle=`rgba(${Math.round(40+v*200)},${Math.round(60+v*160)},${Math.round(120+v*135)},${.25+v*.75})`;acq.fillRect(8+x*9.7,10+y*9.3,9,8.6);}
+acq.strokeStyle='#fff';acq.strokeRect(8+27*9.7,10+8*9.3,4*9.7,4*8.6);
+/* ── 波形 ── */
+const wv=document.getElementById('wave').getContext('2d');
+wv.strokeStyle='#22304f';wv.beginPath();wv.moveTo(8,105);wv.lineTo(592,105);wv.stroke();
+function wf(col,ph,amp){wv.beginPath();wv.strokeStyle=col;for(let x=0;x<584;x++){const t=x/584*20*Math.PI;const s=Math.sign(Math.sin(t+ph))*(9+Math.random()*5);wv.lineTo(8+x,105-(s*amp/16)+Math.sin(t*7)*3);}wv.stroke();}
+wf('#4cc2ff',0,14);wf('#39e6b4',Math.PI/2,10);
+/* ── 星座图 ── */
+const cs=document.getElementById('cons').getContext('2d');cs.translate(143,143);
+cs.strokeStyle='#22304f';cs.beginPath();cs.moveTo(-143,0);cs.lineTo(143,0);cs.moveTo(0,-143);cs.lineTo(0,143);cs.stroke();
+for(let i=0;i<420;i++){const b=Math.random()<.5?1:-1;cs.fillStyle='rgba(76,194,255,.6)';
+ cs.beginPath();cs.arc(b*(62+(Math.random()-.5)*30),(Math.random()-.5)*70,1.6,0,7);cs.fill();}
+/* ── 频谱 ── */
+const sp=document.getElementById('spec').getContext('2d');
+sp.beginPath();sp.strokeStyle='#4cc2ff';sp.lineWidth=1.2;
+for(let x=0;x<584;x++){const t=x/584;const bump=Math.exp(-((t-.5)**2)/.012)*34+Math.exp(-((t-.5)**2)/.0009)*22;
+ const v=34+bump+Math.random()*7;sp.lineTo(8+x,266-v);}sp.stroke();
+sp.fillStyle='rgba(76,194,255,.08)';sp.fillRect(8+(.5-.1)*584,30,0.2*584,236);
+sp.fillStyle='#7d90b5';sp.font='10px Consolas';sp.fillText('−12.5 MHz',8,280);sp.fillText('0',292,280);sp.fillText('+12.5 MHz',540,280);
+sp.fillStyle='#39e6b4';sp.fillText('GNSS 信号淹没于噪声底 −158 dBW/Hz',220,60);
+/* ── 小地图 ── */
+const mm=document.getElementById('minimap').getContext('2d');
+mm.fillStyle='#0b1226';mm.fillRect(0,0,410,150);mm.strokeStyle='#22304f';
+for(let x=0;x<410;x+=41)for(let y=0;y<150;y+=30)mm.strokeRect(x,y,41,30);
+mm.fillStyle='rgba(60,84,130,.45)';mm.beginPath();mm.ellipse(205,58,120,34,0,0,7);mm.fill();mm.beginPath();mm.ellipse(310,96,60,30,.4,0,7);mm.fill();mm.beginPath();mm.ellipse(96,86,44,26,-.3,0,7);mm.fill();
+const mx=316,my=44;mm.strokeStyle='#4cc2ff';mm.beginPath();mm.arc(mx,my,9,0,7);mm.stroke();mm.fillStyle='#4cc2ff';mm.beginPath();mm.arc(mx,my,3,0,7);mm.fill();
+mm.shadowColor='#4cc2ff';mm.shadowBlur=12;mm.beginPath();mm.arc(mx,my,9,0,7);mm.stroke();mm.shadowBlur=0;
+mm.fillStyle='#dbe6f7';mm.font='10px Consolas';mm.fillText('60.182537 N, 24.828260 E · 47.248 m',mx-60,my+26);
+/* ── 轨迹 ── */
+document.getElementById('wp').innerHTML='<tr><th>#</th><th>Lat</th><th>Lon</th><th>Alt</th><th>速度</th></tr>'+
+ [[0,60.18254,24.82826,47.2,0],[1,60.18290,24.82860,47.2,5],[2,60.18330,24.82910,47.3,5],[3,60.18360,24.82980,47.3,8]]
+ .map(r=>`<tr><td class="ok">${r[0]}</td><td class="num">${r[1].toFixed(5)}</td><td class="num">${r[2].toFixed(5)}</td><td class="num">${r[3]}</td><td class="num">${r[4]} m/s</td></tr>`).join('');
+const tc=document.getElementById('trajcvs').getContext('2d');
+tc.strokeStyle='#22304f';for(let x=0;x<880;x+=44)for(let y=0;y<560;y+=40)tc.strokeRect(x,y,44,40);
+tc.beginPath();tc.strokeStyle='#39e6b4';tc.lineWidth=2;const pts=[[180,420],[330,340],[520,240],[660,150]];
+pts.forEach((p,i)=>i?tc.lineTo(...p):tc.moveTo(...p));tc.stroke();
+pts.forEach((p,i)=>{tc.fillStyle=i==0?'#4cc2ff':'#0a0f1e';tc.strokeStyle='#4cc2ff';tc.beginPath();tc.arc(p[0],p[1],8,0,7);tc.fill();tc.stroke();tc.fillStyle='#dbe6f7';tc.font='11px Consolas';tc.fillText('WP'+i,p[0]+13,p[1]+4);});
+/* ── 日志 ── */
+document.getElementById('logbox').innerHTML=[
+ ['23:36:02','ver','Verify Fix 完成 · error 3.80 m · 12/12 ★ · residual RMS 2.91 m · policy=meta(atmo klob+saas)'],
+ ['23:35:41','ver','内置接收机启动 · 捕获 12★（C/N₀ 40.6–46.0 dB-Hz）→ 伪距提取 → WLS'],
+ ['23:35:38','gen','生成完成 · out/20261117T150257152117 · 6,000,000,000 B · 17.9 s · sha256 已记录 provenance'],
+ ['23:35:20','gen','native 引擎 · block 1500/1500 · 12★ · 高斯白噪声 σ 按 sig_p(LSB²)'],
+ ['23:35:02','gen','开始生成 · 25 Msps · int16 · 60 s · 15 亿复采样 · 磁盘峰值预估 12.0 GB（postproc 2×）'],
+ ['23:34:55','sys','场景校验通过 · BRDC_2023271_whu_afzero2.rnx 覆盖窗口 · align_for_run 3600 s 栅格'],
+ ['23:20:11','warn','磁盘策略 · avail < 2× 预估 → 提示启用 in-place impairments（峰值 1×）'],
+ ['23:20:10','sys','native 引擎加载 · libgnsssynth.dll · ABI v3 · 8 worker 线程']]
+ .map(l=>`<div class="logline"><span class="t">${l[0]}</span><span class="tg ${l[1]}">${{gen:'GEN',ver:'VERIFY',sys:'SYS',warn:'WARN'}[l[1]]}</span><span>${l[2]}</span></div>`).join('');
+/* ── 历史 ── */
+if(location.hash){const h=location.hash.slice(1);const b=document.querySelector(`.rbtn[data-pg="${h}"]`);if(b)b.click();}
+document.getElementById('hist').innerHTML=
+ '<tr><th>Run ID</th><th>场景</th><th>参数摘要</th><th>Verify</th><th>体积</th><th>操作</th></tr>'+
+ [['20261117T150257152117','Tampere · L1CA 12★','25 Msps int16 60 s · atmo 注入 · alt 100','<span class="badge">3.80 m</span>','6.0 GB','<span class="link">载入配置</span> <span class="link">重验证</span> <span class="link">打开目录</span>'],
+  ['20261113T033315803665','Tampere · L1CA 12★','25 Msps int16 60 s · atmo off · snr −18.33 dB','<span class="badge">3.60 m</span>','6.0 GB','<span class="link">载入配置</span> <span class="link">重验证</span> <span class="link">打开目录</span>'],
+  ['20261117T123629105786','WHU · E1+E5a 双频','20 Msps int16 60 s · IFLC','<span class="badge">3.44 m</span>','9.3 GB','<span class="link">载入配置</span> <span class="link">重验证</span> <span class="link">打开目录</span>'],
+  ['20261106T132634253154','郑州 G+E 25★','20 Msps int8 30 s · 跟踪解 coh','<span class="badge">0.12 m</span>','1.2 GB','<span class="link">载入配置</span> <span class="link">重验证</span> <span class="link">打开目录</span>'],
+  ['20261111T183037271329','probe 900 s · L1CA','25 Msps int16 900 s · in-place','<span class="badge r">未验证</span>','90 GB','<span class="link">载入配置</span> <span class="link">验证</span> <span class="link">打开目录</span>']]
+ .map(r=>'<tr>'+r.map((c,i)=>`<td${i==0?' class="ok"':''}>${c}</td>`).join('')+'</tr>').join('');
+</script>
+</body>
+</html>
