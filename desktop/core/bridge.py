@@ -151,6 +151,19 @@ def lnav(prn: int, outdir: str) -> dict:
     return _call(web().lnav, int(prn), outdir)
 
 
+# ── trace JSON（验证页误差曲线）───────────────────────────────────
+def trace_json(outdir: str, name: str = "trace_rx.json") -> dict | None:
+    """读 out/<runid>/ 下的 trace_*.json；缺失返回 None。"""
+    from backend import config as bconfig
+    p = bconfig.OUT_DIR / outdir / name
+    if not p.exists():
+        return None
+    try:
+        return _jsonable(json.loads(p.read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return None
+
+
 # ── 历史（out/ 扫描）───────────────────────────────────────────────
 def list_runs(limit: int = 80) -> list[dict]:
     from backend import config as bconfig

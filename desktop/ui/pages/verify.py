@@ -12,6 +12,10 @@ from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
 from .. import theme
 from ..widgets import Card, StatCard, fmt_bytes
 
+import pyqtgraph as pg
+pg.setConfigOptions(background=theme.BG, foreground=theme.MUT,
+                    antialias=True)
+
 
 def _mk(val, unit="", good=None, bad=None):
     """（保留位）KPI 阈值着色由 _done 内联处理。"""
@@ -24,7 +28,10 @@ class VerifyPage(QWidget):
         self.win = win
         self.session = win.session
         self._worker = None
+        self._workers: list = []
         self._result: dict | None = None
+        self._trace_rx: dict | None = None
+        self._trace_dll: dict | None = None
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(14, 10, 14, 10)
@@ -32,7 +39,155 @@ class VerifyPage(QWidget):
         lay.addWidget(self._card_run())
         lay.addLayout(self._row_kpi())
         lay.addWidget(self._card_result())
+        lay.addWidget(self._card_errcurve(), 3)
         lay.addWidget(self._card_track(), 3)
+        lay.addWidget(self._card_lnav(), 2)
+
+    # ══ 误差曲线（trace_rx / trace_dll）══════════════════════════
+    def _card_errcurve(self) -> Card:
+        c = Card("逐历元码相位误差", "trace_rx.json 捕获 / trace_dll.json 跟踪")
+        row = QHBoxLayout()
+        self.cb_sv = QComboBox()
+        self.cb_sv.setMinimumWidth(160)
+        self.cb_sv.currentIndexChanged.connect(self._draw_err)
+        row.addWidget(QLabel("卫星"))
+        row.addWidget(self.cb_sv)
+        self.ck_dll = QCheckBox("叠加跟踪解曲线（coh 会话 chi）")
+        self.ck_dll.setChecked(True)
+        self.ck_dll.toggled.connect(self._draw_err)
+        row.addWidget(self.ck_dll)
+        b = QPushButton("刷新曲线")
+        b.setObjectName("FileBtn")
+        b.clicked.connect(self._load_traces)
+        row.addWidget(b)
+        self.curve_hint = QLabel("运行验证（含 trace）后可绘制")
+        self.curve_hint.setObjectName("DimTxt")
+        row.addWidget(self.curve_hint, 1)
+        c.body.addLayout(row)
+        self.p_err = pg.PlotWidget()
+        self.p_err.showGrid(x=True, y=True, alpha=0.18)
+        self.p_err.setLabel("bottom", "历元时刻 s")
+        self.p_err.setLabel("left", "err_chips")
+        self.p_err.setMinimumHeight(180)
+        c.body.addWidget(self.p_err, 1)
+        return c
+
+    def _load_traces(self):
+        outdir = self.ed_outdir.text().strip()
+        if not outdir:
+            return
+        from desktop.core import bridge
+        self._trace_rx = bridge.trace_json(outdir, "trace_rx.json")
+        self._trace_dll = bridge.trace_json(outdir, "trace_dll.json")
+        keys = sorted((self._trace_rx or {}).get("svs", {}).keys())
+        self.cb_sv.blockSignals(True)
+        self.cb_sv.clear()
+        self.cb_sv.addItems(keys)
+        self.cb_sv.blockSignals(False)
+        if keys:
+            self.curve_hint.setText(
+                f"捕获星 {len(keys)}｜跟踪 {'有' if self._trace_dll else '无'}")
+            self._draw_err()
+        else:
+            self.p_err.clear()
+            self.curve_hint.setText("该场景无 trace_rx.json（验证时勾选逐历元 trace）")
+
+    def _draw_err(self):
+        key = self.cb_sv.currentData() or self.cb_sv.currentText()
+        self.p_err.clear()
+        if not key:
+            return
+        tr = ((self._trace_rx or {}).get("svs") or {}).get(key) or {}
+        t = (self._trace_rx or {}).get("t_s") or []
+        if tr.get("err_chips") and t:
+            self.p_err.plot(t, tr["err_chips"],
+                                pen=pg.mkPen(theme.ACC, width=1.6),
+                                name="捕获 err_chips")
+        if self.ck_dll.isChecked() and self._trace_dll:
+            td = ((self._trace_dll or {}).get("svs") or {}).get(key) or {}
+            td_t = (self._trace_dll or {}).get("t_s") or t
+            if td.get("err_chips"):
+                self.p_err.plot(td_t, td["err_chips"],
+                                    pen=pg.mkPen(theme.ACC2, width=1.6),
+                                    name="跟踪 chi")
+        self.p_err.addLegend(offset=(10, 10))
+
+    # ══ LNAV 电文面板 ═════════════════════════════════════════════
+    def _card_lnav(self) -> Card:
+        c = Card("导航电文回放", "L1CA 子帧字段级解释（lnav_display）")
+        row = QHBoxLayout()
+        row.addWidget(QLabel("PRN"))
+        self.ed_lnav_prn = QLineEdit("1")
+        self.ed_lnav_prn.setFixedWidth(56)
+        row.addWidget(self.ed_lnav_prn)
+        b = QPushButton("解释电文")
+        b.setObjectName("Ghost")
+        b.clicked.connect(self._load_lnav)
+        row.addWidget(b)
+        self.lnav_hint = QLabel("取该星生成时刻实际写入 IQ 的广播星历字段")
+        self.lnav_hint.setObjectName("DimTxt")
+        row.addWidget(self.lnav_hint, 1)
+        c.body.addLayout(row)
+        from PySide6.QtWidgets import QPlainTextEdit
+        self.txt_lnav = QPlainTextEdit()
+        self.txt_lnav.setObjectName("LogView")
+        self.txt_lnav.setReadOnly(True)
+        self.txt_lnav.setMaximumHeight(160)
+        self.txt_lnav.setPlaceholderText("PRN + 解释电文")
+        c.body.addWidget(self.txt_lnav)
+        return c
+
+    def _load_lnav(self):
+        outdir = self.ed_outdir.text().strip()
+        if not outdir:
+            self.lnav_hint.setText("请先指定场景")
+            return
+        try:
+            prn = int(self.ed_lnav_prn.text().strip())
+        except ValueError:
+            return
+        from desktop.core import bridge
+        from desktop.core.worker import FnWorker
+        self.lnav_hint.setText(f"解析 PRN{prn} 电文…")
+        w = FnWorker(bridge.lnav, prn, outdir)
+        w.ok.connect(lambda d, p=prn: self._fill_lnav(d, p))
+        w.fail.connect(lambda m: self.lnav_hint.setText(
+            f"电文失败：{m.splitlines()[0]}"))
+        self._workers.append(w)
+        w.start()
+
+    def _fill_lnav(self, d, prn: int):
+        lines = [f"══ PRN {prn} L1CA 导航电文（写入 IQ 的字段）══"]
+
+        def emit_list(lst, depth, label=""):
+            pref = f"{label} = " if label else ""
+            pad = "  " * depth
+            if lst and all(not isinstance(x, (dict, list)) for x in lst):
+                shown = "".join(str(x) for x in lst[:32])
+                lines.append(pad + pref + f"[{len(lst)} 项] {shown}"
+                             + ("…" if len(lst) > 32 else ""))
+            else:
+                lines.append(pad + pref)
+                for x in lst:
+                    walk(x, depth + 1)
+
+        def walk(obj, depth=0):
+            if isinstance(obj, dict):
+                for k, v in obj.items():
+                    if isinstance(v, dict):
+                        lines.append("  " * depth + f"[{k}]")
+                        walk(v, depth + 1)
+                    elif isinstance(v, list):
+                        emit_list(v, depth, k)
+                    else:
+                        lines.append("  " * depth + f"{k} = {v}")
+            elif isinstance(obj, list):
+                emit_list(obj, depth)
+            else:
+                lines.append("  " * depth + str(obj))
+        walk(d if isinstance(d, dict) else {"value": d})
+        self.txt_lnav.setPlainText("\n".join(lines))
+        self.lnav_hint.setText("完成")
 
     # ══ 运行控制 ═════════════════════════════════════════════════
     def _card_run(self) -> Card:
@@ -111,6 +266,8 @@ class VerifyPage(QWidget):
         t = self.session.current()
         if not self.ed_outdir.text().strip():
             self.ed_outdir.setText(t.last_outdir or self.session.last_outdir)
+        if self.ed_outdir.text().strip() and self._trace_rx is None:
+            self._load_traces()
 
     def run_verify(self, auto: bool = False):
         if self._worker and self._worker.isRunning():
@@ -209,6 +366,7 @@ class VerifyPage(QWidget):
             self.kpi_2d.set(f"{_m.hypot(dlat, dlon):.2f}")
         except Exception:                        # noqa: BLE001
             pass
+        self._load_traces()
 
     def _fail(self, msg: str):
         self.btn_run.setEnabled(True)

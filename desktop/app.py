@@ -24,6 +24,8 @@ def main() -> int:
     ap.add_argument("--shot", help="窗口截图输出 png（自检用）")
     ap.add_argument("--page", default="sim",
                     choices=["sim", "verify", "iq", "traj", "log", "hist"])
+    ap.add_argument("--outdir", default="",
+                    help="预载场景 runid（图谱/验证页直接可用）")
     ap.add_argument("--exit-after", type=float, default=0.0,
                     help="N 秒后自动退出")
     ap.add_argument("--show-delay", type=float, default=0.6,
@@ -43,8 +45,17 @@ def main() -> int:
 
     session = Session()
     win = MainWindow(session)
+    if args.outdir:
+        session.last_outdir = args.outdir
+        win.pages["iq"].ed_outdir.setText(args.outdir)
+        win.pages["verify"].ed_outdir.setText(args.outdir)
     win.goto(args.page)
     win.show()
+    if args.outdir and args.page == "iq":
+        win.pages["iq"]._load_iq()
+        win.pages["iq"]._load_corr()
+    if args.outdir and args.page == "verify":
+        win.pages["verify"]._load_traces()
 
     if args.exit_after > 0:
         QTimer.singleShot(int(args.exit_after * 1000), app.quit)
