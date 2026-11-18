@@ -2,20 +2,23 @@
 """高级图谱页：RF 频谱 PSD + 相关器四联图（对齐官方 Web UI rfch/corr 页语义）。
 
 数据源（引擎二进制 topic，src/sdr_web.c 实证）：
-  psd        rfch 选定，nfft/tave 可调      → 频谱曲线（dB，fo 处竖线）
+  psd        rfch 选定，nfft/tave 可调      → 频谱曲线（dB，fo 处竖线，频段刻度）
   corr       ch 选定，width(μs) 扫查窗      → 相关峰：x=coff+pos/fs(ms)
   corr_hist  ch 选定，tspan(s) 历史窗       → IP-QP 星座 + IP/QP 时间线
-  ch_stat(opt=1)                            → 锁定 CH 下拉 + C/N0/COFF/DOP KPI
+  ch_stat(opt=1)                            → CH 下拉 + KPI + PSD 频段标记来源
+
+增强（二期）：
+  星座/相关峰主相关器按角色分色：E=绿 P=蓝 P2=红 L=橙（pos 序自动判角色）
+  PSD 信号频段刻度：ch_stat 各 RF CH 的 SIG 集合 × SIG_FREQ 载波频率表
+  （官方 rfch.js updateSigs/SIG_FREQ 同款），按系统着色画刻度+标签。
 """
 from __future__ import annotations
-
-import math
 
 import numpy as np
 import pyqtgraph as pg
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QComboBox, QGridLayout, QHBoxLayout, QLabel,
-                               QVBoxLayout, QWidget)
+                               QPushButton, QVBoxLayout, QWidget)
 
 from .. import theme
 from ..widgets import Card
@@ -29,6 +32,24 @@ R_OPTS = ["0.1", "0.15", "0.2", "0.3", "0.4", "0.6", "0.8", "1.0", "1.5", "2"]
 NFFT_OPTS = ["256", "1024", "2048", "4096"]
 TAVE_OPTS = {"1": 0.001, "10": 0.01, "20": 0.02, "50": 0.05}            # ms
 
+# 信号载波频率表（官方 html/js/pages/rfch.js SIG_FREQ 原表，MHz）
+SIG_FREQ = {
+    "L1CA": 1575.42, "L1CB": 1575.42, "L1CD": 1575.42, "L1CP": 1575.42,
+    "L1S": 1575.42, "L2CM": 1227.6, "L5I": 1176.45, "L5Q": 1176.45,
+    "L5SI": 1176.45, "L5SQ": 1176.45, "L5SIV": 1176.45, "L5SQV": 1176.45,
+    "L6D": 1278.75, "L6E": 1278.75,
+    "G1CA": 1602.0, "G2CA": 1246.0, "G1OCD": 1600.995, "G1OCP": 1600.995,
+    "G2OCP": 1248.06, "G3OCD": 1202.025, "G3OCP": 1202.025,
+    "E1B": 1575.42, "E1C": 1575.42, "E5AI": 1176.45, "E5AQ": 1176.45,
+    "E5ABI": 1191.795, "E5ABQ": 1191.795, "E5BI": 1207.14, "E5BQ": 1207.14,
+    "E6B": 1278.75, "E6C": 1278.75,
+    "B1I": 1561.098, "B1CD": 1575.42, "B1CP": 1575.42, "B2AD": 1176.45,
+    "B2AP": 1176.45, "B2I": 1207.14, "B2BI": 1207.14, "B3I": 1268.52,
+    "I1SD": 1575.42, "I1SP": 1575.42, "I5S": 1176.45, "ISS": 2492.028,
+}
+# 主相关器角色配色
+ROLE_COLOR = {"E": theme.ACC2, "P": theme.ACC, "P2": theme.BAD, "L": theme.WARN}
+
 
 class AdvancedPage(QWidget):
     def __init__(self, win):
@@ -39,6 +60,7 @@ class AdvancedPage(QWidget):
         self.lock_chs: list[int] = []
         self._ch_key = ""
         self.stat_row: list[str] | None = None
+        self._sigs: dict[int, list] = {}    # rfch -> [(sig, sys)] 去重
         self.corr = None          # 最近 corr 快照
         self.hist = None          # 最近 corr_hist
         self.psd_msg = None
@@ -65,7 +87,6 @@ class AdvancedPage(QWidget):
             return lb
 
         bar.addWidget(label("相关 CH"))
-        from PySide6.QtWidgets import QPushButton
         self.btn_prev = QPushButton("◀")
         self.btn_prev.setFixedWidth(28)
         self.btn_prev.clicked.connect(lambda: self._nav_ch(-1))
@@ -127,7 +148,7 @@ class AdvancedPage(QWidget):
         self._fo_line = pg.InfiniteLine(pen=pg.mkPen(theme.WARN, width=1,
                                                       style=Qt.DashLine))
         self.pg_psd.addItem(self._fo_line)
-        c1 = Card("频谱 PSD", "psd · 噪声基底/信号带宽")
+        c1 = Card("频谱 PSD", "psd · 虚线=LO，顶部刻度=信号频段（按系统着色）")
         c1.body.addWidget(self.pg_psd)
 
         self.pg_corr = pg.PlotWidget()
@@ -135,13 +156,13 @@ class AdvancedPage(QWidget):
         self.pg_corr.showGrid(x=True, y=True, alpha=0.15)
         self._coff_line = pg.InfiniteLine(pen=pg.mkPen(theme.MUT, width=1))
         self.pg_corr.addItem(self._coff_line)
-        c2 = Card("相关峰", "corr · 主相关器大点/扫查相关器连线")
+        c2 = Card("相关峰", "corr · 大点分色 E绿/P蓝/P2红/L橙，小点=扫查相关器")
         c2.body.addWidget(self.pg_corr)
 
         self.pg_iq = pg.PlotWidget()
         self.pg_iq.setAspectLocked(True)
         self.pg_iq.showGrid(x=True, y=True, alpha=0.15)
-        c3 = Card("IP-QP 星座", "corr_hist 散点 + 当前 prompt")
+        c3 = Card("IP-QP 星座", "corr_hist 散点 + 主相关器分色大点")
         c3.body.addWidget(self.pg_iq)
 
         self.pg_hist = pg.PlotWidget()
@@ -252,9 +273,10 @@ class AdvancedPage(QWidget):
             self._draw_hist()
 
     def update_ch_stat_opt(self, text: str):
-        """ch_stat(opt=1) 文本表：26+ 列，f[0]=CH。填 CH 下拉 + KPI。"""
+        """ch_stat(opt=1) 文本表：26+ 列，f[0]=CH f[1]=RFCH f[2]=SAT f[3]=SIG。"""
         rows = []
         stat = None
+        sigs: dict[int, list] = {}
         for line in text.split("\n")[2:]:
             f = line.strip().split()
             if len(f) < 26 or not f[0].isdigit():
@@ -262,6 +284,17 @@ class AdvancedPage(QWidget):
             rows.append(int(f[0]))
             if int(f[0]) == self.ch:
                 stat = f
+            try:
+                rf = int(f[1])
+            except ValueError:
+                continue
+            sig = f[3]
+            c0 = f[2][0] if f[2] else "?"
+            sysc = "S" if c0.isdigit() else c0          # 官方 sats.js 同款判系
+            lst = sigs.setdefault(rf, [])
+            if (sig, sysc) not in lst:
+                lst.append((sig, sysc))
+        self._sigs = sigs
         self.stat_row = stat
         if rows != self.lock_chs:
             self.lock_chs = rows
@@ -297,9 +330,32 @@ class AdvancedPage(QWidget):
         self._draw_iq()
         self._draw_hist()
 
+    def _main_roles(self, m: dict):
+        """主相关器（前 npos 点）按 x 自动判角色：最小=E、最大=L，
+        中间按接近码相位基线程度 P/P2。返回 roles 列表（与主点对齐）。"""
+        npos = min(int(m["npos"]), m["n"])
+        if npos <= 0:
+            return 0, []
+        x = m["pos"][:npos]
+        order = sorted(range(npos), key=lambda i: x[i])
+        roles = ["P"] * npos
+        if npos == 1:
+            roles[0] = "P"
+        elif npos == 2:
+            roles[order[0]], roles[order[1]] = "E", "L"
+        else:
+            roles[order[0]] = "E"
+            roles[order[-1]] = "L"
+            mid = order[1:-1]                    # npos>3 时全部并入 P 色
+            roles[mid[0]] = "P"
+            if len(mid) > 1:
+                roles[mid[1]] = "P2"
+        return npos, roles
+
     def _draw_psd(self):
         p, m = self.pg_psd, self.psd_msg
         p.clear()
+        self._fo_line.setVisible(False)
         if not m:
             return
         n = m["psd"].size
@@ -312,6 +368,21 @@ class AdvancedPage(QWidget):
         self._fo_line.setValue(fo)
         self._fo_line.setVisible(True)
         p.setXRange(x0, x0 + w, padding=0)
+        # 信号频段刻度（官方 rfch.js marks：窗口内 sig 逐个画刻度+标签）
+        ymax = float(np.max(m["psd"]))
+        dy = 0.0
+        for sig, sysc in sorted(self._sigs.get(int(self.cb_rfch.currentText()),
+                                                [])):
+            f = SIG_FREQ.get(sig)
+            if f is None or f < x0 or f > x0 + w:
+                continue
+            color = theme.SYS_COLOR.get(sysc, theme.MUT)
+            p.addItem(pg.InfiniteLine(pos=f, pen=pg.mkPen(color, width=1,
+                                                          style=Qt.DotLine)))
+            ti = pg.TextItem(sig, color=color, anchor=(0, 0.5))
+            ti.setPos(f + 0.05, ymax - dy)
+            p.addItem(ti, ignoreBounds=True)
+            dy += (ymax + 85) * 0.07                      # 层叠错开
 
     def _draw_corr(self):
         p, m = self.pg_corr, self.corr
@@ -338,12 +409,15 @@ class AdvancedPage(QWidget):
         half = w * 5e-4                                    # W(μs)/2 → ms
         npos = min(int(m["npos"]), m["n"])
         if m["n"] > npos:                                  # 附加扫查相关器
-            p.plot(x[npos:], y[npos:], pen=pg.mkPen(theme.ACC2, width=1))
+            p.plot(x[npos:], y[npos:], pen=pg.mkPen(theme.MUT, width=1))
             p.addItem(pg.ScatterPlotItem(x=x[npos:], y=y[npos:],
-                                         brush=pg.mkBrush(theme.ACC2),
+                                         brush=pg.mkBrush(theme.MUT),
                                          size=3))
-        p.addItem(pg.ScatterPlotItem(x=x[:npos], y=y[:npos],
-                                     brush=pg.mkBrush(theme.ACC), size=9))
+        _, roles = self._main_roles(m)
+        for i, role in enumerate(roles):                   # 主相关器分色大点
+            p.addItem(pg.ScatterPlotItem(
+                x=[x[i]], y=[y[i]],
+                brush=pg.mkBrush(ROLE_COLOR.get(role, theme.ACC)), size=10))
         self._coff_line.setValue(m["coff"])
         self._coff_line.setVisible(True)
         p.addItem(pg.InfiniteLine(pos=0, angle=0,
@@ -367,12 +441,17 @@ class AdvancedPage(QWidget):
         if h and h["n"]:
             P = h["P"]
             p.addItem(pg.ScatterPlotItem(x=P[0::2], y=P[1::2],
-                                         brush=pg.mkBrush(theme.ACC2),
+                                         brush=pg.mkBrush("#2e7d6b"),  # 淡青绿
                                          size=2))
         if m and m["n"]:
-            p.addItem(pg.ScatterPlotItem(x=[m["C"][0]], y=[m["C"][1]],
-                                         brush=pg.mkBrush(theme.ACC),
-                                         size=10))
+            npos, roles = self._main_roles(m)
+            for i, role in enumerate(roles):
+                if 2 * i + 1 >= m["C"].size:
+                    break
+                p.addItem(pg.ScatterPlotItem(
+                    x=[m["C"][2 * i]], y=[m["C"][2 * i + 1]],
+                    brush=pg.mkBrush(ROLE_COLOR.get(role, theme.ACC)),
+                    size=9 if role != "P" else 11))
         p.setXRange(-R, R, padding=0)
         p.setYRange(-R, R, padding=0)
 

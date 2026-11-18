@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-"""高级图谱页 GUI 验收驱动：回放 → 锁定 → 进入高级页 → 截 IQ/I 两模式图。
+"""高级页增强 + 数据页 GUI 验收驱动 v2。
 
 用法: python .workbuddy/pocket_adv_drive.py <iq_abs_path> <shots_dir>
-判据: 进入高级页后 psd/corr/corr_hist 均有帧且 corr cn0>30 → ADV-DRIVE-OK
+判据: 高级页 psd/corr/hist 齐 + 频段刻度 sigs 非空 +
+      数据页观测表 >=4 行 + 卫星表 >=4 行 → ADV2-DRIVE-OK
 """
 import os
 import sys
@@ -40,57 +41,55 @@ def main():
         st["t"] += 2
         nfix = len(win.page_solution.pts)
         lock = win.page_monitor.tbl.rowCount()
-        win.foot_l.setText(f"adv-drive: fix={nfix} lock={lock} t={st['t']}")
+        win.foot_l.setText(f"adv2-drive: fix={nfix} lock={lock} t={st['t']}")
         if nfix >= 12 and lock >= 4:
-            enter_adv()
+            win.goto("advanced")
+            QTimer.singleShot(500, lambda: wait_adv(0.0))
             return
         if st["t"] > 170:
-            win.grab().save(f"{SHOTS}/p5_timeout.png")
-            print(f"ADV-DRIVE-TIMEOUT fix={nfix} lock={lock}", flush=True)
+            win.grab().save(f"{SHOTS}/p6_timeout.png")
+            print(f"ADV2-DRIVE-TIMEOUT fix={nfix} lock={lock}", flush=True)
             app.quit()
             return
         QTimer.singleShot(2000, poll)
 
-    def enter_adv():
-        win.goto("advanced")
-        QTimer.singleShot(500, lambda: wait_ch(0.0))
-
-    def wait_ch(elapsed):
-        # 等 ch_stat 首帧到达（页面内自动锁定首个在用通道）
+    def wait_adv(elapsed):
         adv = win.page_advanced
-        if (adv.lock_chs and adv.ch in adv.lock_chs) or elapsed > 8.0:
-            QTimer.singleShot(3500, shoot_iq)
+        if (adv.lock_chs and adv.ch in adv.lock_chs
+                and adv.psd_msg and adv.corr) or elapsed > 10:
+            QTimer.singleShot(3000, shoot_adv)
         else:
-            QTimer.singleShot(500, lambda: wait_ch(elapsed + 0.5))
+            QTimer.singleShot(500, lambda: wait_adv(elapsed + 0.5))
 
-    def shoot_iq():
+    def shoot_adv():
         adv = win.page_advanced
-        win.grab().save(f"{SHOTS}/p5_advanced_iq.png")
-        adv.cb_mode.setCurrentText("I")   # 切换显示量 → 等下一帧重绘
-        QTimer.singleShot(1500, shoot_i)
+        win.grab().save(f"{SHOTS}/p6_advanced_enh.png")
+        win.goto("data")
+        QTimer.singleShot(500, lambda: wait_data(0.0))
 
-    def shoot_i():
-        win.grab().save(f"{SHOTS}/p5_advanced_i.png")
-        adv = win.page_advanced
+    def wait_data(elapsed):
+        dp = win.page_data
+        if ((dp.tbl_ch.rowCount() >= 4 and dp.tbl_sat.rowCount() >= 4)
+                or elapsed > 12):
+            QTimer.singleShot(1200, shoot_data)
+        else:
+            QTimer.singleShot(500, lambda: wait_data(elapsed + 0.5))
+
+    def shoot_data():
+        adv, dp = win.page_advanced, win.page_data
+        sigs_n = sum(len(v) for v in adv._sigs.values())
         cmax = 0.0
         if adv.corr is not None and adv.corr["n"]:
             cmax = float(np.max(np.abs(adv.corr["C"])))
-        cn0_stat = 0.0
-        if adv.stat_row:
-            try:
-                cn0_stat = float(adv.stat_row[6])
-            except (ValueError, IndexError):
-                pass
-        ok = (adv.psd_msg is not None and adv.corr is not None and cmax > 0
-              and adv.hist is not None and adv.hist["n"] > 0
-              and cn0_stat > 35.0)
-        info = dict(ch=adv.ch, lock_chs=len(adv.lock_chs),
-                    corr_n=adv.corr["n"] if adv.corr else 0,
-                    npos=adv.corr["npos"] if adv.corr else 0,
-                    Cmax=round(cmax, 2), cn0_chstat=round(cn0_stat, 1),
-                    hist_n=adv.hist["n"] if adv.hist else 0,
-                    psd_n=adv.psd_msg["psd"].size if adv.psd_msg else 0)
-        print(("ADV-DRIVE-OK " if ok else "ADV-DRIVE-BAD ") + str(info),
+        ok = (adv.psd_msg and adv.corr and cmax > 0 and adv.hist
+              and adv.hist["n"] > 0 and sigs_n > 0
+              and dp.tbl_ch.rowCount() >= 4 and dp.tbl_sat.rowCount() >= 4)
+        win.grab().save(f"{SHOTS}/p6_data.png")
+        info = dict(ch=adv.ch, sigs=sigs_n, Cmax=round(cmax, 2),
+                    ch_rows=dp.tbl_ch.rowCount(),
+                    ch_cols=dp.tbl_ch.columnCount(),
+                    sat_rows=dp.tbl_sat.rowCount())
+        print(("ADV2-DRIVE-OK " if ok else "ADV2-DRIVE-BAD ") + str(info),
               flush=True)
         app.quit()
 

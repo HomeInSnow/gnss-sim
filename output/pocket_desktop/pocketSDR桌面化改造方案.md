@@ -87,3 +87,33 @@ topic（`src/sdr_web.c` send_psd/send_corr/send_corr_hist 实证；字段语义�
   show 新页，避免 corr 的 sel_ch 占用泄漏与 ch_stat 参数互相覆盖）。
 - 验收：CLI 探针三类帧到达 + 字段合理；GUI 驱动 ADV-DRIVE-OK（G04 C/N0 41.8、
   相关峰主相关器落峰、IP 位翻转方波清晰）；exe 重打包 selftest PASS。
+
+## 9. 官方 Web 版其余要素补齐（二期，2026-11-18）
+
+在第 8 节四联图基础上补齐官方 Web UI 的三类要素，rail 扩为 6 页
+（控制台/监测/高级/定位/数据/日志）：
+
+**主相关器按角色分色**（对齐官方 corr.js 语义）：主相关器前 npos 个大点按
+x(pos) 排序判角色——最小=E(绿)、最大=L(橙)、中间依次=P(蓝)、P2(红)；
+npos==2 时只有 E/L。附加扫查相关器保持小点+连线（灰）。IP-QP 星座图同样
+按角色分色画大点（历史散点保持灰绿），与相关峰图色彩语言一致。
+
+**PSD 信号频段刻度**（对齐官方 rfch.js updateSigs）：从 ch_stat(opt=1) 收集
+每 RF 通道的 (SIG, 系统) 集合（系统= SAT 首字母，数字开头归 S），对官方
+SIG_FREQ 表内落于显示窗口的信号按系统色画竖直虚线刻度，标签按序层叠避免
+重叠（本 60s 场景即 L1CA @1575.42 MHz 一条）。
+
+**数据页**（rail 第 5 页，`ui/pages/data.py`）：
+- 左「通道观测」：ch_stat opt=1 全列（实测 26 列）12 行级全列表——
+  CH/RF/SAT/SIG/PRN/LOCK/C-N0(文本条+40/35 阈值着色)/COFF/DOP/ADR 及扩展列
+  ERR_P/ERR_C/PLI/NAV1-3/WEEK/TOW。注意引擎 `print_head` 表头恒 16 列名而
+  opt=1 数据行 26 列，表按数据行最大列数扩列（扩展列名按 corr.js 引用语义）。
+- 右「卫星状态/导航」：sat_stat 的 SAT/AZ/EL/PVT/OBS/EPH/SVH/FCN 标志表，
+  OK 绿/– 灰，SVH 非零红。sat_stat 的 obs/eph 是 int 标志而非数值
+  （官方 Web 同样只有 OK 列），观测/导航**数值**只能取自 ch_stat opt=1。
+  订阅的 sats 参数必须逗号分隔字符串（引擎 jsn_str 拒 list → 空星集）。
+
+验收：GUI 驱动 ADV2-DRIVE-OK（`{'ch': 4, 'sigs': 1, 'Cmax': 0.08,
+'ch_rows': 12, 'ch_cols': 26, 'sat_rows': 12}`，sigs=1 与该 GPS-only 场景相符）；
+截图 `shots/p6_advanced_enh.png`、`shots/p6_data.png`；exe 重打包
+selftest PASS(fixes=3)。

@@ -12,13 +12,14 @@ from ..core.wslink import WsLink
 from . import theme
 from .pages.advanced import AdvancedPage
 from .pages.console import ConsolePage
+from .pages.data import DataPage
 from .pages.logpage import LogPage
 from .pages.monitor import MonitorPage
 from .pages.solution import SolutionPage
 
 PAGES = [("console", "控制台", "▶"), ("monitor", "监控", "◎"),
          ("advanced", "高级", "∿"), ("solution", "定位", "⌖"),
-         ("log", "日志", "☰")]
+         ("data", "数据", "≡"), ("log", "日志", "☰")]
 
 
 class MainWindow(QMainWindow):
@@ -72,11 +73,13 @@ class MainWindow(QMainWindow):
         self.page_monitor = MonitorPage(self)
         self.page_advanced = AdvancedPage(self)
         self.page_solution = SolutionPage(self)
+        self.page_data = DataPage(self)
         self.page_log = LogPage(self)
         self._by_key = {"console": self.page_console,
                         "monitor": self.page_monitor,
                         "advanced": self.page_advanced,
                         "solution": self.page_solution,
+                        "data": self.page_data,
                         "log": self.page_log}
         for p in self._by_key.values():
             self.stack.addWidget(p)
@@ -205,10 +208,12 @@ class MainWindow(QMainWindow):
         elif t == "ch_stat":
             self.page_monitor.update_ch_stat(m.get("str", ""))
             self.page_advanced.update_ch_stat_opt(m.get("str", ""))
+            self.page_data.update_ch_stat(m.get("str", ""))
         elif t == "bin":
             self.page_advanced.on_bin(m)
         elif t == "sat_stat":
             self.page_monitor.update_sat_stat(m.get("sats", []))
+            self.page_data.update_sat_stat(m.get("sats", []))
         elif t == "pvt_sol":
             self.page_solution.update_pvt(m.get("str", ""))
         elif t == "log":
