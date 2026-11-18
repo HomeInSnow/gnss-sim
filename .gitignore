@@ -36,3 +36,4 @@ docs/
 PocketSDR/
 dist/
 .workbuddy/pyi_build/
+.workbuddy/pyi_build_pocket/
