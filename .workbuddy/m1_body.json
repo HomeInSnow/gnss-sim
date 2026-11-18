@@ -1,0 +1,16 @@
+{
+ "rinex_path": "AUTO",
+ "lat": 60.182537,
+ "lon": 24.82826,
+ "alt": 47.248,
+ "start_utc": "2023-09-28T23:20:00",
+ "duration_s": 10,
+ "sample_rate": 2500000.0,
+ "sample_format": "int8",
+ "ephemeris_mode": "broadcast",
+ "sv_clock": true,
+ "engine": "native",
+ "systems": [
+  "G"
+ ]
+}
