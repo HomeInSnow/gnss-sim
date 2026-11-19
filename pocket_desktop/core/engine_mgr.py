@@ -45,9 +45,16 @@ def engine_dir() -> Path:
             if cand.exists():
                 return cand
         return _pkg_root() / "engine"
-    # PocketSDR 是 gnss-sim 仓库的兄弟目录
-    return Path(os.environ.get("POCKETSDR_BUILD",
-                              repo_root().parent / "PocketSDR" / "local_build"))
+    # pocketSDR-desktop 是 gnss-sim-desktop 仓库的兄弟目录（旧名 PocketSDR 兼容）
+    env = os.environ.get("POCKETSDR_BUILD")
+    if env:
+        return Path(env)
+    parent = repo_root().parent
+    for name in ("pocketSDR-desktop", "PocketSDR"):
+        cand = parent / name / "local_build"
+        if cand.exists():
+            return cand
+    return parent / "pocketSDR-desktop" / "local_build"
 
 
 def html_dir() -> Path:

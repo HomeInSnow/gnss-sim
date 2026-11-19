@@ -1,5 +1,37 @@
 # GNSS Signal Simulator
 
+## About gnss-sim-desktop
+
+**gnss-sim-desktop** is an independently maintained continuation of
+[aryesil/gnss-sim](https://github.com/aryesil/gnss-sim). The fork was taken in
+September 2026 and has since diverged substantially (300+ commits of rework);
+the two codebases are no longer kept in sync and this repository should be
+treated as a standalone project. This section describes the current state of
+the fork and is revised as the project evolves.
+
+What sets this fork apart from the original:
+
+- **Native Windows desktop application** (`desktop/`, PySide6, packaged with
+  PyInstaller): map-based scenario editor, ephemeris browser with live
+  sky-coverage visibility, generation console and a verification page — next
+  to the web workbench and JSON API of the original.
+- **Built-in receiver self-check, tracking-solution based.** A pure-Python
+  software receiver (acquisition, coherent early/late code tracking with
+  Costas carrier loops, anchor pseudorange least squares) verifies every
+  generated scenario end-to-end; the verification page reports horizontal /
+  vertical error, PDOP, pseudorange-residual RMS, code-phase error in chips
+  and de-trended carrier-phase jitter.
+- **PocketSDR joint-verification console** (`pocket_desktop/`): a companion
+  desktop app that drives [pocketSDR-desktop](https://github.com/HomeInSnow/pocketSDR-desktop)
+  engine variants (standard / atmosphere+clock-off / E1+E5a IFLC) to replay
+  the exact same IQ files for third-party cross-validation, with live
+  acquisition/tracking/observables/navigation monitors.
+- **Reproducible provenance:** every run writes `out/<runid>/` with
+  `meta.json` + per-run provenance, and packaged builds ship a pre-seeded
+  RINEX broadcast cache for fully offline runs.
+
+## A controlled, observable, and reproducible GNSS workbench
+
 A controlled, observable, and reproducible multi-constellation GNSS signal testing workbench.
 
 Pick a place and time on a map, generate baseband IQ recordings across multiple GNSS bands, check them with a built-in software receiver, decode broadcast navigation messages directly from IQ, and — into a cable and never over the air — replay them live to a PlutoSDR-class SDR, a Tezuka LibreSDR or a Nuand bladeRF. Every RF-relevant action is written to a persistent audit log.
