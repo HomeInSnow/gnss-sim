@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-"""深空蓝黑 × 青蓝高亮主题（与概念稿 v1 同一色板）。"""
+"""深空蓝黑 v2 高对比主题：提亮底色分层与次级文字，表头/时间戳可读性优先。"""
 
-BG      = "#0a0f1e"
-PANEL   = "#101a30"
-PANEL2  = "#141f3a"
-FIELD   = "#0b1226"
-LINE    = "#22304f"
-LINE2   = "#1a2540"
-TXT     = "#dbe6f7"
-MUT     = "#7d90b5"
-DIM     = "#55648a"
-ACC     = "#4cc2ff"
-ACC2    = "#39e6b4"
-WARN    = "#ffb454"
-BAD     = "#ff6b81"
+BG      = "#0d1424"
+PANEL   = "#161f33"
+PANEL2  = "#1d2946"
+FIELD   = "#101a2f"
+LINE    = "#3a4d78"
+LINE2   = "#28395c"
+TXT     = "#f2f7ff"
+MUT     = "#b6c5de"
+DIM     = "#8ea3c6"
+ACC     = "#5ecbff"
+ACC2    = "#46e8ad"
+WARN    = "#ffc46b"
+BAD     = "#ff7d90"
 
 SYS_COLOR = {"G": ACC, "R": BAD, "E": ACC2, "C": WARN, "J": "#b48cff",
              "S": MUT, "I": "#a3e635"}
@@ -49,29 +49,29 @@ QComboBox QAbstractItemView {{ background:{FIELD}; border:1px solid {LINE};
   selection-background-color:{PANEL2}; color:{TXT}; }}
 
 QPushButton#Primary {{
-  background:qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #2f9dff, stop:1 #25e0b3);
+  background:qlineargradient(x1:0,y1:0,x2:1,y2:1, stop:0 #38a8ff, stop:1 #2ee6b0);
   color:#04121f; font-weight:800; border:none; border-radius:9px;
   padding:10px 24px; font-size:14px;
 }}
-QPushButton#Primary:disabled {{ color:#28405c; background:{PANEL2}; }}
-QPushButton#Ghost {{ background:{PANEL2}; color:{ACC}; border:1px solid rgba(76,194,255,.35);
+QPushButton#Primary:disabled {{ color:#5a7396; background:{PANEL2}; }}
+QPushButton#Ghost {{ background:{PANEL2}; color:{ACC}; border:1px solid rgba(94,203,255,.45);
   border-radius:9px; padding:9px 18px; font-weight:700; }}
 QPushButton#Ghost:hover {{ border:1px solid {ACC}; }}
 QPushButton#FileBtn {{ background:{PANEL2}; color:{MUT}; border:1px solid {LINE};
   border-radius:7px; padding:5px 10px; font-size:11px; }}
-QPushButton#Chip {{ background:{FIELD}; color:{DIM}; border:1px solid {LINE};
+QPushButton#Chip {{ background:{FIELD}; color:{MUT}; border:1px solid {LINE};
   border-radius:11px; padding:3px 12px; font-family:{FONT_MONO}; font-size:11px; }}
-QPushButton#Chip:checked {{ background:{ACC}; color:#06111f; font-weight:800;
+QPushButton#Chip:checked {{ background:{ACC}; color:#06121f; font-weight:800;
   border:1px solid {ACC}; }}
 QPushButton#RailBtn {{ background:transparent; border:none; color:{DIM};
   font-size:11px; padding:8px 2px; }}
 QPushButton#RailBtn:hover {{ color:{TXT}; }}
-QPushButton#RailBtn:checked {{ color:{ACC}; background:rgba(76,194,255,.09);
-  border:1px solid rgba(76,194,255,.25); border-radius:10px; }}
+QPushButton#RailBtn:checked {{ color:{ACC}; background:rgba(94,203,255,.10);
+  border:1px solid rgba(94,203,255,.30); border-radius:10px; }}
 QPushButton#TaskItem {{ background:{PANEL}; border:1px solid {LINE2};
   border-radius:9px; padding:8px 10px; text-align:left; color:{TXT}; }}
-QPushButton#TaskItem:checked {{ border:1px solid rgba(76,194,255,.5);
-  background:rgba(76,194,255,.07); }}
+QPushButton#TaskItem:checked {{ border:1px solid rgba(94,203,255,.55);
+  background:rgba(94,203,255,.08); }}
 QPushButton#Link {{ color:{ACC}; background:transparent; border:none;
   font-size:11px; padding:2px 4px; }}
 
@@ -86,11 +86,11 @@ QProgressBar::chunk {{ background:qlineargradient(x1:0,y1:0,x2:1,y2:0,
 
 QTableWidget {{ border:1px solid {LINE2}; border-radius:10px; gridline-color:{LINE2};
   background:{PANEL}; alternate-background-color:{PANEL2}; }}
-QHeaderView::section {{ background:{PANEL}; color:{DIM}; border:none;
-  border-bottom:1px solid {LINE}; padding:5px 8px; font-size:10px;
-  letter-spacing:1px; }}
+QHeaderView::section {{ background:{PANEL}; color:{MUT}; border:none;
+  border-bottom:1px solid {LINE}; padding:5px 8px; font-size:11px;
+  font-weight:700; letter-spacing:1px; }}
 QTableWidget::item {{ padding:3px 6px; color:{TXT}; }}
-QTableWidget::item:selected {{ background:rgba(76,194,255,.12); }}
+QTableWidget::item:selected {{ background:rgba(94,203,255,.14); }}
 
 QScrollArea {{ border:none; background:transparent; }}
 QScrollBar:vertical {{ background:transparent; width:9px; margin:0; }}
@@ -100,14 +100,17 @@ QScrollBar:horizontal {{ background:transparent; height:9px; }}
 QScrollBar::handle:horizontal {{ background:{LINE}; border-radius:4px; min-width:24px; }}
 
 QFrame#TopBar {{ background:qlineargradient(x1:0,y1:0,x2:0,y2:1,
-  stop:0 #111c36, stop:1 #0c1428); border-bottom:1px solid {LINE2}; }}
-QFrame#Footer {{ background:#0a1122; border-top:1px solid {LINE2}; }}
+  stop:0 #17233d, stop:1 #111a2e); border-bottom:1px solid {LINE2}; }}
+QFrame#Footer {{ background:#0e1729; border-top:1px solid {LINE2}; }}
 QLabel#Foot {{ color:{DIM}; font-family:{FONT_MONO}; font-size:10px; }}
 QLabel#Logo {{ font-size:15px; font-weight:800; color:{ACC}; }}
 QLabel#LogoSub {{ color:{MUT}; font-size:11px; }}
 QLabel#Dot {{ color:{ACC2}; font-size:14px; }}
 
 QPlainTextEdit#LogView {{ font-family:{FONT_MONO}; font-size:11px; }}
+
+QToolTip {{ background:{PANEL2}; color:{TXT}; border:1px solid {LINE};
+  padding:4px 8px; font-size:11px; }}
 """
 
 

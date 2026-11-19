@@ -278,13 +278,13 @@ class MapWidget(QWidget):
         p = QPainter(self)
         p.setRenderHint(QPainter.Antialiasing, False)
         w, h = self.width(), self.height()
-        p.fillRect(0, 0, w, h, QColor("#0b1526"))
+        p.fillRect(0, 0, w, h, QColor(theme.FIELD))
 
         def xy(lon, lat):
             return (lon + 180.0) / 360.0 * w, (90.0 - lat) / 180.0 * h
 
         # 经纬网
-        p.setPen(QPen(QColor("#16233f"), 1))
+        p.setPen(QPen(QColor(theme.LINE2), 1))
         for gl in range(-150, 180, 30):
             x, _ = xy(gl, 0)
             p.drawLine(QPointF(x, 0), QPointF(x, h))
@@ -292,8 +292,8 @@ class MapWidget(QWidget):
             _, y = xy(0, ga)
             p.drawLine(QPointF(0, y), QPointF(w, y))
         # 陆地
-        p.setPen(QPen(QColor("#2a5a6e"), 0.8))
-        p.setBrush(QBrush(QColor("#17435a")))
+        p.setPen(QPen(QColor("#4d9fc0"), 0.8))
+        p.setBrush(QBrush(QColor("#20566e")))
         for ring in self._rings:
             poly = []
             prev = None

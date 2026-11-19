@@ -81,7 +81,7 @@ class SettingsDialog(QDialog):
             c.body.addLayout(row)
         lay.addWidget(c)
 
-        note = QLabel("界面主题：深空蓝黑（v1 定案）；硬件通道/播发功能按方案裁剪。\n"
+        note = QLabel("界面主题：深空蓝黑 v2（高对比）；硬件通道/播发功能按方案裁剪。\n"
                       "输出与数据目录可用环境变量 OUT_DIR / DATA_DIR 覆盖。")
         note.setObjectName("DimTxt")
         lay.addWidget(note)

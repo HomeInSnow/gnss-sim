@@ -38,8 +38,8 @@ class MainWindow(QMainWindow):
         top = QWidget(objectName="TopBar")
         tl = QHBoxLayout(top)
         tl.setContentsMargins(16, 8, 16, 8)
-        tl.addWidget(QLabel('<font id="Logo">PocketSDR</font> '
-                            '<font color="#7d90b5" size="2">Desktop</font>'))
+        tl.addWidget(QLabel(f'<font id="Logo">PocketSDR</font> '
+                            f'<font color="{theme.MUT}" size="2">Desktop</font>'))
         tl.addStretch(1)
         self.dot_engine = QLabel("● 引擎停止")
         self.dot_engine.setStyleSheet(f"color:{theme.DIM};font-size:11px;")
@@ -49,7 +49,7 @@ class MainWindow(QMainWindow):
         tl.addSpacing(14)
         tl.addWidget(self.dot_ws)
         tl.addSpacing(14)
-        tl.addWidget(QLabel('<font color="#55648a" size="1">v0.1</font>'))
+        tl.addWidget(QLabel(f'<font color="{theme.DIM}" size="1">v0.1</font>'))
 
         # 左 rail
         rail = QWidget()

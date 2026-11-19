@@ -7,10 +7,11 @@ import datetime as dt
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
                                QPlainTextEdit, QFileDialog)
 
+from .. import theme
 from ..widgets import Card
 
-LEVEL_COLOR = {"info": "#dbe6f7", "ok": "#39e6b4", "warn": "#ffb454",
-               "bad": "#ff6b81"}
+LEVEL_COLOR = {"info": theme.TXT, "ok": theme.ACC2, "warn": theme.WARN,
+               "bad": theme.BAD}
 
 
 class LogPage(QWidget):
@@ -43,9 +44,9 @@ class LogPage(QWidget):
 
     def _append(self, ts: str, level: str, msg: str):
         self._lines.append((ts, level, msg))
-        color = LEVEL_COLOR.get(level, "#dbe6f7")
+        color = LEVEL_COLOR.get(level, theme.TXT)
         self.view.appendHtml(
-            f"<span style='color:#55648a'>{ts}</span> "
+            f"<span style='color:{theme.DIM}'>{ts}</span> "
             f"<span style='color:{color}'>{msg.replace('<', '&lt;')}</span>")
 
     def _clear(self):
