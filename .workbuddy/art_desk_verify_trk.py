@@ -4,8 +4,10 @@
 用法：.venv/Scripts/python.exe .workbuddy/art_desk_verify_trk.py <runid>
 判据: SHOT 04/05 + TRK-RESHOT-OK + VERIFY 行（含 tracking error_m）。
 """
+import os
 import sys
 
+os.environ["QT_QPA_PLATFORM"] = "windows"   # offscreen 下无中文字体→豆腐块
 sys.path.insert(0, ".")
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication
