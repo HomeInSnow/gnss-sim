@@ -14,7 +14,7 @@ import time
 
 PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 8084
 RUN_S = float(sys.argv[2]) if len(sys.argv) > 2 else 75
-OUT = "D:/workbuddy/GNSSSignal/gnss-sim/output/pocket_web_verify/"
+OUT = "D:/workbuddy/GNSSSignal/gnss-sim-desktop/output/pocket_web_verify/"
 SAT = "2,7,8,10,11,12,14,22,23,24,33"
 
 def ws_connect(sock):
@@ -115,7 +115,7 @@ def main():
     cmds = [
         {"cmd": "set_inp", "inp": 1, "fmt": 8, "fs": 25.0, "toff": 0.0,
          "tscale": 1.0,
-         "file": "D:/workbuddy/GNSSSignal/gnss-sim/out/"
+         "file": "D:/workbuddy/GNSSSignal/gnss-sim-desktop/out/"
                  "20261117T123629105786/pocket_e1e5a.bin",
          "fo": "1575.42,1176.45,0,0,0,0,0,0",
          "IQ": "2,2,2,2,2,2,2,2", "bits": "2,2,2,2,2,2,2,2",

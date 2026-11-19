@@ -4,8 +4,8 @@ import pypdfium2 as pdfium
 from PIL import Image, ImageDraw
 import os, re, math
 
-PDF = r"D:/workbuddy/GNSSSignal/gnss-sim/FGI-GSRx-2.1.3/Documentation/masters_thesis_paakkonen_2024.pdf"
-W = r"D:/workbuddy/GNSSSignal/gnss-sim/.workbuddy/thesis_work"
+PDF = r"D:/workbuddy/GNSSSignal/gnss-sim-desktop/FGI-GSRx-2.1.3/Documentation/masters_thesis_paakkonen_2024.pdf"
+W = r"D:/workbuddy/GNSSSignal/gnss-sim-desktop/.workbuddy/thesis_work"
 os.makedirs(W + r"\figs\cand", exist_ok=True)
 
 # figure -> page map (PDF file page numbers, from thesis.md page comments)

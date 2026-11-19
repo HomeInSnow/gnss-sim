@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei"]
 plt.rcParams["axes.unicode_minus"] = False
 
-ROOT = pathlib.Path("D:/workbuddy/GNSSSignal/gnss-sim")
+ROOT = pathlib.Path("D:/workbuddy/GNSSSignal/gnss-sim-desktop")
 FGI = ROOT / "out" / "figi_placeholder" if False else ROOT / "out" / "fgi"
 PREFIX = sys.argv[1] if len(sys.argv) > 1 else "fgi_whu60b"
 STEM = sys.argv[2] if len(sys.argv) > 2 else "trk_20261113T033315803665_coh"

@@ -6,7 +6,7 @@
 # 与 CLI 版 pocket_trk_iflc.exe 的 PVT 逻辑同源，用于 Web UI 双频回放验证与使用。
 set -e
 export PATH="/d/workbuddy/tools/mingw64/bin:$PATH"
-cd /d/workbuddy/GNSSSignal/PocketSDR/local_build
+cd /d/workbuddy/GNSSSignal/pocketSDR-desktop/local_build
 
 INC="-I../src -I../lib/RTKLIB/src -I../lib/cyusb -I../lib/pocketfft"
 CFLAGS="-O3 -DWIN32 -Wall -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function"

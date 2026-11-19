@@ -11,7 +11,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cdpsnap import CDP
 
-OUT = "D:/workbuddy/GNSSSignal/gnss-sim/output/wechat_l1ca_article/img/"
+OUT = "D:/workbuddy/GNSSSignal/gnss-sim-desktop/output/wechat_l1ca_article/img/"
 URL = "http://127.0.0.1:8082/"
 
 
@@ -72,7 +72,7 @@ def main():
     wait = 75 - (time.time() - t0)
     if wait > 0:
         time.sleep(wait)
-    nmea = "D:/workbuddy/GNSSSignal/gnss-sim/output/wechat_l1ca_article/art4.nmea"
+    nmea = "D:/workbuddy/GNSSSignal/gnss-sim-desktop/output/wechat_l1ca_article/art4.nmea"
     if os.path.exists(nmea):
         with open(nmea, encoding="utf-8", errors="ignore") as f:
             gga = sum(1 for ln in f if ln.startswith("$GNGGA"))

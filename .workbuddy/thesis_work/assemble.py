@@ -2,7 +2,7 @@
 """组装论文中文译本：sections/*.html + figs/cand/*.png(base64) → 单一 HTML"""
 import re, base64, pathlib, sys
 
-ROOT = pathlib.Path(r"D:\workbuddy\GNSSSignal\gnss-sim")
+ROOT = pathlib.Path(r"D:\workbuddy\GNSSSignal\gnss-sim-desktop")
 SEC = ROOT / r"output\fgi-gsrx\thesis_cn\sections"
 FIGS = ROOT / r".workbuddy\thesis_work\figs\cand"
 OUT = ROOT / r"output\fgi-gsrx\thesis_cn\thesis_cn.html"

@@ -11,7 +11,7 @@ from backend import scenario
 from backend.synth import engine as signal_engine
 
 req = scenario.ScenarioRequest(
-    rinex_path=r"D:\workbuddy\GNSSSignal\gnss-sim\data\rinex\BRDC_2026283.rnx",
+    rinex_path=r"D:\workbuddy\GNSSSignal\gnss-sim-desktop\data\rinex\BRDC_2026283.rnx",
     lat=34.7466, lon=113.6254, alt=110,
     start=dt.datetime(2026, 10, 10, 4, 0, 0),
     duration_s=300,

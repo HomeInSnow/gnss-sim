@@ -22,8 +22,8 @@ RINEX 2.x GPS nav 记录首行（8 行记录中的第 1 行）：
 import re
 import sys
 
-SRC = r"D:\workbuddy\GNSSSignal\gnss-sim\data\rinex\BRDC_2023271.rnx"
-DST = r"D:\workbuddy\GNSSSignal\gnss-sim\data\rinex\BRDC_2023271_afzero.rnx"
+SRC = r"D:\workbuddy\GNSSSignal\gnss-sim-desktop\data\rinex\BRDC_2023271.rnx"
+DST = r"D:\workbuddy\GNSSSignal\gnss-sim-desktop\data\rinex\BRDC_2023271_afzero.rnx"
 
 # 记录首行特征：PRN + yy mm dd hh mm + ss.f（年份 23）
 REC_START = re.compile(r"^\s*\d{1,2} 23 \d{2} \d{2} \d{2} \d{2} \d{2}\.\d")

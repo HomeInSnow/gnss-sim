@@ -20,7 +20,7 @@ from backend.synth import engine as signal_engine  # noqa: E402
 DUR = int(sys.argv[1]) if len(sys.argv) > 1 else 60
 
 req = scenario.ScenarioRequest(
-    rinex_path="D:/workbuddy/GNSSSignal/gnss-sim/data/rinex/BRDC_2023271_whu_afzero2.rnx",
+    rinex_path="D:/workbuddy/GNSSSignal/gnss-sim-desktop/data/rinex/BRDC_2023271_whu_afzero2.rnx",
     lat=60.182537, lon=24.82826, alt=47.248,
     start=dt.datetime(2023, 9, 28, 23, 20, 0),      # naive UTC, 与基准 run 一致
     duration_s=DUR,

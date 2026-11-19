@@ -12,7 +12,7 @@ import math
 import sys
 import pathlib
 
-FGI = pathlib.Path("D:/workbuddy/GNSSSignal/gnss-sim/out/fgi")
+FGI = pathlib.Path("D:/workbuddy/GNSSSignal/gnss-sim-desktop/out/fgi")
 LAT, LON, HGT = 60.182537, 24.82826, 47.248
 A, F = 6378137.0, 1.0 / 298.257223563
 E2 = F * (2 - F)

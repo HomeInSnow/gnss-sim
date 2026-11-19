@@ -10,7 +10,7 @@ rx = truth.rx_ecef
 prns_obs = [4,5,9,11,12,18,20,25,26,29,31]
 obs_res = [-486,1222,205,-507,-1607,405,864,-663,376,614,-422]
 
-ephs = parse_rinex_multi(r"D:/workbuddy/GNSSSignal/gnss-sim/data/rinex/BRDC_2023271.rnx", systems=("G",))
+ephs = parse_rinex_multi(r"D:/workbuddy/GNSSSignal/gnss-sim-desktop/data/rinex/BRDC_2023271.rnx", systems=("G",))
 eph_by_prn = {(k[1] if isinstance(k, tuple) else k): v for k, v in ephs.items()}
 
 drho = []

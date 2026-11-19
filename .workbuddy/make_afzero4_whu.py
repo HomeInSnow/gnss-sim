@@ -15,8 +15,8 @@ GPS 记录 8 行，TGD 在第 7 行（记录内 pos==6）第 3 个 20 列 DFLOAT
 """
 import re
 
-SRC = r"D:\workbuddy\GNSSSignal\gnss-sim\data\rinex\BRDC_2023271.rnx"
-DST = r"D:\workbuddy\GNSSSignal\gnss-sim\data\rinex\BRDC_2023271_whu_afzero2.rnx"
+SRC = r"D:\workbuddy\GNSSSignal\gnss-sim-desktop\data\rinex\BRDC_2023271.rnx"
+DST = r"D:\workbuddy\GNSSSignal\gnss-sim-desktop\data\rinex\BRDC_2023271_whu_afzero2.rnx"
 
 REC_START = re.compile(r"^\s*[GEJCRSI][0-9A-Z]{2} 20\d\d \d\d \d\d \d\d \d\d \d\d(\.\d)?[ ]*[ -]\d\.\d{12}[ED]")
 DFLOAT = re.compile(r"[ -]\d\.\d{12}[ED][+-]\d{2}")

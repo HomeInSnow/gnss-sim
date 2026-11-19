@@ -4,7 +4,7 @@
 # 本 run 引擎 atmosphere off，Saas 属"错扣"，用于隔离 fixA 的高程偏置来源。
 set -e
 export PATH="/d/workbuddy/tools/mingw64/bin:$PATH"
-cd /d/workbuddy/GNSSSignal/PocketSDR/local_build
+cd /d/workbuddy/GNSSSignal/pocketSDR-desktop/local_build
 
 # 变体源：sed 自 sdr_pvt_iflc.c，仅改 tropoopt 一行
 sed 's|opt.tropopt = TROPOPT_SAAS;.*|opt.tropopt = TROPOPT_OFF;  // diag: engine troposphere=off|' \

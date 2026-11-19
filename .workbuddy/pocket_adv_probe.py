@@ -12,7 +12,7 @@ from pocket_desktop.core.engine_mgr import EngineMgr, ensure_tag  # noqa: E402
 from pocket_desktop.core.wslink import WsLink  # noqa: E402
 
 IQ = sys.argv[1] if len(sys.argv) > 1 else \
-    r"D:\workbuddy\GNSSSignal\gnss-sim\out\20261118T104257507553\gpssim.bin"
+    r"D:\workbuddy\GNSSSignal\gnss-sim-desktop\out\20261118T104257507553\gpssim.bin"
 IQ = os.path.abspath(IQ)
 ensure_tag(IQ, 8, 25.0, "1575.42", "2", "16")
 

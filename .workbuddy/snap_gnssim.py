@@ -11,7 +11,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cdpsnap import CDP
 
-OUT = "D:/workbuddy/GNSSSignal/gnss-sim/output/wechat_l1ca_article/img/"
+OUT = "D:/workbuddy/GNSSSignal/gnss-sim-desktop/output/wechat_l1ca_article/img/"
 os.makedirs(OUT, exist_ok=True)
 
 
@@ -44,7 +44,7 @@ def main():
       set('ch1-rate','25000000');
       set('ch1-fmt','int16');
       set('ch1-rinex-path',
-          'D:/workbuddy/GNSSSignal/gnss-sim/data/rinex/BRDC_2023271_whu_afzero2.rnx');
+          'D:/workbuddy/GNSSSignal/gnss-sim-desktop/data/rinex/BRDC_2023271_whu_afzero2.rnx');
       return 1;})()""")
     # 参考点 marker：走前端自带的程序化入口（与读档场景同路径）
     mv = c.eval("""(() => {try {

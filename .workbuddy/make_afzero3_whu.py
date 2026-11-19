@@ -11,8 +11,8 @@ af 必须为零），区别：输入是 RINEX 3.04 mixed（G/E/C 记录，PRN �
 """
 import re
 
-SRC = r"D:\workbuddy\GNSSSignal\gnss-sim\data\rinex\BRDC_2023271.rnx"
-DST = r"D:\workbuddy\GNSSSignal\gnss-sim\data\rinex\BRDC_2023271_whu_afzero.rnx"
+SRC = r"D:\workbuddy\GNSSSignal\gnss-sim-desktop\data\rinex\BRDC_2023271.rnx"
+DST = r"D:\workbuddy\GNSSSignal\gnss-sim-desktop\data\rinex\BRDC_2023271_whu_afzero.rnx"
 
 # RINEX3 记录首行：PRN(如 G28) + 完整日期时间（秒为整数或带小数）
 REC_START = re.compile(r"^\s*[GEJCRSI][0-9A-Z]{2} 20\d\d \d\d \d\d \d\d \d\d \d\d(\.\d)?[ ]*[ -]\d\.\d{12}[ED]")

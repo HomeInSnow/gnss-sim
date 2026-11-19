@@ -7,7 +7,7 @@ import time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from cdpsnap import CDP
 
-OUT = "D:/workbuddy/GNSSSignal/gnss-sim/output/wechat_l1ca_article/img/"
+OUT = "D:/workbuddy/GNSSSignal/gnss-sim-desktop/output/wechat_l1ca_article/img/"
 
 c = CDP(9223, url_sub="8082")
 c.cmd("Page.bringToFront")
