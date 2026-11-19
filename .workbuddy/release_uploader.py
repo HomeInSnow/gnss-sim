@@ -11,23 +11,23 @@ import urllib.error
 import urllib.request
 
 OWNER = "HomeInSnow"
-TAG = "v2026.11.19"
+TAG = "v2026.11.19b"
 NO_PROXY = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 RELEASES = [
     {
         "repo": "gnss-sim-desktop",
         "branch": "main",
-        "name": "gnss-sim-desktop v2026.11.19 (Windows x64)",
+        "name": "gnss-sim-desktop v2026.11.19b (Windows x64)",
         "body_file": ".workbuddy/release_body_gnss.md",
-        "zip": "dist/release/gnss-sim-desktop_v2026.11.19_win-x64.zip",
+        "zip": "dist/release/gnss-sim-desktop_v2026.11.19b_win-x64.zip",
     },
     {
         "repo": "pocketSDR-desktop",
         "branch": "master",
-        "name": "pocketSDR-desktop console v2026.11.19 (Windows x64)",
+        "name": "pocketSDR-desktop console v2026.11.19b (Windows x64)",
         "body_file": ".workbuddy/release_body_pocket.md",
-        "zip": "dist/release/pocketSDR-desktop_console_v2026.11.19_win-x64.zip",
+        "zip": "dist/release/pocketSDR-desktop_console_v2026.11.19b_win-x64.zip",
     },
 ]
 

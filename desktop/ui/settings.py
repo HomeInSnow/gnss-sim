@@ -28,7 +28,7 @@ class SettingsDialog(QDialog):
     def __init__(self, win):
         super().__init__(win)
         self.win = win
-        self.setWindowTitle("设置 · gnss-sim 桌面版")
+        self.setWindowTitle("设置 · gnss-sim-desktop")
         self.resize(560, 420)
         lay = QVBoxLayout(self)
         lay.setContentsMargins(14, 12, 14, 12)

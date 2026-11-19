@@ -1,15 +1,22 @@
 # -*- coding: utf-8 -*-
-"""PyInstaller 打包：PocketSDR Desktop（引擎三变体 + html 随包）。
+"""PyInstaller 打包：pocketSDR-desktop（引擎三变体 + html 随包）。
 
-构建：.venv/Scripts/pyinstaller.exe pocket_desktop.spec --noconfirm \
+构建：.venv/Scripts/python.exe -m PyInstaller -y pocketSDR-desktop.spec \
       --distpath dist --workpath .workbuddy/pyi_build_pocket
+产物：dist/pocketSDR-desktop/pocketSDR-desktop.exe
 """
 from pathlib import Path
 
 from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 root = Path(SPECPATH)
-psdr = root.parent / "PocketSDR"          # 仓库兄弟目录
+# 仓库兄弟目录：改名后优先 pocketSDR-desktop，兼容旧名 PocketSDR（同 engine_dir 策略）
+for _cand in (root.parent / "pocketSDR-desktop", root.parent / "PocketSDR"):
+    if (_cand / "local_build").is_dir():
+        psdr = _cand
+        break
+else:
+    raise FileNotFoundError("未找到兄弟目录 pocketSDR-desktop/PocketSDR（缺 local_build）")
 
 ENGINE_EXES = ("pocket_web_local.exe", "pocket_web_both_off.exe",
                "pocket_web_iflc.exe")
@@ -43,10 +50,10 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz, a.scripts, [],
     exclude_binaries=True,
-    name="pocket-desktop",
+    name="pocketSDR-desktop",
     debug=False, strip=False, upx=False,
     console=False,
     icon=str(root / "pocket_desktop" / "assets" / "app.ico"),
 )
 coll = COLLECT(exe, a.binaries, a.datas,
-               strip=False, upx=False, name="pocket-desktop")
+               strip=False, upx=False, name="pocketSDR-desktop")

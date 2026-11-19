@@ -54,7 +54,7 @@ def main() -> int:
     from desktop.core.session import Session
 
     app = QApplication(sys.argv)
-    app.setApplicationName("gnss-sim")
+    app.setApplicationName("gnss-sim-desktop")
     app.setStyleSheet(theme.QSS)
     # 任务栏/窗口图标：frozen=_MEIPASS 随包（spec datas），源码态=仓库目录
     _mp = getattr(sys, "_MEIPASS", None)

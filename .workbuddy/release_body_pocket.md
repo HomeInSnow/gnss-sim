@@ -3,9 +3,9 @@
 Self-contained PyInstaller build of the **PocketSDR replay console** used to
 validate gnss-sim-desktop IQ scenarios with PocketSDR engines.
 
-Contents of `pocket-desktop/`:
+Contents of `pocketSDR-desktop/`:
 
-- `pocket-desktop.exe` — console app (variant picker, web replay monitors:
+- `pocketSDR-desktop.exe` — console app (variant picker, web replay monitors:
   acquisition waterfall, tracking, observables, navigation, live NMEA/fix KPIs).
 - `pocket_web_local.exe` — standard engine (BRDC/SAAS, as upstream).
 - `pocket_web_both_off.exe` — atmosphere + satellite-clock corrections off.

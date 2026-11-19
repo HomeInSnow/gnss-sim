@@ -26,7 +26,7 @@ class MainWindow(QMainWindow):
     def __init__(self, session):
         super().__init__()
         self.session = session
-        self.setWindowTitle("gnss-sim · 中频信号仿真器（桌面版）")
+        self.setWindowTitle("gnss-sim-desktop · 中频信号仿真器（桌面版）")
         self.resize(1500, 920)
         self._rail_btns: dict[str, QPushButton] = {}
         self._task_btns: list[QPushButton] = []

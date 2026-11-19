@@ -1,8 +1,8 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""gnss-sim 桌面版 PyInstaller spec（onedir）。
+"""gnss-sim-desktop 桌面版 PyInstaller spec（onedir）。
 
 构建：.venv/Scripts/python.exe -m PyInstaller -y gnss-sim-desktop.spec
-产物：dist/gnss-sim/gnss-sim.exe（同目录随包 libgnsssynth.dll、frontend、地图轮廓）
+产物：dist/gnss-sim-desktop/gnss-sim-desktop.exe（同目录随包 libgnsssynth.dll、frontend、地图轮廓）
 """
 from pathlib import Path
 
@@ -63,7 +63,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="gnss-sim",
+    name="gnss-sim-desktop",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -79,5 +79,5 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=False,
-    name="gnss-sim",
+    name="gnss-sim-desktop",
 )
