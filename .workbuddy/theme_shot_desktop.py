@@ -17,7 +17,7 @@ from desktop.ui import theme
 from desktop.ui.main_window import MainWindow
 from desktop.core.session import Session
 
-SHOT = "output/theme_v2/"
+SHOT = (sys.argv[1] if len(sys.argv) > 1 else "output/theme_v3_light/")
 os.makedirs(SHOT, exist_ok=True)
 RUNID = "20261118T152018562283"
 

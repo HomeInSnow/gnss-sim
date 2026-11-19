@@ -292,8 +292,8 @@ class MapWidget(QWidget):
             _, y = xy(0, ga)
             p.drawLine(QPointF(0, y), QPointF(w, y))
         # 陆地
-        p.setPen(QPen(QColor("#4d9fc0"), 0.8))
-        p.setBrush(QBrush(QColor("#20566e")))
+        p.setPen(QPen(QColor("#3f96b8"), 0.8))
+        p.setBrush(QBrush(QColor("#bfe0ea")))
         for ring in self._rings:
             poly = []
             prev = None

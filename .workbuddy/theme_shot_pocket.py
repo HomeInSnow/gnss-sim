@@ -16,7 +16,7 @@ from pocket_desktop.app import _make_app                         # noqa: E402
 from pocket_desktop.ui.main_window import MainWindow             # noqa: E402
 
 IQ = os.path.abspath("out/20261118T104257507553/gpssim.bin")
-SHOT = "output/theme_v2/"
+SHOT = (sys.argv[1] if len(sys.argv) > 1 else "output/theme_v3_light/")
 os.makedirs(SHOT, exist_ok=True)
 st = {"t": 0}
 
