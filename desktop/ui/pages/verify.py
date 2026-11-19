@@ -2,7 +2,9 @@
 """验证页：内置接收机 Verify Fix（快照 + 跟踪解）+ KPI + 逐星表。"""
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+import time
+
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QLabel,
                                QLineEdit, QPushButton, QComboBox, QCheckBox,
@@ -294,6 +296,12 @@ class VerifyPage(QWidget):
 
     def run_verify(self, auto: bool = False):
         if self._worker and self._worker.isRunning():
+            # 原为静默 return：自动验证/上一发验证还在跑时，用户再点按钮（或
+            # 生成后自动触发）会"没有任何反应"。改为明确反馈当前忙态。
+            s = int(time.monotonic() - getattr(self, "_busy_t0", time.monotonic()))
+            self.status_lbl.setText(f"验证已在进行中… {s} s，请等待完成")
+            self._busy_silence = time.monotonic() + 2.5  # 心跳暂停，让提示可见
+            self.session.bus.log("验证已在进行中，忽略本次触发", "warn")
             return
         outdir = self.ed_outdir.text().strip()
         if not outdir:
@@ -325,8 +333,18 @@ class VerifyPage(QWidget):
             bw = self.ed_bw.text().strip()
             if bw:
                 kw["dll_bw_hz"] = float(bw)
-        self.btn_run.setEnabled(False)
+        # 按钮不再置灰：置灰时用户再点一下毫无反馈，酷似"没有任何反应"。
+        # 保持可点，重入由 run_verify 开头的 busy 分支明确提示进行中。
         self.status_lbl.setText("验证中…（大场景可能较久）")
+        # 心跳：大场景验证可达十几分钟，秒级计时让"进行中"看得见，
+        # 避免用户以为按钮无响应而重复点击。
+        self._busy_t0 = time.monotonic()
+        self._busy_silence = 0.0
+        self._busy_kind = "跟踪解" if kw.get("tracking") else "快照解"
+        self._stop_busy_timer()
+        self._hb = QTimer(self)
+        self._hb.timeout.connect(self._tick_busy)
+        self._hb.start(1000)
         self.session.bus.set_status(f"Verify Fix：{outdir}")
         self.session.bus.log(
             f"开始验证：out/{outdir}｜跟踪={'开' if kw.get('tracking') else '关'}"
@@ -340,12 +358,31 @@ class VerifyPage(QWidget):
         self._worker = w
         w.start()
 
+    def _tick_busy(self):
+        if self._worker is None or not self._worker.isRunning():
+            self._stop_busy_timer()
+            return
+        if time.monotonic() < getattr(self, "_busy_silence", 0.0):
+            return
+        s = int(time.monotonic() - self._busy_t0)
+        extra = "，跟踪解通常需 10~20 分钟" if self._busy_kind == "跟踪解" else ""
+        self.status_lbl.setText(
+            f"验证中… {s} s（{self._busy_kind}，大场景可能较久{extra}）")
+
+    def _stop_busy_timer(self):
+        t = getattr(self, "_hb", None)
+        if t is not None:
+            t.stop()
+            t.deleteLater()
+            self._hb = None
+
     def _fmt(self, v, fmt="{:.3f}", dash="—"):
         if isinstance(v, (int, float)):
             return fmt.format(v)
         return dash
 
     def _done(self, res: dict):
+        self._stop_busy_timer()
         self.btn_run.setEnabled(True)
         if not isinstance(res, dict) or "error" in res:
             err = (res or {}).get("error", "验证返回异常")
@@ -410,6 +447,7 @@ class VerifyPage(QWidget):
         self._load_traces()
 
     def _fail(self, msg: str):
+        self._stop_busy_timer()
         self.btn_run.setEnabled(True)
         self.status_lbl.setText("验证失败")
         head = msg.splitlines()[0] if msg else "未知"

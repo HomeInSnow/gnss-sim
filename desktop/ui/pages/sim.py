@@ -846,7 +846,11 @@ class SimPage(QWidget):
             f"｜星座 {''.join(t.systems)}", "info")
         from desktop.core.worker import GenerateWorker
         w = GenerateWorker(body)
-        w.progress.connect(self.pb.setValue)
+        # progress 携带 0..1 浮点比例；QProgressBar 量程 0..1000 且 setValue 收 int，
+        # 直连会被 PySide 截断成 0（进度条全程 0%、结束才跳 100%），必须换算后转接。
+        w.progress.connect(
+            lambda f: self.pb.setValue(
+                int(round(max(0.0, min(1.0, float(f))) * 1000))))
         w.ok.connect(self._gen_done)
         w.fail.connect(self._gen_fail)
         self._gen_worker = w
