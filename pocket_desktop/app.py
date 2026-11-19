@@ -85,7 +85,7 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="pocket-desktop")
     ap.add_argument("--shot", metavar="PNG", help="截图后退出")
     ap.add_argument("--page", default="console")
-    ap.add_argument("--exit-after", type=float, default=3.0)
+    ap.add_argument("--exit-after", type=float, default=None)  # 无参 GUI 常驻
     ap.add_argument("--show-delay", type=float, default=0.8)
     ap.add_argument("--selftest", nargs="?", const="", metavar="IQ")
     args = ap.parse_args(argv)
