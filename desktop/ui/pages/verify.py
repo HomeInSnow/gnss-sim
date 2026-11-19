@@ -310,6 +310,7 @@ class VerifyPage(QWidget):
         marker = {"lat": _mv(self.ed_mlat, t.lat),
                   "lon": _mv(self.ed_mlon, t.lon),
                   "alt": _mv(self.ed_malt, t.alt)}
+        self._verify_marker = marker   # 本次验证实际基准点（显示层复用，防任务位漂移）
         kw: dict = {"trace": self.cb_trace.isChecked()}
         # 捕获质量门限（快照解与跟踪解都生效，空=快照 9 / 跟踪 15 dB）
         md = self.ed_mindb.text().strip()
@@ -396,9 +397,13 @@ class VerifyPage(QWidget):
         # 水平/垂直拆分（若有 wls.ecef 则从 ecef 无法直接得，用 llh 与 marker 差近似）
         try:
             import math as _m
-            t = self.session.current()
-            dlat = (llh[0] - t.lat) * 111320.0
-            dlon = (llh[1] - t.lon) * 111320.0 * _m.cos(_m.radians(t.lat))
+            # 必须用本次验证的实际基准点（run_verify 保存），不能用当前任务位：
+            # 跨场景验证时任务位≠场景真值，水平误差会掺入两位置之差（曾示 40 万米）。
+            mk = getattr(self, "_verify_marker", None) or self.session.current()
+            mlat = mk["lat"] if isinstance(mk, dict) else mk.lat
+            mlon = mk["lon"] if isinstance(mk, dict) else mk.lon
+            dlat = (llh[0] - mlat) * 111320.0
+            dlon = (llh[1] - mlon) * 111320.0 * _m.cos(_m.radians(mlat))
             self.kpi_2d.set(f"{_m.hypot(dlat, dlon):.2f}")
         except Exception:                        # noqa: BLE001
             pass
