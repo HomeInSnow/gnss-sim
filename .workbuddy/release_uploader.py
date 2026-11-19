@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """Create GitHub Releases and upload the packaged desktop builds.
 
-Usage: python release_uploader.py <TOKEN>
-Token is read from argv only; never stored.
+Usage: python release_uploader.py <TOKEN> [repo ...]
+Token is read from argv only; never stored.  Optional repo names filter which
+releases to publish (e.g. only gnss-sim-desktop after a UI-only fix).
+Each entry may override the global TAG with its own "tag" key.
 """
 import json
 import os
@@ -18,9 +20,10 @@ RELEASES = [
     {
         "repo": "gnss-sim-desktop",
         "branch": "main",
-        "name": "gnss-sim-desktop v2026.11.19b (Windows x64)",
+        "tag": "v2026.11.19c",
+        "name": "gnss-sim-desktop v2026.11.19c (Windows x64)",
         "body_file": ".workbuddy/release_body_gnss.md",
-        "zip": "dist/release/gnss-sim-desktop_v2026.11.19b_win-x64.zip",
+        "zip": "dist/release/gnss-sim-desktop_v2026.11.19c_win-x64.zip",
     },
     {
         "repo": "pocketSDR-desktop",
@@ -65,21 +68,25 @@ def upload_asset(rel_id, repo, zip_path):
             return json.loads(f.read() or b"{}")
 
 
-def main():
+def main(repos=None):
     for spec in RELEASES:
         repo = spec["repo"]
+        if repos and repo not in repos:
+            print(repo, ": skipped (filtered out)")
+            continue
+        tag = spec.get("tag", TAG)
         base = "https://api.github.com/repos/%s/%s" % (OWNER, repo)
         with open(spec["body_file"], "r", encoding="utf-8") as f:
             body = f.read()
         # reuse existing release for this tag if present
         try:
-            rel = api("GET", base + "/releases/tags/" + TAG)
+            rel = api("GET", base + "/releases/tags/" + tag)
             print(repo, ": release exists id=", rel.get("id"))
         except urllib.error.HTTPError as e:
             if e.code != 404:
                 raise
             rel = api("POST", base + "/releases", {
-                "tag_name": TAG,
+                "tag_name": tag,
                 "target_commitish": spec["branch"],
                 "name": spec["name"],
                 "body": body,
@@ -101,4 +108,4 @@ def main():
 
 if __name__ == "__main__":
     TOKEN = sys.argv[1]
-    sys.exit(main())
+    sys.exit(main(repos=sys.argv[2:] or None))
