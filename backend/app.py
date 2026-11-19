@@ -397,7 +397,7 @@ def _rinex_dir():
     return config.DATA_DIR / "rinex"
 
 
-def _newest_cached_rinex():
+def _newest_cached_rinex(want_systems=()):
     d = _rinex_dir()
     if not d.is_dir():
         return None
@@ -405,6 +405,14 @@ def _newest_cached_rinex():
              if p.is_file() and (p.suffix == ".rnx" or p.name[-1:].lower() == "n")]
     if not files:
         return None
+    want = set(want_systems or ())
+    if want:
+        # Prefer caches that actually carry every requested system; a GPS-only
+        # legacy file must not win the mtime race while E/C were asked for.
+        covering = [p for p in files
+                    if want <= ephemeris.covered_systems(p)]
+        if covering:
+            return max(covering, key=lambda p: p.stat().st_mtime)
     return max(files, key=lambda p: p.stat().st_mtime)
 
 
@@ -577,7 +585,7 @@ def _preview_multi(body: dict, start: dt.datetime, rx,
     else:
         precise_warns = []
 
-    path = _resolve_rinex(body, start)
+    path = _resolve_rinex(body, start, systems)
     engine = body.get("engine", "native")
     try:
         # GPS zorunlu değil: Talep edilen sistemler arasında 'G' varsa 'G' zorunlu tutulur, yoksa boş demet verilir
@@ -665,8 +673,8 @@ def _preview_multi_precise(body: dict, start: dt.datetime, rx,
     if r_keys:
         r_eph: dict = {}
         try:
-            r_eph = ephemeris.parse_rinex_multi(_resolve_rinex(body, start),
-                                                ("R",), require=())
+            r_eph = ephemeris.parse_rinex_multi(
+                _resolve_rinex(body, start, ("R",)), ("R",), require=())
         except Exception as exc:                 # noqa: BLE001 - degrade, warn
             warnings.append("precise preview: GLONASS needs broadcast FDMA "
                             f"channel numbers but the RINEX is unusable "
@@ -816,21 +824,27 @@ async def rinex_upload(date: str, file: UploadFile):
     return {"cached": True, "date": date}
 
 
-def _resolve_rinex(body: dict, start: dt.datetime) -> str:
+def _resolve_rinex(body: dict, start: dt.datetime, want_systems=()) -> str:
     """Turn a request body's rinex_path into a real file path.
 
     'AUTO' (the UI's default) means "that day's cached/downloaded RINEX, or
     the newest cached file as a fallback". Anything else is passed through
     as an explicit path. Shared by /api/generate and /api/live/start -- both
     build a ScenarioRequest, which needs a path gps-sdr-sim can open.
+
+    ``want_systems`` (e.g. ("G","E","C")) makes the AUTO branch coverage
+    aware: downloads and cache fallbacks prefer files that actually carry
+    every requested constellation, so a GPS-only legacy mirror file cannot
+    silently drop the other systems from the run or preview.
     """
     rinex_path = body.get("rinex_path") or "AUTO"
     if rinex_path != "AUTO":
         return rinex_path
+    want = tuple(dict.fromkeys(want_systems or ()))
     try:
-        return str(ephemeris.cached_rinex_path(start.date()))
+        return str(ephemeris.cached_rinex_path(start.date(), want))
     except ephemeris.EphemerisUnavailable:
-        fb = _newest_cached_rinex()
+        fb = _newest_cached_rinex(want)
         if fb is None:
             raise
         return str(fb)
@@ -1057,13 +1071,13 @@ def generate(body: dict):
         # precise and gps-sdr-sim never read it.
         if isinstance(nav_override, dict) and "precise_provider" in nav_override:
             try:
-                rinex_path = _resolve_rinex(body, start) or rinex_path
+                rinex_path = _resolve_rinex(body, start, ("R",)) or rinex_path
             except Exception as exc:               # noqa: BLE001 - non-fatal
                 precise_warnings.append(
                     "precise: could not resolve a broadcast RINEX "
                     f"({exc}); GLONASS FDMA channels unavailable, R omitted")
     else:
-        rinex_path = _resolve_rinex(body, start)
+        rinex_path = _resolve_rinex(body, start, systems)
     req = scenario.ScenarioRequest(
         rinex_path=rinex_path, lat=body["lat"], lon=body["lon"], alt=body["alt"],
         start=start, duration_s=int(body["duration_s"]),
@@ -1907,7 +1921,7 @@ def live_start(body: dict, request: Request):
                  else _parse_utc(body["start_utc"]))
         nav_override, _ = _precise_nav_override(body, start)
         rinex_path = (body.get("rinex_path") or "") if nav_override is not None \
-            else _resolve_rinex(body, start)
+            else _resolve_rinex(body, start, systems)
         if start_now:
             # Re-read the clock after the (possibly downloading) RINEX
             # resolution, then lead it by the live pipeline's latency so the

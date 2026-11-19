@@ -203,8 +203,19 @@ class VerifyPage(QWidget):
         self.cb_dll.addItems(["coh 相干E/L+PLL", "el 非相干E/L", "nc 峰追踪"])
         self.ed_tracks = QLineEdit()
         self.ed_tracks.setPlaceholderText("可选")
+        self.ed_bw = QLineEdit()
+        self.ed_bw.setPlaceholderText("0.5")
+        self.ed_bw.setToolTip("跟踪 DLL 环路带宽 Hz（空=内核默认 0.5）")
         self.ed_mindb = QLineEdit()
-        self.ed_mindb.setPlaceholderText("可选")
+        self.ed_mindb.setPlaceholderText("9/15")
+        self.ed_mindb.setToolTip(
+            "捕获质量门限 dB：快照解默认 9，跟踪解默认 15（空=按路径默认）")
+        self.ed_mlat = QLineEdit()
+        self.ed_mlon = QLineEdit()
+        self.ed_malt = QLineEdit()
+        for w in (self.ed_mlat, self.ed_mlon, self.ed_malt):
+            w.setPlaceholderText("任务值")
+            w.setFixedWidth(92)
         self.btn_run = QPushButton("▶ 运行验证")
         self.btn_run.setObjectName("Primary")
         self.btn_run.clicked.connect(lambda: self.run_verify())
@@ -218,6 +229,9 @@ class VerifyPage(QWidget):
         row.addWidget(QLabel("track_s"))
         row.addWidget(self.ed_tracks, 0)
         self.ed_tracks.setFixedWidth(56)
+        row.addWidget(QLabel("dll_bw"))
+        row.addWidget(self.ed_bw, 0)
+        self.ed_bw.setFixedWidth(56)
         row.addWidget(QLabel("min_db"))
         row.addWidget(self.ed_mindb, 0)
         self.ed_mindb.setFixedWidth(56)
@@ -225,6 +239,15 @@ class VerifyPage(QWidget):
         row.addWidget(self.btn_run)
         row.addWidget(self.status_lbl, 1)
         c.body.addLayout(row)
+        mrow = QHBoxLayout()
+        mrow.addWidget(QLabel("基准点 纬/经/高"))
+        mrow.addWidget(self.ed_mlat, 0)
+        mrow.addWidget(self.ed_mlon, 0)
+        mrow.addWidget(self.ed_malt, 0)
+        m = QLabel("空 = 取当前仿真任务位置（跨场景验证时请填该场景生成位置）")
+        m.setObjectName("DimTxt")
+        mrow.addWidget(m, 1)
+        c.body.addLayout(mrow)
         return c
 
     def _row_kpi(self) -> QHBoxLayout:
@@ -277,9 +300,18 @@ class VerifyPage(QWidget):
             self.session.bus.log("请先指定场景（out/<runid>）", "warn")
             return
         t = self.session.current()
-        marker = {"lat": t.lat, "lon": t.lon, "alt": t.alt}
+        # 基准点：手填优先，留空回落到当前任务位置（跨场景验证时须手填
+        # 该场景的生成位置，否则 3D 误差掺入两位置之差）
+        def _mv(w, dv):
+            try:
+                return float(w.text().strip())
+            except ValueError:
+                return dv
+        marker = {"lat": _mv(self.ed_mlat, t.lat),
+                  "lon": _mv(self.ed_mlon, t.lon),
+                  "alt": _mv(self.ed_malt, t.alt)}
         kw: dict = {"trace": self.cb_trace.isChecked()}
-        # 捕获质量门限（快照解与跟踪解都生效，空=内核默认 9 dB）
+        # 捕获质量门限（快照解与跟踪解都生效，空=快照 9 / 跟踪 15 dB）
         md = self.ed_mindb.text().strip()
         if md:
             kw["min_metric_db"] = float(md)
@@ -289,6 +321,9 @@ class VerifyPage(QWidget):
             ts = self.ed_tracks.text().strip()
             if ts:
                 kw["track_s"] = float(ts)
+            bw = self.ed_bw.text().strip()
+            if bw:
+                kw["dll_bw_hz"] = float(bw)
         self.btn_run.setEnabled(False)
         self.status_lbl.setText("验证中…（大场景可能较久）")
         self.session.bus.set_status(f"Verify Fix：{outdir}")

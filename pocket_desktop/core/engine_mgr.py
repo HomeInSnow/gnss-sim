@@ -68,28 +68,70 @@ _FMT_NAME = {1: "INT8", 2: "INT8X2", 3: "RAW8", 4: "RAW16", 5: "RAW16I",
              6: "RAW32", 7: "CS8", 8: "CS16"}
 
 
-def ensure_tag(iq_path: str | Path, fmt: int, fs_mhz: float, fo_csv: str,
-               iq_csv: str, bits_csv: str) -> str | None:
-    """引擎（rcv_open_file）要求 <file>.tag 伴生文件，缺失则按参数补写。
+def _tag_lines(fmt: int, fs_mhz: float, fo_csv: str, iq_csv: str,
+               bits_csv: str) -> list[str]:
+    """按界面参数生成 tag 行。NCH 随 fo 个数推导（引擎 rcv_open_file 以 tag
+    为准并截断超出 NCH 的 F_LO/IQ/BITS，硬编码 1 会让双频文件永远单 RF CH）；
+    iq/bits 列表按 NCH 重复补齐。"""
+    fo = [f"{float(x):.6f}" for x in fo_csv.split(",") if x.strip()] or \
+        ["1575.42"]
+    iq = [x.strip() for x in iq_csv.split(",") if x.strip()] or ["2"]
+    bits = [x.strip() for x in bits_csv.split(",") if x.strip()] or ["3"]
+    nch = len(fo)
+    iq = (iq * nch)[:nch]
+    bits = (bits * nch)[:nch]
+    return [
+        "PROG = pocket-desktop",
+        "TIME = 0000-00-00 00:00:00",
+        f"FMT = {_FMT_NAME.get(int(fmt), 'CS16')}",
+        f"NCH = {nch}",
+        f"F_S = {float(fs_mhz):.6f}",
+        "F_LO = " + ",".join(fo),
+        "IQ = " + ",".join(iq),
+        "BITS = " + ",".join(bits),
+    ]
 
-    返回写入的 tag 路径；已存在则返回 None（不覆盖）。
+
+def _parse_tag(tag: Path) -> dict:
+    d = {}
+    try:
+        for ln in tag.read_text(encoding="ascii", errors="ignore").splitlines():
+            if "=" in ln:
+                k, v = ln.split("=", 1)
+                d[k.strip()] = v.strip()
+    except OSError:
+        pass
+    return d
+
+
+def _same_tag(cur: dict, want: list[str]) -> bool:
+    for ln in want:
+        k, _, v = ln.partition("=")
+        if cur.get(k.strip()) != v.strip():
+            return False
+    return True
+
+
+def ensure_tag(iq_path: str | Path, fmt: int, fs_mhz: float, fo_csv: str,
+               iq_csv: str, bits_csv: str) -> tuple[str | None, str]:
+    """引擎（rcv_open_file）以 <file>.tag 伴生文件为准（set_inp 值会被 tag
+    整体覆盖），所以：
+
+    - tag 缺失 → 按界面参数写入，返回 (path, "created")；
+    - tag 存在但与界面参数不符 → 重写并返回 (path, "rewritten")；
+      桌面端界面即真值来源，不重写会让"改了采样率/中频"静默无效；
+    - tag 一致 → (None, "ok")。
     """
     p = Path(iq_path)
     tag = p.with_name(p.name + ".tag")
+    want = _tag_lines(fmt, fs_mhz, fo_csv, iq_csv, bits_csv)
     if tag.exists():
-        return None
-    lines = [
-        "PROG = pocket-desktop",
-        "TIME = 0000/00/00 00:00:00",
-        f"FMT = {_FMT_NAME.get(int(fmt), 'CS16')}",
-        "NCH = 1",
-        f"F_S = {float(fs_mhz):.6f}",
-        f"F_LO = {','.join(f'{float(x):.6f}' for x in fo_csv.split(',') if x.strip())}",
-        f"IQ = {','.join(x.strip() for x in iq_csv.split(',') if x.strip())}",
-        f"BITS = {','.join(x.strip() for x in bits_csv.split(',') if x.strip())}",
-    ]
-    tag.write_text("\n".join(lines) + "\n", encoding="ascii")
-    return str(tag)
+        if _same_tag(_parse_tag(tag), want):
+            return None, "ok"
+        tag.write_text("\n".join(want) + "\n", encoding="ascii")
+        return str(tag), "rewritten"
+    tag.write_text("\n".join(want) + "\n", encoding="ascii")
+    return str(tag), "created"
 
 
 def free_port() -> int:
@@ -132,8 +174,12 @@ class EngineMgr(QObject):
         logp = runlog_dir / f"engine_{time.strftime('%Y%m%dT%H%M%S')}.log"
         self.logf = open(logp, "w", encoding="utf-8", errors="ignore")
         self.port = free_port()
+        # 每变体独立 ini：默认 pocket_web.ini 与官方 Web UI / 其他变体共用
+        # 一份（str_type/log_mask/opt/fftw 等未覆盖项会互相污染），缺失时
+        # 引擎回落内置默认（load_cfg fopen 失败即返回 0）。
+        ini = runlog_dir / f"desktop_{variant}.ini"
         cmd = [str(exe), "-web", f"127.0.0.1:{self.port}",
-               "-html", str(html_dir())]
+               "-html", str(html_dir()), "-ini", str(ini)]
         flags = subprocess.CREATE_NEW_PROCESS_GROUP if os.name == "nt" else 0
         try:
             self.proc = subprocess.Popen(

@@ -64,6 +64,8 @@ class SimTask:
     rinex_path: str = "AUTO"
     ephemeris_mode: str = "broadcast"             # broadcast / precise
     sp3_path: str = ""
+    fallback_to_broadcast: bool = False           # precise 拿不到产品时降级广播
+    mask_deg: float = 5.0                         # 几何预览截止高度角
     # ── 星座与频段 ──
     systems: list[str] = field(default_factory=lambda: ["G"])
     bands: list[str] = field(default_factory=list)   # 空=各系统本征频段
@@ -190,10 +192,13 @@ class SimTask:
              "start_utc": self._start_str(),
              "rinex_path": self.rinex_path.strip() or "AUTO",
              "ephemeris_mode": self.ephemeris_mode,
+             "mask_deg": float(self.mask_deg),
              "systems": [s for s in SYSTEMS if s in self.systems]}
         b.update(self._models_part())
-        if self.ephemeris_mode == "precise" and self.sp3_path.strip():
-            b["sp3_path"] = self.sp3_path.strip()
+        if self.ephemeris_mode == "precise":
+            b["fallback_to_broadcast"] = bool(self.fallback_to_broadcast)
+            if self.sp3_path.strip():
+                b["sp3_path"] = self.sp3_path.strip()
         return b
 
     def generate_body(self) -> dict:
@@ -223,10 +228,12 @@ class SimTask:
         fd = self._fading_part()
         if fd:
             b["fading"] = fd
-        if self.osnma_enabled:
+        if self.osnma_enabled and "E" in self.systems:
             b["osnma"] = {"nmas": int(self.osnma_nmas)}
-        if self.ephemeris_mode == "precise" and self.sp3_path.strip():
-            b["sp3_path"] = self.sp3_path.strip()
+        if self.ephemeris_mode == "precise":
+            b["fallback_to_broadcast"] = bool(self.fallback_to_broadcast)
+            if self.sp3_path.strip():
+                b["sp3_path"] = self.sp3_path.strip()
         return b
 
     # ══ 场景库（与 Web /api/scenario 同一存储，可互通）════════════

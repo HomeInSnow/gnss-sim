@@ -16,7 +16,20 @@ def _make_app():
     from .ui import theme
     app = QApplication.instance() or QApplication(sys.argv)
     app.setStyleSheet(theme.QSS)
+    _set_window_icon(app)
     return app
+
+
+def _set_window_icon(app) -> None:
+    """任务栏/窗口图标：frozen=_MEIPASS 随包，源码态=仓库目录。"""
+    import pathlib
+    from PySide6.QtGui import QIcon
+    mp = getattr(sys, "_MEIPASS", None)
+    base = (pathlib.Path(mp) if mp
+            else pathlib.Path(__file__).resolve().parents[1])
+    ico = base / "pocket_desktop" / "assets" / "app.ico"
+    if ico.is_file():
+        app.setWindowIcon(QIcon(str(ico)))
 
 
 def run_selftest(iq: str | None) -> int:
@@ -42,7 +55,7 @@ def run_selftest(iq: str | None) -> int:
     else:
         iq = str(Path(iq).resolve())   # 引擎子进程 cwd 在别处，必须绝对路径
     from .core.engine_mgr import ensure_tag
-    ensure_tag(iq, 8, 25.0, "1575.42", "2", "16")
+    ensure_tag(iq, 8, 25.0, "1575.42", "2", "3")
     win = MainWindow()
     win.show()
     state = {"fix": 0, "t0": 0}
@@ -58,7 +71,7 @@ def run_selftest(iq: str | None) -> int:
 
     def kick():
         cmds = [{"cmd": "set_inp", "inp": 1, "fmt": 8, "fs": 25.0,
-                 "file": iq, "fo": "1575.42", "IQ": "2", "bits": "16",
+                 "file": iq, "fo": "1575.42", "IQ": "2", "bits": "3",
                  "tscale": 1.0, "toff": 0.0},
                 {"cmd": "set_sig", "sigs": "L1CA:1-32"},
                 {"cmd": "sub", "topic": "pvt_sol", "cyc": 200},

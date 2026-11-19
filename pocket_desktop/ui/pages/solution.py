@@ -81,10 +81,22 @@ class SolutionPage(QWidget):
 
         right = QVBoxLayout()
         right.setSpacing(10)
-        c3 = Card("轨迹地图", "离线世界底图")
+        c3 = Card("轨迹地图", "离线世界底图 · 单击设为真值")
         self.map = MapWidget()
         self.map.setMinimumHeight(200)
         c3.body.addWidget(self.map)
+
+        def _map_pick(lat, lon):
+            tr = self.win.session.truth or {}
+            self.win.session.truth = {"lat": lat, "lon": lon,
+                                      "alt": tr.get("alt") or 0.0}
+            pc = getattr(self.win, "page_console", None)
+            if pc is not None:
+                pc.sp_lat.setValue(lat)
+                pc.sp_lon.setValue(lon)
+            self._draw_err()
+            self.win.log(f"地图选点设为真值：{lat:.6f},{lon:.6f}", "info")
+        self.map.clicked.connect(_map_pick)
         right.addWidget(c3)
         c4 = Card("误差曲线", "水平/垂直 vs 时间")
         self.pg_err = pg.PlotWidget()

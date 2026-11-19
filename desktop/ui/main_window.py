@@ -196,7 +196,16 @@ class MainWindow(QMainWindow):
         if select_current and 0 <= self.session.cur < len(self._task_btns):
             self._task_btns[self.session.cur].setChecked(True)
 
+    def _commit_edits(self):
+        """切换/新建/删除前固化仿真页未保存的控件值，避免静默回滚。"""
+        try:
+            self.pages["sim"].store_task()
+        except Exception:                           # noqa: BLE001
+            pass                                    # 页面未就绪时忽略
+
     def _select_task(self, i: int):
+        if i != self.session.cur:
+            self._commit_edits()
         self.session.select(i)
         for j, b in enumerate(self._task_btns):
             b.setChecked(j == i)
@@ -204,17 +213,19 @@ class MainWindow(QMainWindow):
         self.session.bus.log(f"切换到任务：{self.session.current().name}", "info")
 
     def _new_task(self):
+        self._commit_edits()
         self.session.new_task()
         self.refresh_tasks(select_current=True)
         self.pages["sim"].load_task(self.session.current())
 
     def _dup_task(self):
-        self.pages["sim"].store_task()          # 先固化当前编辑
+        self._commit_edits()                       # 先固化当前编辑
         self.session.duplicate_task()
         self.refresh_tasks(select_current=True)
         self.pages["sim"].load_task(self.session.current())
 
     def _del_task(self):
+        self._commit_edits()
         if not self.session.delete_task(self.session.cur):
             self.session.bus.log("至少保留一个任务", "warn")
         self.refresh_tasks(select_current=True)

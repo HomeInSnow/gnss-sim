@@ -56,6 +56,12 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName("gnss-sim")
     app.setStyleSheet(theme.QSS)
+    # 任务栏/窗口图标：frozen=_MEIPASS 随包（spec datas），源码态=仓库目录
+    _mp = getattr(sys, "_MEIPASS", None)
+    _ico = (pathlib.Path(_mp) if _mp else _ROOT) / "desktop" / "assets" / "app.ico"
+    if _ico.is_file():
+        from PySide6.QtGui import QIcon
+        app.setWindowIcon(QIcon(str(_ico)))
 
     if args.selftest:
         from desktop.core import bridge

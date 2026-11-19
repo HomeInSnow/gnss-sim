@@ -191,7 +191,7 @@ class Skyplot(QWidget):
             p.setBrush(QBrush(color))
             p.drawEllipse(QPointF(x, y), 5, 5)
             p.setPen(QPen(QColor(theme.TXT)))
-            lbl = str(s.get("prn", ""))
+            lbl = str(s.get("svid") or s.get("prn", ""))
             p.drawText(QPointF(x + 7, y - 4), lbl)
 
 

@@ -85,6 +85,22 @@ def preview(body: dict) -> dict:
     return _call(web().preview, dict(body))
 
 
+# ── precise 星历（/api/precise/load 同一入口；进程内即操作者，免 API key）──
+def precise_load(path: str) -> dict:
+    """装载本地 SP3 产品，返回 status（source/satellites/epochs）。"""
+    w = web()
+    p = pathlib.Path(path)
+    if not p.is_file():
+        raise BridgeError(404, f"未找到 SP3 文件：{path}")
+    w._precise_provider.load(str(p))
+    return _call(w._precise_provider.status)
+
+
+def precise_status() -> dict:
+    w = web()
+    return _call(w._precise_provider.status)
+
+
 # ── 生成 ────────────────────────────────────────────────────────────
 def generate(body: dict, progress_cb=None, stop_flag=None) -> dict:
     """跑完一次生成。progress_cb(frac)；stop_flag()→True 时请求停止。返回 done 载荷。"""
@@ -124,7 +140,8 @@ def stop() -> bool:
 def receiver(outdir: str, marker: dict | None = None, trace: bool = True,
              tracking: bool = False, dll_mode: str = "coh",
              track_s: float | None = None,
-             min_metric_db: float | None = None) -> dict:
+             min_metric_db: float | None = None,
+             dll_bw_hz: float | None = None) -> dict:
     body: dict = {"outdir": outdir, "trace": bool(trace)}
     if marker:
         body["marker"] = marker
@@ -137,6 +154,8 @@ def receiver(outdir: str, marker: dict | None = None, trace: bool = True,
         body["dll_mode"] = dll_mode
         if track_s is not None:
             body["track_s"] = float(track_s)
+        if dll_bw_hz is not None:
+            body["dll_bw_hz"] = float(dll_bw_hz)
         if min_metric_db is not None:
             body["min_metric_db"] = float(min_metric_db)
     return _call(web().run_receiver, body)

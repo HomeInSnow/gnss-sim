@@ -278,9 +278,57 @@ def save_uploaded_rinex(date: dt.date, raw: bytes) -> pathlib.Path:
     return p
 
 
-def _download(date: dt.date) -> pathlib.Path | None:
+def _covered_systems_text(text: str) -> set:
+    """GNSS system letters present as observation records in RINEX 3 text.
+
+    Header lines start with "SYS/obs" comments or col-5 markers; record lines
+    look like ``C02 2026 09 30 05 00 00...`` -- system letter in col 1, two
+    digit PRN, space, 4-digit year. That shape test is enough to tell real
+    records from header free text.
+    """
+    cov = set()
+    for line in text.splitlines():
+        if (len(line) > 20 and line[0] in "GRECJIS"
+                and line[1:3].isdigit() and line[3] == " "
+                and line[4:8].isdigit()):
+            cov.add(line[0])
+            if len(cov) == 7:
+                break
+    return cov
+
+
+def covered_systems(path) -> set:
+    """Systems with at least one broadcast-ephemeris record in a cached file.
+
+    Used to keep GPS-only legacy mirrors (brdc*.{yy}n) from silently shadowing
+    the multi-GNSS mixed navigation files a user actually needs: a cached or
+    freshly downloaded file that lacks a requested system must not win.
+    """
+    try:
+        raw = pathlib.Path(path).read_bytes()
+    except OSError:
+        return set()
+    if raw[:2] == b"\x1f\x8b":
+        try:
+            raw = gzip.decompress(raw)
+        except OSError:
+            return set()
+    return _covered_systems_text(raw.decode("latin-1", errors="ignore"))
+
+
+def _download(date: dt.date, want_systems=()) -> pathlib.Path | None:
+    """Fetch the day's mixed navigation file, preferring mirror files that
+    actually contain ``want_systems``.
+
+    Mirrors are tried in config order; a content-valid candidate that misses a
+    requested system is kept as a degraded fallback (saved only when no mirror
+    covers the request) so offline-poor environments still get *something* and
+    the caller can surface an honest "no records" warning instead of an error.
+    """
+    want = set(want_systems or ())
     ddd = f"{date.timetuple().tm_yday:03d}"
     yy = f"{date.year % 100:02d}"
+    fallback_data = None
     for tmpl in config.RINEX_MIRRORS:
         url = tmpl.format(yyyy=date.year, ddd=ddd, yy=yy)
         try:
@@ -302,8 +350,21 @@ def _download(date: dt.date) -> pathlib.Path | None:
         data = gzip.decompress(content) if content[:2] == b"\x1f\x8b" else content
         if b"RINEX VERSION" not in data[:200]:
             continue  # mirror returned an error page / HTML, not a RINEX file
+        if want:
+            cov = _covered_systems_text(data.decode("latin-1", errors="ignore"))
+            if not want <= cov:
+                if fallback_data is None:
+                    fallback_data = data
+                continue  # e.g. a GPS-only legacy file while E/C were asked for
         p = _cache_path(date)
         p.write_bytes(data)
+        return p
+    if want and fallback_data is not None:
+        # Nothing covered the request -- still cache the first valid file so
+        # the request degrades visibly (parse reports missing systems) rather
+        # than failing outright.
+        p = _cache_path(date)
+        p.write_bytes(fallback_data)
         return p
     return None
 
@@ -694,23 +755,35 @@ def to_rinex2_nav(eph_by_prn: dict[int, dict]) -> str:
 
 
 _TODAY_REFRESH_S = 1800.0
+_COVERAGE_RETRY_S = 600.0  # min age before a coverage-short cache is re-fetched
 
 
-def get_ephemeris(date: dt.date, download: bool = True) -> dict[int, dict]:
+def get_ephemeris(date: dt.date, download: bool = True,
+                  want_systems=()) -> dict[int, dict]:
+    want = tuple(dict.fromkeys(want_systems or ()))
     p = _cache_path(date)
-    if (p.exists() and download
-            and date == dt.datetime.utcnow().date()
-            and time.time() - p.stat().st_mtime > _TODAY_REFRESH_S):
-        # Today's BRDC grows all day (hourly uploads); a copy cached this
-        # morning lacks the records a run starting "now" needs, and the
-        # run would fall back to relabeled stale ones.
-        fresh = _download(date)
-        if fresh is not None:
-            p = fresh
+    if p.exists() and download:
+        force = (date == dt.datetime.utcnow().date()
+                 and time.time() - p.stat().st_mtime > _TODAY_REFRESH_S)
+        if not force and want:
+            # A cached GPS-only legacy file must not keep shadowing a
+            # multi-GNSS request -- retry the mirrors for a covering file.
+            # A cache younger than _COVERAGE_RETRY_S is assumed already the
+            # best the mirrors can offer (just checked), so don't hammer them.
+            cov = covered_systems(p)
+            if not set(want) <= cov and \
+                    time.time() - p.stat().st_mtime > _COVERAGE_RETRY_S:
+                force = True
+        if force:
+            fresh = _download(date, want)
+            if fresh is not None:
+                p = fresh  # covers the request (or is the degraded best try)
+            # download failed -> keep the stale cache; honest warnings come
+            # from the parse layer instead of an outright failure
     if not p.exists():
         if not download:
             raise EphemerisUnavailable(f"no cached RINEX for {date}")
-        p = _download(date)
+        p = _download(date, want)
         if p is None:
             raise EphemerisUnavailable(f"all mirrors failed for {date}")
     try:
@@ -721,7 +794,7 @@ def get_ephemeris(date: dt.date, download: bool = True) -> dict[int, dict]:
         raise EphemerisUnavailable(f"could not parse cached RINEX {p}: {e}") from e
 
 
-def cached_rinex_path(date: dt.date) -> pathlib.Path:
+def cached_rinex_path(date: dt.date, want_systems=()) -> pathlib.Path:
     """Ensure a RINEX file for ``date`` is cached, then return its local path."""
-    get_ephemeris(date)
+    get_ephemeris(date, want_systems=want_systems)
     return _cache_path(date)

@@ -18,10 +18,13 @@ from ..widgets import Card, ChipGroup
 FMTS = [("CS16 int16 IQ", 8), ("CS8 int8 IQ", 7), ("INT8X2", 2),
         ("RAW8", 3), ("RAW16", 4), ("RAW32", 6)]
 SYSS = ["ALL", "GPS", "Galileo", "BeiDou", "QZSS", "GLONASS"]
-# 留空信号集时按系统生成的默认捕获集（对齐官方 Web UI 默认）
+# 留空信号集时按系统生成的默认捕获集（对齐官方 Web UI 默认）。
+# 语法：空格分 token，token = sig:prn列表；prn 只认 "a-b" 范围与逗号。
+# GLONASS 的 prn 列表是 FDMA 频槽号（sdr_rcv.c: ch->prn is FCN），
+# 星号捕获范围由引擎 satno 默认（-7-6/1-27）兜底，勿在此串里塞 "/"。
 DEFAULT_SIGS = {"GPS": "L1CA:1-32", "ALL": "L1CA:1-32",
                 "Galileo": "E1B:1-36", "BeiDou": "B1I:1-63",
-                "QZSS": "L1CA:1-9", "GLONASS": "G1CA:-7-6/1-27"}
+                "QZSS": "L1CA:1-9", "GLONASS": "G1CA:-7-6"}
 
 
 def read_run_truth(runid: str) -> dict:
@@ -94,8 +97,11 @@ class ConsolePage(QWidget):
         self.ed_iq = QLineEdit("2")
         self.ed_iq.setPlaceholderText("每 RF 通道 I/Q 数：2 或 1，逗号分列")
         f.addRow("IQ", self.ed_iq)
-        self.ed_bits = QLineEdit("16")
-        self.ed_bits.setPlaceholderText("量化位数 16/8，逗号分列")
+        self.ed_bits = QLineEdit("3")
+        self.ed_bits.setPlaceholderText("每样本比特数 2/3，仅 RAW* 格式生效")
+        self.ed_bits.setToolTip(
+            "引擎按 2/3 裁剪（sdr_web.c CLIP 2..3）；CS16/CS8/INT8X2 等格式"
+            "由格式本身决定位宽，本项被忽略")
         f.addRow("bits", self.ed_bits)
         self.sp_ts = QComboBox()
         self.sp_ts.addItem("实时 tscale=1", 1.0)
@@ -106,7 +112,8 @@ class ConsolePage(QWidget):
                                       suffix=" s")
         f.addRow("时间偏移", self.sp_toff)
         self.ed_sigs = QLineEdit()
-        self.ed_sigs.setPlaceholderText("留空＝引擎默认全信号；可填 L1CA:4,5 / L5C:*")
+        self.ed_sigs.setPlaceholderText(
+            "留空＝按系统过滤生成默认集；多组空格分列，如 L1CA:4,5 L1C:1-8")
         f.addRow("信号集", self.ed_sigs)
         self.cb_sys = QComboBox()
         self.cb_sys.addItems(SYSS)
@@ -178,7 +185,9 @@ class ConsolePage(QWidget):
             self.ed_file.setText(p)
             tag = Path(p).with_suffix(Path(p).suffix + ".tag")
             if tag.exists():
-                self.lbl_stat.setText("检测到 .tag，格式参数由引擎自读")
+                self.lbl_stat.setText(
+                    "检测到 .tag：引擎以 tag 内格式为准，开始回放时会按"
+                    "界面参数自动校正重写")
 
     def _read_run(self):
         rid = self.ed_run.text().strip()
@@ -229,17 +238,20 @@ class ConsolePage(QWidget):
                                   "alt": self.sp_alt.value()}
         self.win.page_solution.reset()
         from ...core.engine_mgr import ensure_tag
-        tg = ensure_tag(f, self.cb_fmt.currentData(), self.sp_fs.value(),
-                        self.ed_fo.text() or "1575.42",
-                        self.ed_iq.text() or "2",
-                        self.ed_bits.text() or "16")
-        if tg:
+        tg, act = ensure_tag(f, self.cb_fmt.currentData(), self.sp_fs.value(),
+                             self.ed_fo.text() or "1575.42",
+                             self.ed_iq.text() or "2",
+                             self.ed_bits.text() or "3")
+        if tg and act == "created":
             self.win.log(f"已自动补写 {Path(tg).name}（引擎要求 tag）", "info")
+        elif tg and act == "rewritten":
+            self.win.log(f"{Path(tg).name} 与界面参数不符，已按界面重写"
+                         "（tag 存在时引擎以 tag 为准）", "warn")
         cmds = [{"cmd": "set_inp", "inp": 1, "fmt": self.cb_fmt.currentData(),
                  "fs": self.sp_fs.value(), "file": f,
                  "fo": self.ed_fo.text() or "1575.42",
                  "IQ": self.ed_iq.text() or "2",
-                 "bits": self.ed_bits.text() or "16",
+                 "bits": self.ed_bits.text() or "3",
                  "tscale": self.sp_ts.currentData(),
                  "toff": self.sp_toff.value()}]
         sigs = self.ed_sigs.text().strip() or \
@@ -284,8 +296,12 @@ class ConsolePage(QWidget):
         self.sp_fs.setValue(p.get("fs", 25.0))
         self.ed_fo.setText(p.get("fo", "1575.42"))
         self.ed_iq.setText(p.get("iq", "2"))
-        self.ed_bits.setText(p.get("bits", "16"))
+        self.ed_bits.setText(p.get("bits", "3"))
         self.ed_sigs.setText(p.get("sigs", ""))
         self.cb_sys.setCurrentText(p.get("sys", "ALL"))
+        self.sp_toff.setValue(p.get("toff", 0.0))
         i = self.sp_ts.findData(p.get("tscale", 1.0))
         self.sp_ts.setCurrentIndex(max(0, i))
+        vk = p.get("variant")
+        if vk in VARIANTS:
+            self.chip.set_selected([VARIANTS[vk][0]])

@@ -32,6 +32,7 @@ datas = [
     ("backend/synth/native/libgnsssynth.dll", "backend/synth/native"),
     ("frontend", "frontend"),
     ("desktop/assets/world_land.geojson", "desktop/assets"),
+    ("desktop/assets/app.ico", "desktop/assets"),
 ]
 datas += collect_data_files("georinex")
 datas += collect_data_files("xarray")
@@ -70,6 +71,7 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     contents_directory="_internal",
+    icon=str(ROOT / "desktop" / "assets" / "app.ico"),
 )
 coll = COLLECT(
     exe,

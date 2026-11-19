@@ -133,9 +133,17 @@ class SimPage(QWidget):
         self.ed_rinex = self._line("AUTO", "AUTO = 使用 data/rinex 当日 BRDC")
         self.cb_ephmode = self._combo(["broadcast", "precise"], "broadcast")
         self.ed_sp3 = self._line("", "仅 precise 模式需要")
+        self.ck_fb = self._check("precise 失败时降级广播星历")
+        self.ck_fb.setToolTip("勾选：取不到 SP3 产品时自动改用广播星历并告警；"
+                              "不勾：precise 数据不可用直接报错")
         c.body.addLayout(self._eph_row())
         c.body.addLayout(form_row("星历模式", self.cb_ephmode))
         c.body.addLayout(self._file_row(self.ed_sp3, "SP3 (*.sp3 *.SP3);;所有文件 (*)"))
+        fb_row = QHBoxLayout()
+        fb_row.addSpacing(96 + 8)
+        fb_row.addWidget(self.ck_fb)
+        fb_row.addStretch(1)
+        c.body.addLayout(fb_row)
         self.cb_ephmode.currentTextChanged.connect(self._sync_eph_mode)
         return c
 
@@ -157,11 +165,13 @@ class SimPage(QWidget):
 
     def _sync_eph_mode(self, mode):
         self.ed_sp3.setEnabled(mode == "precise")
+        self.ck_fb.setEnabled(mode == "precise")
 
     def _card_const(self) -> Card:
         c = Card("星座与信号", "Constellations")
         self.chip_sys = ChipGroup(SYSTEMS, ["G"])
         self.chip_band = ChipGroup(BANDS, [])
+        self.ed_mask = self._line("5", "几何预览/生成的截止高度角（度）")
         self.ck_osnma = self._check("OSNMA (Galileo)")
         self.cb_nmas = self._combo(["2 operational", "1 test", "3 don't use"])
         row = QHBoxLayout()
@@ -171,8 +181,23 @@ class SimPage(QWidget):
         row.addStretch(1)
         c.body.addLayout(form_row("星座", self.chip_sys))
         c.body.addLayout(form_row("频段", self.chip_band, "空 = 各系统本征频段"))
+        c.body.addLayout(form_row("截止高度角 °", self.ed_mask))
         c.body.addLayout(row)
+        # OSNMA 只对 Galileo 有意义：未选 E 时禁用并取消勾选（与 Web 联动一致）
+        self.chip_sys.changed.connect(self._sync_osnma)
+        self.ck_osnma.toggled.connect(self._sync_osnma)
         return c
+
+    def _sync_osnma(self):
+        if self._loading:
+            return
+        has_e = "E" in self.chip_sys.selected()
+        if not has_e and self.ck_osnma.isChecked():
+            self.ck_osnma.setChecked(False)
+            self.session.bus.log("OSNMA 仅适用于 Galileo：未选 E 系统，已取消勾选",
+                                 "warn")
+        self.ck_osnma.setEnabled(has_e)
+        self.cb_nmas.setEnabled(has_e and self.ck_osnma.isChecked())
 
     def _card_models(self) -> Card:
         c = Card("传播模型", "Channel Models")
@@ -195,7 +220,14 @@ class SimPage(QWidget):
         self.ed_mp2d = self._line("0")
         self.ed_mp2a = self._line("0")
         self.ed_mp2p = self._line("3.14159")
-        self.ck_models_iq = self._check("模型注入 IQ（默认仅预览/真值）")
+        self.ck_models_iq = self._check(
+            "模型注入 IQ（钟差/多径；大气延迟始终注入）")
+        self.ck_models_iq.setToolTip(
+            "勾选后接收机钟差/多径写进 IQ；不勾仅参与预览/真值。\n"
+            "注意：电离层/对流层延迟由引擎无条件注入 IQ，不受此开关影响。")
+        self.ck_svclock = self._check("卫星钟差注入（broadcast 钟差参数）")
+        self.ck_svclock.setToolTip(
+            "关闭后引擎不注入卫星钟差/群延迟（验证端按 meta 对称回读）")
         c.body.addLayout(form_row("预设", self.cb_mdlpreset))
         cells = [("电离层", self.cb_iono), ("对流层", self.cb_tropo),
                  ("接收机钟", self.cb_rxclk),
@@ -216,6 +248,7 @@ class SimPage(QWidget):
             g.addWidget(w, r, col * 2 + 1)
         c.body.addLayout(g)
         c.body.addWidget(self.ck_models_iq)
+        c.body.addWidget(self.ck_svclock)
         self.cb_mdlpreset.currentIndexChanged.connect(self._apply_mdl_preset)
         self.cb_rxclk.currentTextChanged.connect(
             lambda v: self._set_enabled(
@@ -331,9 +364,9 @@ class SimPage(QWidget):
         self.ed_fadespeed = self._line("", "空 = 轨迹自动")
         self.ed_fadeseed = self._line("1")
         self.ed_fadekey = self._line("")
-        btn_rand = QPushButton("随机密钥")
-        btn_rand.setObjectName("FileBtn")
-        btn_rand.clicked.connect(
+        self.btn_faderand = QPushButton("随机密钥")
+        self.btn_faderand.setObjectName("FileBtn")
+        self.btn_faderand.clicked.connect(
             lambda: self.ed_fadekey.setText(secrets.token_hex(8)))
         self.ck_faderec = self._check("记录密钥到 meta")
         row = QHBoxLayout()
@@ -349,10 +382,17 @@ class SimPage(QWidget):
         row3 = QHBoxLayout()
         row3.addWidget(QLabel("密钥"))
         row3.addWidget(self.ed_fadekey, 2)
-        row3.addWidget(btn_rand)
+        row3.addWidget(self.btn_faderand)
         c.body.addLayout(row3)
         c.body.addWidget(self.ck_faderec)
+        self.cb_fade.currentIndexChanged.connect(self._sync_fade_mode)
         return c
+
+    def _sync_fade_mode(self, _idx=None):
+        mode = self.cb_fade.currentData()
+        self._set_enabled((self.ed_fadeseed,), mode == "seeded")
+        self._set_enabled((self.ed_fadekey, self.btn_faderand,
+                           self.ck_faderec), mode == "keyed")
 
     def _card_pos(self) -> Card:
         c = Card("接收机位置", "Location · 单击地图选点")
@@ -501,9 +541,11 @@ class SimPage(QWidget):
         self.ed_rinex.setText(t.rinex_path)
         self.cb_ephmode.setCurrentText(t.ephemeris_mode)
         self.ed_sp3.setText(t.sp3_path)
+        self.ck_fb.setChecked(bool(t.fallback_to_broadcast))
         self.chip_sys.set_selected(t.systems)
         self.chip_band.set_selected(t.bands)
-        self.ck_osnma.setChecked(t.osnma_enabled)
+        self.ed_mask.setText(repr(t.mask_deg))
+        self.ck_osnma.setChecked(t.osnma_enabled and "E" in t.systems)
         idx = {"1": 1, "2": 0, "3": 2}.get(str(t.osnma_nmas), 0)
         self.cb_nmas.setCurrentIndex(idx)
         self.cb_mdlpreset.setCurrentIndex(
@@ -522,6 +564,7 @@ class SimPage(QWidget):
             w.setText(repr(v))
         self.cb_mp.setCurrentText(t.mp)
         self.ck_models_iq.setChecked(t.models_to_iq)
+        self.ck_svclock.setChecked(bool(t.sv_clock))
         self.ck_imp.setChecked(t.imp_enabled)
         self.cb_imppreset.setCurrentIndex(
             max(0, self.cb_imppreset.findData(t.imp_preset)))
@@ -554,6 +597,8 @@ class SimPage(QWidget):
         self.cb_rxclk.currentTextChanged.emit(t.rxclk)
         self.cb_mp.currentTextChanged.emit(t.mp)
         self.ck_imp.toggled.emit(t.imp_enabled)
+        self._sync_osnma()
+        self._sync_fade_mode()
         if t.last_preview:
             self._fill_preview(t.last_preview)
         self._update_size_est()
@@ -575,8 +620,10 @@ class SimPage(QWidget):
         t.rinex_path = self.ed_rinex.text().strip() or "AUTO"
         t.ephemeris_mode = self.cb_ephmode.currentText()
         t.sp3_path = self.ed_sp3.text().strip()
+        t.fallback_to_broadcast = self.ck_fb.isChecked()
         t.systems = self.chip_sys.selected() or ["G"]
         t.bands = self.chip_band.selected()
+        t.mask_deg = self._f(self.ed_mask, 5.0)
         t.osnma_enabled = self.ck_osnma.isChecked()
         t.osnma_nmas = int(self.cb_nmas.currentText()[0])
         t.mdl_preset = self.cb_mdlpreset.currentData() or "manual"
@@ -596,6 +643,7 @@ class SimPage(QWidget):
             self._f(self.ed_mp2d), self._f(self.ed_mp2a),
             self._f(self.ed_mp2p, 3.14159))
         t.models_to_iq = self.ck_models_iq.isChecked()
+        t.sv_clock = self.ck_svclock.isChecked()
         t.imp_enabled = self.ck_imp.isChecked()
         t.imp_preset = self.cb_imppreset.currentData() or "manual"
         t.imp_seed = self._f(self.ed_impseed)
@@ -672,11 +720,32 @@ class SimPage(QWidget):
         self.session.bus.log(f"场景已载入：{name}", "ok")
 
     # ══ Preview ══════════════════════════════════════════════════
+    def _ensure_precise(self, t):
+        """precise 模式且填了本地 SP3：先装载进内核（与 Web "Load this
+        file" 同一 _precise_provider 入口），否则填了路径也不会生效。"""
+        if t.ephemeris_mode != "precise" or not t.sp3_path.strip():
+            return
+        from desktop.core import bridge
+        try:
+            st = bridge.precise_load(t.sp3_path.strip())
+            self.session.bus.log(
+                f"precise：已装载 {st.get('source')}"
+                f"（卫星 {st.get('satellites')}，历元 {st.get('epochs')}）",
+                "ok")
+        except Exception as e:                        # noqa: BLE001
+            self.session.bus.log(
+                f"SP3 装载失败：{e}（precise 将尝试自动下载/降级）", "warn")
+
     def on_preview(self):
         if self._prev_worker and self._prev_worker.isRunning():
             return
         t = self.store_task()
         self.session.save()
+        self._ensure_precise(t)
+        if t.bands:
+            self.session.bus.log(
+                "提示：几何预览按各系统默认信号计算，频段选择仅生成时生效",
+                "info")
         self.btn_preview.setEnabled(False)
         self.hint.setText("几何预览计算中…")
         self.session.bus.set_status("Preview 计算中…")
@@ -736,6 +805,10 @@ class SimPage(QWidget):
                 self.tbl.setItem(r, c, it)
         warns = res.get("warnings", []) or []
         self.warn_view.setText("；".join(warns) if warns else "无告警")
+        # 星座缺记录属于"结果与所选不符"，必须醒目提示而不是混在普通信息里
+        degraded = any(("no records" in w or "omitted" in w) for w in warns)
+        self.warn_view.setStyleSheet(
+            f"color:{theme.BAD}; font-weight:bold;" if degraded else "")
 
     # ══ Generate ═════════════════════════════════════════════════
     def _update_size_est(self):
@@ -758,6 +831,7 @@ class SimPage(QWidget):
             return
         t = self.store_task()
         self.session.save()
+        self._ensure_precise(t)
         self._update_size_est()
         body = t.generate_body()
         self.btn_gen.setEnabled(False)
