@@ -1,12 +1,12 @@
-## pocketSDR-desktop console — Windows x64 build
+## pocketSDR-desktop — Windows x64 build
 
-Self-contained PyInstaller build of the **PocketSDR replay console** used to
+Self-contained PyInstaller build of the **PocketSDR desktop replay shell** used to
 validate gnss-sim-desktop IQ scenarios with PocketSDR engines.
 
 Contents of `pocketSDR-desktop/`:
 
-- `pocketSDR-desktop.exe` — console app (variant picker, web replay monitors:
-  acquisition waterfall, tracking, observables, navigation, live NMEA/fix KPIs).
+- `pocketSDR-desktop.exe` — windowed six-page desktop app (variant picker, replay
+  monitors: acquisition waterfall, tracking, observables, navigation, live NMEA/fix KPIs).
 - `pocket_web_local.exe` — standard engine (BRDC/SAAS, as upstream).
 - `pocket_web_both_off.exe` — atmosphere + satellite-clock corrections off.
 - `pocket_web_iflc.exe` — E1+E5a dual-frequency IFLC variant.
@@ -14,7 +14,7 @@ Contents of `pocketSDR-desktop/`:
 
 The engine variants are built from the patched side-car sources in
 [`local_build/`](https://github.com/HomeInSnow/pocketSDR-desktop/tree/master/local_build)
-of this repository; the console GUI source lives in the companion project
+of this repository; the desktop GUI source lives in the companion project
 [gnss-sim-desktop](https://github.com/HomeInSnow/gnss-sim-desktop)
 (`pocket_desktop/`).
 

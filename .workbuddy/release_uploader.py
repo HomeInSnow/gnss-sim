@@ -25,9 +25,9 @@ RELEASES = [
     {
         "repo": "pocketSDR-desktop",
         "branch": "master",
-        "name": "pocketSDR-desktop console v2026.11.19b (Windows x64)",
+        "name": "pocketSDR-desktop v2026.11.19b (Windows x64)",
         "body_file": ".workbuddy/release_body_pocket.md",
-        "zip": "dist/release/pocketSDR-desktop_console_v2026.11.19b_win-x64.zip",
+        "zip": "dist/release/pocketSDR-desktop_v2026.11.19b_win-x64.zip",
     },
 ]
 
